@@ -485,6 +485,11 @@ function initializeInteractiveSections() {
             display.appendChild(badge);
         }
         display.querySelectorAll('video').forEach(v => {
+            // Leave the method MPAIL2 video at normal speed (it has audio the user controls)
+            if (v.dataset.allowAudio !== undefined) {
+                v.playbackRate = 1;
+                return;
+            }
             v.playbackRate = 3;
             v.addEventListener('loadeddata', function() { this.playbackRate = 3; });
         });
