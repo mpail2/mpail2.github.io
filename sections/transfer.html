@@ -1,0 +1,246 @@
+        <section class="tasks-section scroll-section" id="transfer-section">
+            <h2 class="section-header experiment-sub-header">Transfer Learning
+                <span class="section-subtitle">Robot is trained using an initial set of demonstrations for one task. Then, the model weights are directly transferred for training on a new set of demonstrations for a different task. Since the tasks are similar, we expect the robot to learn new skills quickly by relying on its continual experience. However, this has not been true of most RL methods without specialized methods or massive data coverage.</span>
+            </h2>
+
+            <div class="content-block" id="transfer-initial-demonstrations-block">
+                <h3 class="subsection-header">Demonstrations</h3>
+                <div class="transfer-demo-toggle">
+                    <button type="button" class="sample-method-btn transfer-demo-btn active" data-transfer-demo="initial" onclick="switchTransferDemo('initial')">Initial Task</button>
+                    <button type="button" class="sample-method-btn transfer-demo-btn" data-transfer-demo="new" onclick="switchTransferDemo('new')">New Task</button>
+                </div>
+                <div class="transfer-demo-panel" id="transfer-demo-panel-initial">
+                <div class="demonstrations-grid" id="initial-demonstrations-grid">
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_1.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_2.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_3.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_4.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_5.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_6.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_7.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_8.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_9.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="initial-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Push/demo_10.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                </div>
+                <div class="demonstrations-caption">Only these <span style="font-weight:700; font-size:1.15em; color:#667eea;">10</span> Demonstrations are provided to the learner.</div>
+                </div>
+                <div class="transfer-demo-panel hidden" id="transfer-demo-panel-new">
+                <div class="demonstrations-grid" id="transfer-demonstrations-grid">
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_1.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_2.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_3.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_4.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_5.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_6.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_7.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_8.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_9.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="demo-video-wrapper">
+                        <div class="video-display">
+                            <video class="transfer-demo-video" autoplay muted loop playsinline>
+                                <source src="Media/Video/Demonstrations/Transfer/Push/demo_10.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                </div>
+                <div class="demonstrations-caption">Only these <span style="font-weight:700; font-size:1.15em; color:#667eea;">10</span> Demonstrations are provided to the learner.</div>
+                </div>
+            </div>
+
+            
+            <div class="content-block" id="transfer-time-lapses-block">
+                <h3 class="subsection-header">Training Time-lapse</h3>
+
+                
+                <div class="iteration-control-area">
+                    <div class="iteration-info-row">
+                        <div class="iteration-info-item">
+                            <label>Iteration:</label>
+                            <span class="value" id="transfer-iteration-display">0</span>
+                        </div>
+                        <div class="iteration-info-item">
+                            <label>Time Spent:</label>
+                            <span class="value" id="transfer-time-spent">0</span>
+                        </div>
+                    </div>
+                    <div class="slider-track-container">
+                        <input
+                            type="range"
+                            class="iteration-slider"
+                            id="transfer-iteration-slider" 
+                            min="0"
+                            max="100"
+                            value="0"
+                            step="10"
+                            oninput="updateTransferIteration(this.value)"
+                        >
+                        <div class="slider-dots" id="transfer-slider-dots"></div>
+                        <div class="slider-checkmarks" id="transfer-slider-checkmarks"></div>
+                        <div class="slider-hint slider-hint--transfer">Tip: drag to compare transfer vs. from-scratch training.</div>
+                    </div>
+                </div>
+
+                
+                <div class="transfer-videos-container">
+                    <div class="transfer-video-wrapper transferred">
+                        <p class="video-label highlighted sample-mpail2-title" style="margin-bottom: 10px;">Transferred</p>
+                        <div class="video-display">
+                            <video id="transfer-video-left" autoplay muted loop playsinline>
+                                <source src="Media/Video/Transfer/Push/iter_0.mp4" type="video/mp4">
+                                Your browser does not support video playback.
+                            </video>
+                        </div>
+                        
+                        <a class="full-video-link" style="margin-top: 20px;" onclick="openVideoModal('transfer')">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            Full Training Video
+                        </a>
+                    </div>
+                    <div class="transfer-video-wrapper">
+                        <p class="video-label" style="margin-bottom: 10px;">From Scratch</p>
+                        <div class="video-display">
+                            <video id="transfer-video-right" autoplay muted loop playsinline>
+                                <source src="Media/Video/From%20Scratch/Push/iter_0.mp4" type="video/mp4">
+                                Your browser does not support video playback.
+                            </video>
+                        </div>
+                        <a href="#" class="full-video-link" style="margin-top: 20px;" onclick="openVideoModal('scratch'); return false;">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            Full Training Video
+                        </a>
+                    </div>
+                </div>
+                <div class="content-block" id="transfer-results-block">
+                    <div class="results-panel">
+                        <h3 class="subsection-header">Plots</h3>
+                        <div class="collapsible-body">
+                            <div class="results-chart-container results-chart-full">
+                                <div class="broken-axis-wrapper">
+                                    <div class="broken-chart-top">
+                                        <canvas id="transfer-chart-top"></canvas>
+                                    </div>
+                                    <div class="broken-axis-break" id="transfer-chart-break"></div>
+                                    <div class="broken-chart-bottom">
+                                        <canvas id="transfer-chart-bottom"></canvas>
+                                    </div>
+                                    <div id="transfer-chart-legend"></div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </section>

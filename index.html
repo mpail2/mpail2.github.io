@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning from Observation and Interaction</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="script.js"></script>
+    <script src="charts.js"></script>
+</head>
+<body>
+    
+    <section class="video-section">
+        <div class="video-container" id="hero-video-container">
+            <img class="hero-poster" src="Media/Video/Background/poster.jpg" alt="" aria-hidden="true">
+            <video id="hero-video" autoplay muted loop playsinline preload="metadata">
+                <source src="Media/Video/Background/background.mp4" type="video/mp4">
+                Your browser does not support video playback.
+            </video>
+        </div>
+        <div class="video-overlay">
+            <h1>Planning from Observation and Interaction</h1>
+            <!-- Authors Section -->
+            <div id="authors-section" class="authors-section authors-section--always-visible">
+                <div class="authors-list">
+                    <a>Anonymous Authors</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <nav class="timeline-nav" id="timeline-nav">
+        <div class="timeline-line"></div>
+        <a href="#summary-section" class="timeline-item active" data-section="summary">
+            <span class="timeline-dot"></span>
+            <span class="timeline-label">Overview</span>
+        </a>
+        <a href="#method-section" class="timeline-item" data-section="method">
+            <span class="timeline-dot"></span>
+            <span class="timeline-label">Method</span>
+        </a>
+        <a href="#results-overview-section" class="timeline-item" data-section="results-overview">
+            <span class="timeline-dot"></span>
+            <span class="timeline-label">Results Overview</span>
+        </a>
+        <a href="#efficiency-section" class="timeline-item" data-section="side-by-side">
+            <span class="timeline-dot"></span>
+            <span class="timeline-label">Side-by-Side</span>
+        </a>
+        <a href="#generalization-section" class="timeline-item" data-section="generalization">
+            <span class="timeline-dot"></span>
+            <span class="timeline-label">Generalization</span>
+        </a>
+        <a href="#your-turn-section" class="timeline-item" data-section="your-turn">
+            <span class="timeline-dot"></span>
+            <span class="timeline-label">Your Turn</span>
+        </a>
+    </nav>
+
+    
+    <div class="task-buttons-fixed" id="task-buttons-left">
+        <div class="task-btn-wrapper active" data-task="push">
+            <div class="task-icon push-icon">
+                <div class="icon-block"></div>
+                <div class="icon-block-dest"></div>
+                <div class="icon-arrow">→</div>
+            </div>
+            <button class="task-btn active" data-task="push" onclick="selectTask('push')">Push</button>
+        </div>
+        <div class="task-btn-wrapper" data-task="pick-place">
+            <div class="task-icon pick-icon">
+                <div class="pick-arrow arrow-up">↑</div>
+                <div class="pick-arrow arrow-right">→</div>
+                <div class="pick-arrow arrow-down">↓</div>
+                <div class="icon-block"></div>
+                <div class="icon-block-dest"></div>
+            </div>
+            <button class="task-btn" data-task="pick-place" onclick="selectTask('pick-place')">Pick and Place</button>
+        </div>
+    </div>
+
+    
+    <div class="container">
+        
+        <div id="summary-section-container"></div>
+
+        <div id="method-section-container"></div>
+
+        <div id="results-overview-section-container"></div>
+
+        <div id="efficiency-section-container"></div>
+        <div id="transfer-section-container"></div>
+        <div id="generalization-section-container"></div>
+
+    </div>
+
+    
+    <div class="video-modal" id="video-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeVideoModal()">×</button>
+            <video class="modal-video" id="modal-video" controls muted>
+                <source src="Media/Video/Full/MPAIL.mp4" type="video/mp4">
+                Your browser does not support video playback.
+            </video>
+        </div>
+    </div>
+
+</body>
+</html>
