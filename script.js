@@ -510,8 +510,8 @@ function initializeInteractiveSections() {
             display.appendChild(badge);
         }
         display.querySelectorAll('video').forEach(v => {
-            // Leave the method MPAIL2 video at normal speed (it has audio the user controls)
-            if (v.dataset.allowAudio !== undefined) {
+            // Leave the method MPAIL2 video and the summary teaser at normal speed
+            if (v.dataset.allowAudio !== undefined || isTeaser) {
                 v.playbackRate = 1;
                 return;
             }
