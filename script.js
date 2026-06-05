@@ -10,25 +10,36 @@ async function loadSections() {
         'your-turn-section-container': 'sections/your-turn.html'
     };
 
-    const loadPromises = Object.entries(sectionMappings).map(async ([containerId, sectionFile]) => {
-        try {
-            const response = await fetch(sectionFile);
-            if (response.ok) {
-                const html = await response.text();
-                const container = document.getElementById(containerId);
-                if (container) {
-                    container.innerHTML = html;
-                }
-            } else {
-                console.error(`Failed to load section: ${sectionFile}`);
+    const fetchSection = async (sectionFile, attempts = 3) => {
+        for (let i = 0; i < attempts; i++) {
+            try {
+                const response = await fetch(sectionFile, { cache: 'no-cache' });
+                if (response.ok) return await response.text();
+                console.error(`Failed to load section (${response.status}): ${sectionFile}`);
+            } catch (error) {
+                console.error(`Error loading section ${sectionFile} (attempt ${i + 1}):`, error);
             }
-        } catch (error) {
-            console.error(`Error loading section ${sectionFile}:`, error);
+            await new Promise(r => setTimeout(r, 250 * (i + 1)));
+        }
+        return null;
+    };
+
+    const loadPromises = Object.entries(sectionMappings).map(async ([containerId, sectionFile]) => {
+        const html = await fetchSection(sectionFile);
+        if (html === null) return;
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = html;
         }
     });
     await Promise.all(loadPromises);
-    // Initialize any interactive elements that depend on loaded sections
-    initializeInteractiveSections();
+    // Initialize any interactive elements that depend on loaded sections.
+    // Wrap so a failure here can't prevent the scroll re-fires below.
+    try {
+        initializeInteractiveSections();
+    } catch (e) {
+        console.error('initializeInteractiveSections failed:', e);
+    }
 
     // Make results blocks collapsible (efficiency + transfer)
     document.querySelectorAll('.content-block .collapsible-body').forEach((bodyEl) => {
@@ -57,8 +68,13 @@ async function loadSections() {
             }
         });
     });
-    // Trigger scroll event after all sections are loaded
-    window.dispatchEvent(new Event('scroll'));
+    // Trigger scroll recalculation after sections load. Fire several times to
+    // account for layout shifts as images/videos finish loading (more noticeable
+    // on slower hosts like GitHub Pages), plus once on full window load.
+    const fireScroll = () => window.dispatchEvent(new Event('scroll'));
+    fireScroll();
+    [100, 400, 1000, 2500].forEach(ms => setTimeout(fireScroll, ms));
+    window.addEventListener('load', fireScroll);
 }
 
 // Load sections when DOM is ready
@@ -276,19 +292,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const generalizationSection = document.getElementById('generalization-section');
         const yourTurnSection = document.getElementById('your-turn-section');
 
-        // If core sections are not yet present, skip the rest of the scroll logic
-        if (!summarySection || !methodSection || !resultsOverviewSection || !efficiencySection || !transferSection || !generalizationSection || !yourTurnSection) {
+        // Only bail if nothing has loaded yet. Otherwise run with whatever
+        // sections are present so a single slow/failed fetch (e.g. on GitHub
+        // Pages) can't freeze the whole scroll/highlight/task-button logic.
+        if (!summarySection && !methodSection && !resultsOverviewSection &&
+            !efficiencySection && !transferSection && !generalizationSection &&
+            !yourTurnSection) {
             return;
         }
 
+        // Safe rect: missing sections are treated as far off-screen (top = Infinity)
+        // so they never satisfy "top < threshold" checks below.
+        const OFF = { top: Infinity, bottom: Infinity };
+        const rectOf = (el) => (el ? el.getBoundingClientRect() : OFF);
+
         // Get section positions
-        const summaryRect = summarySection.getBoundingClientRect();
-        const methodRect = methodSection.getBoundingClientRect();
-        const resultsOverviewRect = resultsOverviewSection.getBoundingClientRect();
-        const efficiencyRect = efficiencySection.getBoundingClientRect();
-        const transferRect = transferSection.getBoundingClientRect();
-        const generalizationRect = generalizationSection.getBoundingClientRect();
-        const yourTurnRect = yourTurnSection.getBoundingClientRect();
+        const summaryRect = rectOf(summarySection);
+        const methodRect = rectOf(methodSection);
+        const resultsOverviewRect = rectOf(resultsOverviewSection);
+        const efficiencyRect = rectOf(efficiencySection);
+        const transferRect = rectOf(transferSection);
+        const generalizationRect = rectOf(generalizationSection);
+        const yourTurnRect = rectOf(yourTurnSection);
         
         // Show/hide left task buttons
         if (taskButtonsLeft) {
@@ -352,31 +377,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const showTransfer = transferRect.top < windowHeight * 0.75;
         const showEfficiency = efficiencyRect.top < windowHeight * 0.75;
 
-        // Reset section states
-        summarySection.classList.remove('fade-out');
-        efficiencySection.classList.remove('fade-in', 'fade-out', 'hidden-below');
-        transferSection.classList.remove('fade-in', 'fade-out', 'hidden-below');
-        generalizationSection.classList.remove('fade-in', 'fade-out', 'hidden-below');
+        // Reset section states (null-safe)
+        summarySection?.classList.remove('fade-out');
+        efficiencySection?.classList.remove('fade-in', 'fade-out', 'hidden-below');
+        transferSection?.classList.remove('fade-in', 'fade-out', 'hidden-below');
+        generalizationSection?.classList.remove('fade-in', 'fade-out', 'hidden-below');
 
         if (showGeneralization) {
-            summarySection.classList.add('fade-out');
-            efficiencySection.classList.add('fade-out');
-            transferSection.classList.add('fade-out');
-            generalizationSection.classList.add('fade-in');
+            summarySection?.classList.add('fade-out');
+            efficiencySection?.classList.add('fade-out');
+            transferSection?.classList.add('fade-out');
+            generalizationSection?.classList.add('fade-in');
         } else if (showTransfer) {
-            summarySection.classList.add('fade-out');
-            efficiencySection.classList.add('fade-out');
-            transferSection.classList.add('fade-in');
-            generalizationSection.classList.add('hidden-below');
+            summarySection?.classList.add('fade-out');
+            efficiencySection?.classList.add('fade-out');
+            transferSection?.classList.add('fade-in');
+            generalizationSection?.classList.add('hidden-below');
         } else if (showEfficiency) {
-            summarySection.classList.add('fade-out');
-            efficiencySection.classList.add('fade-in');
-            transferSection.classList.add('hidden-below');
-            generalizationSection.classList.add('hidden-below');
+            summarySection?.classList.add('fade-out');
+            efficiencySection?.classList.add('fade-in');
+            transferSection?.classList.add('hidden-below');
+            generalizationSection?.classList.add('hidden-below');
         } else {
-            efficiencySection.classList.add('hidden-below');
-            transferSection.classList.add('hidden-below');
-            generalizationSection.classList.add('hidden-below');
+            efficiencySection?.classList.add('hidden-below');
+            transferSection?.classList.add('hidden-below');
+            generalizationSection?.classList.add('hidden-below');
         }
 
     });
