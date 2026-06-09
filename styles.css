@@ -685,30 +685,8 @@ body.dark-mode .full-video-link:hover {
     color: #667eea;
 }
 
-body.dark-mode .timeline-nav {
-    background: transparent;
-}
-
-body.dark-mode .timeline-line {
-    background: rgba(102, 126, 234, 0.15);
-}
-
-body.dark-mode .timeline-dot {
-    background: #1a1a30;
-    border-color: rgba(102, 126, 234, 0.3);
-}
-
-body.dark-mode .timeline-item:hover .timeline-dot {
-    border-color: #667eea;
-}
-
-body.dark-mode .timeline-label {
-    color: #777;
-}
-
-body.dark-mode .timeline-item.active .timeline-label {
-    color: #667eea;
-}
+/* top chevron nav keeps its own (dark glass) styling in dark mode */
+body.dark-mode .timeline-label { color: inherit; }
 
 body.dark-mode .video-display {
     background: #1a1a30;
@@ -1593,106 +1571,88 @@ body.dark-mode .left-sidebar-hint::before {
     }
 }
 
+/* Top chevron stepper (replaces the old right-side rail) */
 .timeline-nav {
     position: fixed;
-    right: 30px;
-    top: 50%;
-    transform: translateY(-50%) translateZ(0);
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-110%);
     display: flex;
-    flex-direction: column;
-    gap: 0;
-    z-index: 100;
+    gap: 3px;
+    z-index: 1000;
+    max-width: 96vw;
+    padding: 8px 12px;
+    background: rgba(14, 17, 23, 0.72);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s ease;
-    will-change: opacity;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.4,0,.2,1);
 }
 
 .timeline-nav.visible {
     opacity: 1;
     pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
 }
 
-.timeline-line {
-    position: absolute;
-    right: 8px;
-    top: 18px;
-    bottom: 18px;
-    width: 3px;
-    background: rgba(102, 126, 234, 0.2);
-    border-radius: 2px;
-}
+.timeline-line { display: none; }
+.timeline-dot { display: none; }
 
+/* each step is a right-pointing chevron that interlocks with the next */
 .timeline-item {
     display: flex;
-    flex-direction: row-reverse;
     align-items: center;
-    gap: 15px;
-    padding: 16px 0;
+    padding: 7px 19px 7px 25px;
+    margin-right: -8px;                 /* the point of one nests into the notch of the next */
     text-decoration: none;
-    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    color: #aab2c5;
+    clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 50%, calc(100% - 11px) 100%, 0 100%, 11px 50%);
+    transition: background 0.25s ease, color 0.25s ease;
 }
-
-.timeline-dot {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 3px solid rgba(102, 126, 234, 0.4);
-    background: white;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-    z-index: 1;
+.timeline-item:first-child {
+    padding-left: 18px;
+    clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 50%, calc(100% - 11px) 100%, 0 100%);
+    border-radius: 8px 0 0 8px;
+}
+.timeline-item:last-child {
+    padding-right: 20px;
+    margin-right: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 11px 50%);
+    border-radius: 0 8px 8px 0;
 }
 
 .timeline-label {
-    font-size: 1em;
-    color: #999;
-    font-weight: 500;
-    white-space: nowrap;
-    transition: color 0.3s ease;
-    text-align: right;
-}
-
-.timeline-item:hover .timeline-dot {
-    border-color: #667eea;
-    transform: scale(1.1);
-}
-
-.timeline-item:hover .timeline-label {
-    color: #667eea;
-}
-
-.timeline-item.active .timeline-dot {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: transparent;
-    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.5);
-}
-
-.timeline-item.active .timeline-label {
-    color: #667eea;
+    font-size: 0.82rem;
     font-weight: 600;
+    color: inherit;
+    white-space: nowrap;
+    transition: none;
 }
 
-.timeline-sub-item {
-    padding-left: 12px;
+.timeline-item:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
 }
-.timeline-sub-item .timeline-dot {
-    width: 6px;
-    height: 6px;
+.timeline-item.active {
+    background: linear-gradient(135deg, #6E59C7 0%, #9a8af0 100%);
+    color: #fff;
 }
-.timeline-sub-item .timeline-label {
-    font-size: 0.85em;
+.timeline-item.active .timeline-label { font-weight: 700; }
+
+@media (max-width: 760px) {
+    .timeline-nav { padding: 6px 8px; gap: 2px; }
+    .timeline-item { padding: 6px 13px 6px 18px; margin-right: -7px; }
+    .timeline-label { font-size: 0.7rem; }
 }
 
 @media (max-width: 1400px) {
-    .timeline-nav {
-        right: 10px;
-    }
-    .timeline-label {
-        font-size: 0.8em;
-    }
+    .timeline-label--legacy { font-size: 0.8em; }
 }
 
 .video-modal {
@@ -2867,3 +2827,554 @@ a {
 a:hover {
     color: #667eea;
 }
+
+/* ============================================================
+   LM Roman (academic serif) — matches the explainer video
+   ============================================================ */
+@font-face{font-family:'LMRoman';src:url('Media/fonts/lmroman10-regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'LMRoman';src:url('Media/fonts/lmroman10-bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap;}
+@font-face{font-family:'LMRoman';src:url('Media/fonts/lmroman10-italic.otf') format('opentype');font-weight:400;font-style:italic;font-display:swap;}
+
+/* ============================================================
+   Hero — title + mug-on-plate rollout visualization
+   ============================================================ */
+.hero-section{
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:72px 24px 64px; text-align:center;
+    background:radial-gradient(1200px 720px at 50% -8%, #1b2233 0%, #0E1117 62%);
+}
+.hero-inner{max-width:1040px; width:100%; display:flex; flex-direction:column; align-items:center; text-align:center;}
+.hero-title{
+    font-family:'Space Grotesk','Inter','Segoe UI',sans-serif; font-weight:700;
+    line-height:1.08; font-size:clamp(2em,5.2vw,3.7em); letter-spacing:-0.02em;
+    width:100%; max-width:960px; margin:0 auto 8px;
+    text-align:center; text-wrap:balance;
+    background:linear-gradient(94deg,#ffffff 0%,#eef0ff 40%,#c4caff 100%);
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent;
+    filter:drop-shadow(0 3px 26px rgba(120,130,255,0.18));
+}
+.hero-section .authors-section{position:static; transform:none; top:auto; left:auto; width:auto; max-width:none; margin:6px auto 0;}
+.hero-section .authors-list{font-size:1.05rem;}
+.hero-section .authors-list a{color:rgba(255,255,255,0.7); cursor:default; letter-spacing:0.3px;}
+/* video + "NO <assumption list>" side by side */
+.hero-showcase{
+    display:flex; flex-wrap:wrap; align-items:stretch; justify-content:center;
+    gap:22px 18px; width:min(980px,100%); margin:26px auto 0;
+}
+/* video column: the rollout video with its caption directly beneath it.
+   No flex-grow, so the rotator+video stay a tight group centered under the title. */
+.hero-media{flex:0 1 440px; display:flex; flex-direction:column; min-width:0;}
+.hero-rollout{
+    margin:0;
+    border-radius:16px; overflow:hidden; background:#0b0e14;
+    border:1px solid #2a2f44; box-shadow:0 18px 50px rgba(0,0,0,0.45);
+}
+.hero-rollout video{width:100%; display:block;}
+
+/* a static "NO" beside a vertical carousel of assumptions, sized to the video height */
+.hero-claim{
+    position:relative; flex:0 1 300px; min-width:262px;
+    align-self:stretch; overflow:hidden; text-align:left;
+    cursor:grab; user-select:none; -webkit-user-select:none; touch-action:pan-x;
+    font-size:clamp(1.05em,2.15vw,1.58em);
+    /* peak at the center (NO's line) and fall off gently with distance, so words decay the further away */
+    -webkit-mask-image:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.5) 22%,rgba(0,0,0,0.85) 38%,#000 50%,rgba(0,0,0,0.85) 62%,rgba(0,0,0,0.5) 78%,transparent 100%);
+    mask-image:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.5) 22%,rgba(0,0,0,0.85) 38%,#000 50%,rgba(0,0,0,0.85) 62%,rgba(0,0,0,0.5) 78%,transparent 100%);
+}
+.hero-claim.is-dragging{cursor:grabbing;}
+.hero-claim.is-dragging .hero-list{transition:none !important;}
+.hero-claim__no{
+    position:absolute; left:0; top:50%; transform:translateY(-50%); z-index:2;
+    font-family:'Space Grotesk','Inter','Segoe UI',sans-serif; font-weight:700;
+    font-size:1.18em; line-height:1; color:#E0705A; letter-spacing:0.04em;
+}
+.hero-list{
+    list-style:none; margin:0; padding:0 0 0 2.35em;
+    position:absolute; left:0; right:0; top:0;
+    transition:transform .55s cubic-bezier(.4,0,.2,1); will-change:transform;
+}
+.rotator__word{
+    display:flex; align-items:center; white-space:nowrap;
+    font-family:'Space Grotesk','Inter','Segoe UI',sans-serif; font-weight:700;
+    font-size:1em; line-height:1;
+    color:#7b8294; opacity:0.3;                         /* dimmed: focus removed */
+    transition:opacity .5s ease, color .5s ease;
+}
+.rotator__word.is-active{                               /* only the one beside NO is in focus */
+    opacity:1;
+    background:linear-gradient(94deg,#ffffff 0%,#d7dbff 55%,#b3bbff 100%);
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent;
+}
+
+/* small caption sitting just under the video (not spanning the rotator) */
+.hero-tagline{
+    font-family:'Inter','Segoe UI',sans-serif; color:#7c8498;
+    font-size:clamp(0.74em,1.05vw,0.84em); letter-spacing:0.2px; line-height:1.45;
+    width:100%; margin:10px 0 0; text-align:center;
+}
+.hero-tagline strong{color:#aab2c5; font-weight:600;}
+
+/* respect reduced-motion: show the first assumption, no scrolling */
+@media (prefers-reduced-motion: reduce){
+    .hero-list{transition:none;}
+}
+
+/* ============================================================
+   Baseline Models — interactive component diagram
+   ============================================================ */
+.baseline-picker{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:26px auto 4px auto;}
+.baseline-btn{
+    display:flex; flex-direction:column; align-items:center; gap:3px; min-width:164px;
+    padding:14px 24px; border:2px solid #d8dde8; border-radius:14px; background:#f7f8fb; color:#3a4151;
+    cursor:pointer; font-family:'Inter','Segoe UI',sans-serif;
+    transition:border-color .2s, background .2s, color .2s, box-shadow .2s, transform .12s;
+}
+.baseline-btn:hover{transform:translateY(-2px); border-color:#b9c0d0;}
+.baseline-btn__name{font-weight:700; font-size:1.12em;}
+.baseline-btn__sub{font-size:.8em; color:#8a93a3;}
+.baseline-btn.active{border-color:#6E59C7; background:#efeaff; color:#4a3fb0; box-shadow:0 5px 16px rgba(110,89,199,.2);}
+.baseline-btn.active .baseline-btn__sub{color:#7d6fd0;}
+
+/* break the stage out a little wider so the (taller) diagram + side panel both fit */
+.baseline-stage{position:relative; left:50%; transform:translateX(-50%); width:min(1180px,95vw); margin:20px 0 0;}
+.bl-layout{display:flex; gap:16px; align-items:stretch; width:100%;}
+.bl-layout .baseline-diagram{flex:1 1 auto; min-width:0;}
+
+/* side panel: method info (top, 2/3) + dynamic component tooltip (bottom, 1/3) */
+.bl-side{flex:0 0 246px; display:flex; flex-direction:column; gap:12px;}
+.bl-side__box{
+    background:linear-gradient(180deg,#161d2b,#10141e); border:1px solid #29324a;
+    border-radius:14px; padding:14px 16px; color:#cdd3e0; overflow:auto;
+    font-family:'Inter','Segoe UI',sans-serif;
+}
+.bl-side__info{flex:2 1 0;}
+.bl-side__tip{flex:1 1 0;}
+.bl-side__eyebrow{font-size:.62rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#7c86a0; margin-bottom:6px;}
+.bl-side__title{font-family:'Space Grotesk','Inter',sans-serif; font-weight:700; font-size:1.05rem; color:#fff; margin-bottom:6px; line-height:1.2;}
+.bl-side__tip .bl-side__title{font-size:.95rem;}
+.bl-side__body{font-size:.82rem; line-height:1.5; color:#aab2c5;}
+.bl-side__body em{color:#d8d2f5; font-style:italic;}
+
+/* severed interaction path (BC) */
+.bl-wire--dead{stroke:#E0705A; stroke-dasharray:5 5; opacity:.85;}
+.bl-wire--cut{stroke:#E0705A; stroke-width:2.6; stroke-linecap:round; fill:none;}
+
+@media (max-width:760px){
+    .baseline-stage{left:auto; transform:none; width:100%; margin-left:auto; margin-right:auto;}
+    .bl-layout{flex-direction:column;}
+    .bl-side{flex:0 0 auto; flex-direction:row;}
+    .bl-side__box{flex:1;}
+}
+.baseline-pillars{display:flex; flex-wrap:wrap; gap:18px; justify-content:center; margin-bottom:10px;}
+.pillar-chip{display:inline-flex; align-items:center; gap:7px; font-size:.85em; font-weight:600; color:#6b7280; opacity:.4; transition:opacity .3s, color .3s;}
+.pillar-chip .pillar-dot{width:11px; height:11px; border-radius:50%; background:#c4cad6; transition:background .3s;}
+.pillar-chip.on{opacity:1; color:#3a4151;}
+.pillar-chip[data-pillar="P"].on .pillar-dot{background:#E0A53B;}
+.pillar-chip[data-pillar="M"].on .pillar-dot{background:#E0705A;}
+.pillar-chip[data-pillar="O"].on .pillar-dot{background:#C58BE0;}
+
+/* dark, video-styled diagram canvas */
+.baseline-diagram{
+    width:100%; height:auto; display:block;
+    background:radial-gradient(900px 520px at 50% 0%, #161d2b 0%, #0E1117 72%);
+    border:1px solid #232a3d; border-radius:16px; padding:10px;
+}
+.baseline-diagram text{font-family:'LMRoman',Georgia,'Times New Roman',serif;}
+
+/* wires */
+.bl-wire{fill:none; stroke:#8A93A3; stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round;}
+.bl-wire--purple{stroke:#A99BF5;}
+/* off-policy "electron": flows along the row, behind the semi-transparent blocks */
+.bl-wire--replay{stroke:#C58BE0; stroke-width:2.6; stroke-dasharray:2.5 8; stroke-linecap:round;
+    animation:bl-flow .85s linear infinite; filter:drop-shadow(0 0 3px rgba(197,139,224,.75));}
+@keyframes bl-flow{to{stroke-dashoffset:-21;}}
+
+/* boxes: faint fill + colored border (video look) */
+.bl-box rect, .bl-poly{stroke-width:2; stroke-linejoin:round;}
+.bl-box text{fill:#E8EAED; font-weight:700; font-size:13px; text-anchor:middle;}
+.bl-box .bl-box-sub{font-weight:400; font-size:11px; fill:#9aa2b5;}
+.bl-box--reward .bl-poly{stroke:#7FB069; fill:rgba(127,176,105,.16);}
+.bl-box--policy rect{stroke:#A99BF5; fill:rgba(169,155,245,.16);}
+.bl-box--dynamics rect{stroke:#E0705A; fill:rgba(224,112,90,.16);}
+.bl-box--value rect{stroke:#E0A53B; fill:rgba(224,165,59,.16);}
+.bl-box--value-on rect{stroke:#5FB3A8; fill:rgba(95,179,168,.18);}
+
+/* encoders (right-pointing wedge) */
+.bl-enc{fill:rgba(91,177,232,.16); stroke:#5BB1E8; stroke-width:1.9; stroke-linejoin:round;}
+.bl-enc-label{text-anchor:middle; font-weight:700; font-size:10px; fill:#E8EAED;}
+
+/* input image panels */
+.bl-panel-bg{fill:#0b0e14;}
+.bl-panel-frame{fill:none; stroke:#5E6B86; stroke-width:1.7;}
+.bl-label{text-anchor:middle; font-size:11px; fill:#cbd2de;}
+
+/* planner enclosure — pointer-events:all makes the whole interior a hover target
+   (inner boxes sit on top and capture their own hovers) so the tooltip is easy to find */
+.bl-planner{fill:transparent; stroke:#E0A53B; stroke-width:2; pointer-events:all;}
+.bl-planner-label{text-anchor:middle; font-weight:700; font-size:11px; fill:#E0A53B;}
+
+/* supervision enclosure (human guidance), now confined to the task-observation area */
+.bl-supervision{fill:transparent; stroke:#8f9bb3; stroke-width:2; stroke-dasharray:7 5; pointer-events:all;}
+.bl-supervision-label{text-anchor:middle; font-weight:400; font-size:11px; fill:#e8eaed;}
+.bl-box--actions rect{stroke:#A99BF5; fill:rgba(169,155,245,.16);}
+.bl-box--actions text, .bl-box--handrew text{font-size:12px;}
+.bl-box--handrew rect{stroke:#E0A53B; fill:rgba(224,165,59,.16);}
+.bl-wire--rew{stroke:#E0A53B;}
+/* a supervision box/enclosure shown but not used by the current method (e.g. reward under BC,
+   or the whole enclosure under an IRL method) is greyed */
+.bl-box.bl-sup-off{opacity:0.5;}
+[data-comp="supervision"].bl-sup-off{opacity:0.45;}
+.bl-box.bl-sup-off rect{stroke:#5a6378 !important; fill:rgba(255,255,255,0.025) !important;}
+.bl-box.bl-sup-off text{fill:#7c86a0 !important;}
+/* invisible thick hover target for thin lines (e.g. the electron) */
+.bl-hit{fill:none; stroke:transparent; stroke-width:16; pointer-events:stroke; cursor:pointer;}
+/* clickable "ghost" placeholders to re-enable an off pillar (dynamics / planner) */
+.bl-ghost{cursor:pointer; transition:opacity .35s ease;}
+.bl-ghost rect{fill:rgba(255,255,255,0.02); stroke:#5E6B86; stroke-width:1.6; stroke-dasharray:5 4;
+    transition:stroke .2s ease, fill .2s ease;}
+.bl-ghost-label{text-anchor:middle; font-size:11px; fill:#8A93A3;}
+.bl-ghost:hover rect{stroke:#aeb6c6; fill:rgba(255,255,255,0.05);}
+.bl-ghost:hover .bl-ghost-label{fill:#cbd2de;}
+.bl-ghost--pill rect{fill:rgba(224,165,59,0.06); stroke:#E0A53B;}
+.bl-ghost--pill .bl-ghost-label{fill:#E0A53B; font-size:10px; font-weight:700;}
+.bl-ghost--pill:hover rect{fill:rgba(224,165,59,0.16);}
+/* planner ghost greyed out until a model exists */
+.bl-ghost.bl-ghost--disabled{cursor:not-allowed;}
+.bl-ghost--disabled rect{stroke:#4a5468 !important; fill:rgba(255,255,255,0.015) !important;}
+.bl-ghost--disabled .bl-ghost-label{fill:#5a6378 !important;}
+
+/* offline / hidden states */
+.bl-hidden{opacity:0 !important; pointer-events:none;}
+.bl-dim{opacity:0.3; filter:grayscale(0.55); transition:opacity .45s ease, filter .45s ease;}
+
+/* spacing before the non-ablation baselines (RLPD / BC) */
+.baseline-btn--gap{margin-left:30px; position:relative;}
+.baseline-btn--gap::before{content:""; position:absolute; left:-16px; top:14%; height:72%; width:1px; background:rgba(120,130,150,0.35);}
+
+/* small annotations */
+.bl-mini{text-anchor:middle; font-size:11.5px; fill:#8A93A3; font-style:italic;}
+
+/* animated transitions: components slide + fade away (matches the video's fall-away) */
+.bl-comp{transition:opacity .5s ease, transform .55s cubic-bezier(.4,0,.2,1);}
+.bl-comp.is-off{opacity:0; transform:translateY(58px); pointer-events:none;}
+.bl-comp--fade{transition:opacity .45s ease;}
+.bl-comp--fade.is-off{opacity:0; transform:none;}
+/* the two value heads share one slot: the inactive one tucks below and fades */
+.bl-value-q.is-off, .bl-value-v.is-off{opacity:0; transform:translateY(42px); pointer-events:none;}
+
+/* ----- hover / keyboard focus on blocks (animate a focus + show explainer) ----- */
+.bl-box, .bl-enc, .bl-planner, .bl-input{cursor:pointer;}
+.bl-box{transform-box:fill-box; transform-origin:center;
+    transition:opacity .5s ease, transform .3s cubic-bezier(.34,1.3,.5,1), filter .2s ease;}
+.bl-box:hover, .bl-box.bl-focus{transform:scale(1.07);}
+.bl-box:hover :is(rect,.bl-poly), .bl-box.bl-focus :is(rect,.bl-poly){filter:brightness(1.35);}
+.bl-enc{transform-box:fill-box; transform-origin:center; transition:transform .25s cubic-bezier(.34,1.3,.5,1), filter .2s ease;}
+.bl-enc:hover, .bl-enc.bl-focus{transform:scale(1.12); filter:brightness(1.3);}
+.bl-planner{transition:stroke-width .2s ease, filter .2s ease;}
+.bl-planner:hover, .bl-planner.bl-focus{stroke-width:3; filter:drop-shadow(0 0 5px rgba(224,165,59,.6));}
+.bl-input:hover .bl-panel-frame, .bl-input.bl-focus .bl-panel-frame{stroke:#aeb6c6; stroke-width:2.6;}
+[data-tip]{outline:none;}
+
+/* hover explainer popup */
+.bl-tip{
+    position:absolute; left:0; top:0; z-index:20; width:max-content; max-width:280px;
+    padding:11px 14px; border-radius:12px;
+    background:rgba(18,23,34,0.97); border:1px solid #2f3850;
+    box-shadow:0 12px 32px rgba(0,0,0,0.55);
+    opacity:0; transform:translateY(4px); pointer-events:none;
+    transition:opacity .16s ease, transform .16s ease;
+    font-family:'Inter','Segoe UI',sans-serif; text-align:left;
+}
+.bl-tip.is-visible{opacity:1; transform:translateY(0);}
+.bl-tip__title{font-weight:700; font-size:.92rem; color:#fff; margin-bottom:3px;}
+.bl-tip__body{font-size:.82rem; line-height:1.45; color:#b9c0d0;}
+.bl-tip__body em{color:#d8d2f5; font-style:italic;}
+
+.baseline-caption{text-align:center; margin:16px auto 0 auto; max-width:760px; color:#4a5160; font-size:.96em; line-height:1.5; min-height:1.4em;}
+.baseline-caption strong{color:#2b3140;}
+
+/* dark-mode (page chrome around the always-dark diagram) */
+body.dark-mode .baseline-btn{background:#1b1e2e; border-color:#353a52; color:#c7ccda;}
+body.dark-mode .baseline-btn:hover{border-color:#4a5176;}
+body.dark-mode .baseline-btn__sub{color:#7f879c;}
+body.dark-mode .baseline-btn.active{background:#2a2350; border-color:#a5b4fc; color:#cdc6ff;}
+body.dark-mode .pillar-chip.on{color:#d6dae6;}
+body.dark-mode .baseline-caption{color:#b4bbcb;}
+body.dark-mode .baseline-caption strong{color:#e8eaed;}
+
+@media (max-width:600px){
+    .baseline-btn{min-width:0; flex:1 1 44%; padding:8px 10px;}
+    .baseline-pillars{gap:12px;}
+}
+
+/* ============================================================
+   Fullscreen video: letterbox instead of cropping the sides.
+   Overrides inline object-fit:cover (which crops in fullscreen).
+   ============================================================ */
+video:fullscreen,
+video:-webkit-full-screen {
+    object-fit: contain !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #000;
+}
+
+/* ============================================================
+   Scroll-scrubbed story (Overview): video driven by scroll
+   ============================================================ */
+.story{position:relative; height:760vh; background:#0E1117;
+    width:100vw; margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw);}
+.story__track{height:100%;}
+/* dev/verification only: ?storyp=… pins the stage to the viewport top for headless capture */
+.story--forced .story__stage{position:fixed; inset:0; height:100vh; z-index:99999;}
+.story__stage{
+    position:sticky; top:0; height:100vh; overflow:hidden;
+    background:radial-gradient(1200px 700px at 50% 0%, #161d2b 0%, #0E1117 70%);
+    display:flex; align-items:center; justify-content:center;
+}
+/* native scroll-driven diagram (replaces the rendered video) */
+.story__diagram{
+    width:min(1180px,94%); height:auto; max-height:74vh; display:block;
+    margin-top:-2vh;
+    pointer-events:none;   /* purely scroll-driven: prevents hover transforms fighting the layout engine */
+}
+.story__diagram text{font-family:'LMRoman',Georgia,'Times New Roman',serif;}
+/* input panels/encoders/decks are positioned by the JS layout engine (transform attribute);
+   they only fade in/out via opacity so the transforms aren't overridden */
+.story__diagram .st-panel{transition:opacity .5s ease;}
+.story__diagram .st-panel.is-off{opacity:0;}
+/* the input photos fade into the background once the reward / architecture is introduced */
+.story__diagram .bl-input image{transition:opacity .6s ease;}
+.story__diagram.st-dim-imgs .bl-input image{opacity:0.42;}
+/* story-only wire flavors */
+.story__diagram .bl-wire--red{stroke:#E0705A;}
+.story__diagram .st-return{transition:stroke .45s ease, stroke-width .45s ease, stroke-dasharray .45s ease;}
+.story__diagram .st-return.st-sketchy{stroke:#E0705A; stroke-width:2.4; stroke-dasharray:3 7;}
+/* deck groups fade by OPACITY ONLY (no transform reset) so they fade in place instead of snapping
+   to home — the layout engine keeps positioning them via the transform attribute even while hidden */
+.story__diagram .st-deck-grp{transition:opacity .5s ease;}
+.story__diagram .st-deck-grp.is-off{opacity:0; pointer-events:none;}
+/* obs data deck (manual-data stack): frames are fanned via CSS, then collapse back into the
+   obs panel (st-collapse) as IRL begins, so it decreases rather than vanishing abruptly */
+.story__diagram .st-deck{fill:rgba(91,177,232,.10); stroke:#5BB1E8; stroke-width:1.4; opacity:.55;}
+.story__diagram .st-deck--red{fill:rgba(224,112,90,.12); stroke:#E0705A;}
+.story__diagram [data-comp="obsDeck"] .st-deck{transition:transform .6s cubic-bezier(.4,0,.2,1);}
+.story__diagram [data-comp="obsDeck"] .st-deck:nth-of-type(1){transform:translate(24px,-26px);}
+.story__diagram [data-comp="obsDeck"] .st-deck:nth-of-type(2){transform:translate(15px,-16px);}
+.story__diagram [data-comp="obsDeck"] .st-deck:nth-of-type(3){transform:translate(7px,-8px);}
+.story__diagram [data-comp="obsDeck"].st-collapse .st-deck{transform:translate(0,0);}
+/* interaction deck collapses into the panel as it goes away (same idea as the obs stack).
+   Both the plain rects and the terminal frames are fanned via CSS transforms so the collapse
+   (st-collapse -> translate(0,0)) can override them cleanly. */
+.story__diagram [data-comp="intDeck"] .st-deck--red,
+.story__diagram .st-term-frame{transition:transform .55s cubic-bezier(.4,0,.2,1);}
+/* terminal frames are fanned via CSS so the collapse can override them */
+.story__diagram .st-term-1{transform:translate(24px,-36px);}
+.story__diagram .st-term-2{transform:translate(16px,-24px);}
+.story__diagram .st-term-3{transform:translate(8px,-12px);}
+/* collapse: plain rects (positioned at x44/36/28) retract to the base; terminal frames go to 0 */
+/* during an expand, snap to the collapsed start with transitions off, then fan out */
+.story__diagram .st-deck-grp.st-deck-instant .st-deck--red,
+.story__diagram .st-deck-grp.st-deck-instant .st-term-frame{transition:none !important;}
+.story__diagram [data-comp="intDeck"].st-collapse .st-deck--red:nth-of-type(1){transform:translate(-24px,36px);}
+.story__diagram [data-comp="intDeck"].st-collapse .st-deck--red:nth-of-type(2){transform:translate(-16px,24px);}
+.story__diagram [data-comp="intDeck"].st-collapse .st-deck--red:nth-of-type(3){transform:translate(-8px,12px);}
+.story__diagram [data-comp="intDeck"].st-collapse .st-term-frame{transform:translate(0,0);}
+/* interaction deck: plain red stack (inefficiency) crossfading to terminal/code windows (simulation) */
+.story__diagram .st-deck-plain,
+.story__diagram .st-deck-sim{transition:opacity .45s ease;}
+.story__diagram .st-deck-sim{opacity:0;}
+.story__diagram [data-comp="intDeck"].is-sim .st-deck-plain{opacity:0;}
+.story__diagram [data-comp="intDeck"].is-sim .st-deck-sim{opacity:1;}
+.story__diagram .st-term{fill:#0a0f16; stroke:#2f6f4f; stroke-width:1.4;}
+.story__diagram .st-term-bar{fill:#10241a;}
+.story__diagram .st-term-line{fill:#2f8f5f; opacity:.65;}
+.story__diagram .st-term-prompt{fill:#3ddc84; font-family:'SFMono-Regular',Menlo,Consolas,monospace; font-size:7.5px;}
+/* recycle loop on the RL box (runs to convergence, over and over) */
+.story__diagram .st-recycle{fill:none; stroke:#E0705A; stroke-width:2.2; stroke-linecap:round;
+    animation:st-spin 2.4s linear infinite; transform-box:fill-box; transform-origin:center;}
+.story__diagram .st-recycle--dim{opacity:.3; animation:none;}
+@keyframes st-spin{to{transform:rotate(360deg);}}
+.story__diagram .st-cut{stroke:#E0705A; stroke-width:3; stroke-linecap:round; fill:none;}
+/* "(prior)" appears only at the MPAIL con (st-prior-show), then gets crossed out and fades when the
+   dynamics is learned online (st-dyn-online: the strike animates across before vanishing). */
+.story__diagram .st-dyn-sub{opacity:0; transition:opacity .3s ease;}
+.story__diagram .bl-box.st-prior-show .st-dyn-sub{opacity:1;}
+.story__diagram .st-strike{stroke:#E0705A; stroke-width:2.4; stroke-linecap:round;
+    opacity:0; transform:scaleX(0); transform-box:fill-box; transform-origin:left;}
+.story__diagram .bl-box.st-dyn-online .st-strike{animation:st-strike-draw .95s ease forwards;}
+.story__diagram .bl-box.st-dyn-online .st-dyn-sub{animation:st-sub-fade .95s ease forwards;}
+@keyframes st-strike-draw{0%{opacity:1; transform:scaleX(0);} 45%{opacity:1; transform:scaleX(1);}
+    78%{opacity:1; transform:scaleX(1);} 100%{opacity:0; transform:scaleX(1);}}
+@keyframes st-sub-fade{0%,52%{opacity:1;} 100%{opacity:0;}}
+/* planner enclosure: the rect's x/width are tweened in JS to wrap the current boxes;
+   the group itself just fades in/out */
+.story__diagram .st-planner{transition:opacity .55s ease;}
+.story__diagram .st-planner.is-off{opacity:0; pointer-events:none;}
+/* the reward/value/policy cluster slides as a unit (transform set on #st-rvp by the layout engine) */
+.story__diagram #st-rvp{transition:none;}
+/* mode toggle (scroll vs narrated), top-right of the stage */
+.story__mode{
+    position:absolute; top:54px; right:18px; z-index:7; display:inline-flex; gap:3px; padding:4px;
+    background:rgba(14,17,23,0.6); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.09); border-radius:999px;
+}
+.story__mode-btn{
+    font-family:'Space Grotesk','Inter',sans-serif; font-size:.72rem; font-weight:600; letter-spacing:.03em;
+    color:#8a93a8; padding:5px 13px; border-radius:999px; border:none; background:transparent; cursor:pointer;
+    transition:color .25s, background .25s;
+}
+.story__mode-btn:hover{color:#fff;}
+.story__mode-btn.is-active{color:#fff; background:linear-gradient(135deg,#6E59C7,#9a8af0);}
+/* narrated overview video (shown only in narrated mode) */
+.story__video{
+    display:none; width:min(1100px,92%); aspect-ratio:16/9; max-height:78vh; height:auto;
+    object-fit:contain; border-radius:14px; position:relative; z-index:6; pointer-events:auto;
+    background:#0b0e14; border:1px solid #2a2f44; box-shadow:0 18px 50px rgba(0,0,0,0.45);
+}
+.story--narrated .story__video{display:block;}
+.story--narrated .story__diagram,
+.story--narrated .story__chapters,
+.story--narrated .story__captions,
+.story--narrated .story__cite,
+.story--narrated .story__progress,
+.story--narrated .story__hint{display:none;}
+.story--narrated{height:118vh;}
+/* chapter rail — sits just below the global chevron nav (inside the pinned stage) */
+.story__chapters{
+    position:absolute; top:54px; left:50%; transform:translateX(-50%);
+    display:flex; gap:7px; z-index:6; flex-wrap:wrap; justify-content:center; padding:5px 8px;
+    background:rgba(14,17,23,0.55); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.07); border-radius:999px;
+}
+.story__chip{
+    font-family:'Space Grotesk','Inter',sans-serif; font-size:.74rem; font-weight:600; letter-spacing:.04em;
+    color:#8a93a8; padding:5px 13px; border-radius:999px; line-height:1.2; cursor:pointer;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+    transition:color .3s, background .3s, border-color .3s, transform .15s ease;
+}
+.story__chip:hover{color:#fff; border-color:rgba(169,155,245,0.5);}
+.story__chip:active{transform:translateY(1px);}
+.story__chip.is-on{color:#fff; background:linear-gradient(135deg,#6E59C7,#9a8af0); border-color:transparent;}
+/* skip-to-end button, set off from the chapter chips */
+.story__skip{margin-left:6px; color:#c9c2ff; background:transparent; border-color:rgba(169,155,245,0.4);}
+.story__skip::before{content:""; position:absolute; margin-left:-12px; height:60%; top:20%; width:1px; background:rgba(255,255,255,0.12);}
+.story__skip{position:relative;}
+.story__skip:hover{background:rgba(169,155,245,0.14); border-color:rgba(169,155,245,0.7);}
+/* caption band: a zero-height anchor line a comfortable distance above the bottom; each caption is
+   vertically CENTERED on this line, so 1- and 2-line captions stay put instead of growing down. */
+.story__captions{
+    position:absolute; left:50%; bottom:15%; transform:translateX(-50%);
+    width:min(820px,90%); z-index:4; text-align:center; pointer-events:none;
+}
+.story__cap{
+    position:absolute; left:0; right:0; bottom:0; margin:0 auto;
+    font-family:'Inter','Segoe UI',sans-serif; font-size:clamp(1.05em,2.1vw,1.5em); line-height:1.45;
+    color:#eef1f7; text-shadow:0 2px 18px rgba(0,0,0,0.7);
+    opacity:0; transform:translateY(calc(50% + 14px)); transition:opacity .45s ease, transform .45s ease;
+    background:rgba(12,16,24,0.55); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+    border-radius:14px; padding:14px 22px; border:1px solid rgba(255,255,255,0.06);
+}
+.story__cap b{color:#fff; font-weight:700;}
+.story__cap i{color:#cdc6ff; font-style:italic;}
+.story__cap.is-on{opacity:1; transform:translateY(50%);}
+.story__cap--con{border-color:rgba(224,112,90,0.5); background:rgba(36,18,14,0.6);}
+.story__cap--con b{color:#ffb59f;}
+.story__cap--con::before{content:"\26A0\FE0E"; color:#E0705A; margin-right:8px; font-weight:700;}
+.story__cap--hero{border-color:rgba(169,155,245,0.55); background:rgba(26,22,52,0.62);}
+.story__cap--hero b{color:#c9c2ff;}
+/* per-method paper citation (bottom-right, swaps per method) */
+.story__cite{
+    position:absolute; right:20px; bottom:24px; z-index:6; max-width:340px;
+    display:inline-flex; align-items:baseline; gap:7px; text-decoration:none;
+    font-family:'Inter','Segoe UI',sans-serif; font-size:.78rem; line-height:1.35; color:#aab2c5;
+    background:rgba(14,17,23,0.6); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.09); border-radius:10px; padding:7px 12px;
+    opacity:0; transform:translateY(8px); pointer-events:none; transition:opacity .4s ease, transform .4s ease, border-color .2s, color .2s;
+}
+.story__cite.is-on{opacity:1; transform:translateY(0); pointer-events:auto;}
+/* subtle frame counter, bottom-left */
+.story__counter{
+    position:absolute; left:20px; bottom:26px; z-index:6;
+    font-family:'SFMono-Regular',Menlo,Consolas,monospace; font-size:.7rem; letter-spacing:.06em;
+    color:#5a6378; pointer-events:none; -webkit-font-smoothing:antialiased;
+}
+.story--narrated .story__counter{display:none;}
+.story__cite--plain{cursor:default;}
+.story__cite--plain:hover{color:#aab2c5; border-color:rgba(255,255,255,0.09);}
+.story__cite:hover{color:#eef1f7; border-color:rgba(169,155,245,0.5);}
+.story__cite-m{font-family:'Space Grotesk','Inter',sans-serif; font-weight:700; color:#c9c2ff; letter-spacing:.02em;}
+.story__cite-arr{color:#8a93a8;}
+.story__cite:hover .story__cite-arr{color:#c9c2ff;}
+@media (max-width:760px){ .story__cite{display:none;} }
+/* animation-loop progress bar (small, just above the caption) */
+.story__animbar{
+    position:absolute; left:50%; bottom:24%; transform:translateX(-50%);
+    width:132px; height:3px; border-radius:3px; overflow:hidden; z-index:4;
+    background:rgba(255,255,255,0.12); opacity:0; transition:opacity .35s ease; pointer-events:none;
+}
+.story__animbar.is-on{opacity:1;}
+.story__animbar span{display:block; height:100%; width:0; border-radius:3px; background:linear-gradient(90deg,#6E59C7,#9a8af0);}
+.story--narrated .story__animbar{display:none;}
+/* used during a loop reset to jump to the start instantly (no transitions/keyframes) */
+.story__diagram.st-no-anim, .story__diagram.st-no-anim *{transition:none !important; animation:none !important;}
+/* progress bar */
+.story__progress{position:absolute; left:0; right:0; bottom:0; height:4px; background:rgba(255,255,255,0.07); z-index:5;}
+.story__progress span{display:block; height:100%; width:0; background:linear-gradient(90deg,#6E59C7,#9a8af0);}
+/* scroll hint */
+.story__hint{
+    position:absolute; left:50%; bottom:26px; transform:translateX(-50%); z-index:5;
+    font-family:'Inter',sans-serif; font-size:.8rem; color:#aab2c5; letter-spacing:.08em; text-transform:uppercase;
+    transition:opacity .4s ease;
+}
+.story__hint span{display:inline-block; animation:story-bob 1.4s ease-in-out infinite;}
+@keyframes story-bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)}}
+.story.is-scrolling .story__hint{opacity:0;}
+
+@media (max-width:760px){
+    .story{height:680vh;}
+    .story__captions{bottom:16%;}
+}
+
+/* ============================================================
+   Key Contributions — cards that expand into their claims on hover/focus
+   ============================================================ */
+.contrib-sub{margin-bottom:18px;}
+.contrib-list{display:flex; flex-direction:column; gap:14px; text-align:left; max-width:920px; margin:0 auto;}
+.contrib{
+    --ca:#34d399;
+    background:#141a26; border:1px solid #232a3d; border-left:4px solid var(--ca);
+    border-radius:12px; padding:16px 20px; cursor:pointer; outline:none;
+    transition:background .25s, border-color .25s, box-shadow .25s;
+}
+.contrib--a{--ca:#7FB069;} .contrib--b{--ca:#E0A53B;} .contrib--c{--ca:#A99BF5;}
+.contrib:hover, .contrib:focus-visible, .contrib:focus-within{
+    background:#171d2b; border-color:#2e3650; box-shadow:0 8px 28px rgba(0,0,0,0.28);
+}
+.contrib__head{display:flex; align-items:center; gap:13px;}
+.contrib__num{
+    flex:0 0 auto; width:27px; height:27px; border-radius:50%; display:grid; place-items:center;
+    font-family:'Space Grotesk','Inter',sans-serif; font-weight:700; font-size:.86rem;
+    color:#0E1117; background:var(--ca);
+}
+.contrib__title{margin:0; flex:1; font-family:'Space Grotesk','Inter',sans-serif;
+    font-size:1.05rem; font-weight:700; line-height:1.3; color:#fff;}
+.contrib__more{flex:0 0 auto; color:#8a93a8; font-size:1.35rem; line-height:1; transition:transform .3s ease, color .25s;}
+.contrib:hover .contrib__more, .contrib:focus-within .contrib__more{transform:rotate(45deg); color:var(--ca);}
+.contrib__lead{margin:11px 0 0; font-size:.92rem; line-height:1.55; color:#c2c9d6;}
+.contrib__lead b{color:#fff;}
+/* collapsible claims via the grid 0fr -> 1fr trick */
+.contrib__claims{display:grid; grid-template-rows:0fr; transition:grid-template-rows .35s ease, margin-top .35s ease;}
+.contrib__claims-inner{overflow:hidden; min-height:0; opacity:0; transition:opacity .3s ease;}
+.contrib:hover .contrib__claims, .contrib:focus-within .contrib__claims{grid-template-rows:1fr; margin-top:13px;}
+.contrib:hover .contrib__claims-inner, .contrib:focus-within .contrib__claims-inner{opacity:1;}
+.contrib__claims ul{list-style:none; margin:0; padding:0;}
+.contrib__claims li{position:relative; padding:7px 0 7px 22px; font-size:.875rem; line-height:1.5;
+    color:#aab2c5; border-top:1px solid rgba(255,255,255,0.05);}
+.contrib__claims li:first-child{border-top:none;}
+.contrib__claims li::before{content:""; position:absolute; left:3px; top:13px; width:8px; height:8px;
+    border-radius:50%; background:var(--ca); opacity:.85;}
+.contrib__claims b{color:#eef1f7; font-weight:700;}

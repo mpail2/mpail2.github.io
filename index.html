@@ -2,7 +2,7 @@
 <html lang="en" style="scroll-behavior: smooth;">
 <head>
     <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MPAIL2</title>
     <link rel="stylesheet" href="styles.css">
@@ -12,20 +12,38 @@
 </head>
 <body>
     
-    <section class="video-section">
-        <div class="video-container" id="hero-video-container">
-            <img class="hero-poster" src="Media/Video/Background/poster.jpg" alt="" aria-hidden="true">
-            <video id="hero-video" autoplay muted loop playsinline preload="metadata">
-                <source src="Media/Video/Background/background.mp4" type="video/mp4">
-                Your browser does not support video playback.
-            </video>
-        </div>
-        <div class="video-overlay">
-            <h1>Online World Modeling Enables Real-World Inverse Reinforcement Learning from Observation</h1>
+    <section class="hero-section" id="hero">
+        <div class="hero-inner">
+            <h1 class="hero-title">Online World Modeling<br>Enables<br>Real-World Inverse Reinforcement Learning from Observation</h1>
             <!-- Authors Section -->
             <div id="authors-section" class="authors-section authors-section--always-visible">
                 <div class="authors-list">
                     <a>Anonymous Authors</a>
+                </div>
+            </div>
+            <div class="hero-showcase">
+                <div class="hero-claim">
+                    <span class="hero-claim__no" id="hero-no">NO</span>
+                    <ul class="hero-list" id="hero-rotator" aria-label="assumptions MPAIL2 does not rely on">
+                        <!-- add / reorder assumptions freely; the rotator picks them up automatically -->
+                        <li class="rotator__word is-active">rewards</li>
+                        <li class="rotator__word">action supervision</li>
+                        <li class="rotator__word">pre-training</li>
+                        <li class="rotator__word">play data</li>
+                        <li class="rotator__word">failure examples</li>
+                        <li class="rotator__word">prior models</li>
+                        <li class="rotator__word">interventions</li>
+                        <li class="rotator__word">simulation</li>
+                    </ul>
+                </div>
+                <div class="hero-media">
+                    <div class="hero-rollout">
+                        <video autoplay muted loop playsinline preload="metadata">
+                            <source src="Media/Video/MoP/rollout_vis/mppi_iter_mug-on-plate_under_disturbance2.mp4" type="video/mp4">
+                            Your browser does not support video playback.
+                        </video>
+                    </div>
+                    <p class="hero-tagline">Only <strong>10 observation-only demonstrations</strong> and <strong>&lt; 40 minutes</strong> of real-world training <strong>from scratch</strong></p>
                 </div>
             </div>
         </div>
@@ -42,13 +60,17 @@
             <span class="timeline-dot"></span>
             <span class="timeline-label">Method</span>
         </a>
+        <a href="#baselines-section" class="timeline-item" data-section="baselines">
+            <span class="timeline-dot"></span>
+            <span class="timeline-label">Baselines</span>
+        </a>
         <a href="#results-overview-section" class="timeline-item" data-section="results-overview">
             <span class="timeline-dot"></span>
             <span class="timeline-label">Results Overview</span>
         </a>
         <a href="#efficiency-section" class="timeline-item" data-section="side-by-side">
             <span class="timeline-dot"></span>
-            <span class="timeline-label">Training; Side-by-Side</span>
+            <span class="timeline-label">Training</span>
         </a>
         <a href="#generalization-section" class="timeline-item" data-section="generalization">
             <span class="timeline-dot"></span>
@@ -84,6 +106,8 @@
         <div id="summary-section-container"></div>
 
         <div id="method-section-container"></div>
+
+        <div id="baselines-section-container"></div>
 
         <div id="results-overview-section-container"></div>
 
