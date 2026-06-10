@@ -2877,6 +2877,31 @@ body.dark-mode .results-html-table.tv-active tbody td.tv-focus.col-result {
 .results-rail__claims .tv-chip { display: none; }
 .results-rail__claims .tv-chip.rq-on { display: inline-flex; }
 
+/* the RQ + claim controls group together so they can hide as a unit in Undirected mode */
+.results-rail__focusctl { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: center; }
+/* mode toggle (Focus / Undirected), styled like the overview's mode toggle */
+.results-mode { display: inline-flex; gap: 2px; padding: 2px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); }
+.results-mode-btn { font: 600 0.72rem/1 'Space Grotesk', 'Inter', sans-serif; letter-spacing: .02em;
+    color: #8a93a8; background: transparent; border: none; border-radius: 999px; padding: 6px 12px;
+    cursor: pointer; transition: color .2s, background .2s; }
+.results-mode-btn:hover { color: #fff; }
+.results-mode-btn.is-on { color: #fff; background: linear-gradient(135deg, #6E59C7, #9a8af0); }
+/* mode-driven show/hide: Focus shows the claim media + Training stays hidden; Undirected reveals
+   the full Training (efficiency) section and drops the focus media + claim controls */
+#efficiency-section { display: none; }
+/* in Undirected mode force the Training section fully visible, overriding the legacy section-fade
+   classes (.hidden-below / .fade-out set opacity:0) that otherwise keep it hidden at this scroll pos */
+body.results-undirected #efficiency-section {
+    display: block !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    pointer-events: auto !important;
+}
+body.results-undirected #results-media { display: none; }
+body.results-undirected .results-rail__focusctl { display: none; }
+
 /* task toggle inside the rail (reuses .task-btn so selectTask keeps it in sync; chip-styled here) */
 .results-rail__task { display: flex; gap: 4px; }
 .results-rail .task-btn {

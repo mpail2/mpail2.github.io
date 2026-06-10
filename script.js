@@ -444,11 +444,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Show/hide the Results RQ+claim rail while the results section is in view
+        // Show/hide the Results rail while the results section is in view; in Undirected mode the
+        // revealed Training section is contiguous below, so extend the range through its bottom.
         const resultsRail = document.getElementById('results-rail');
         if (resultsRail) {
             const r = resultsOverviewRect;
-            const showRail = r.top < windowHeight * 0.5 && r.bottom > 120;
+            const undirected = document.body.classList.contains('results-undirected');
+            const bottom = (undirected && efficiencyRect.bottom) ? efficiencyRect.bottom : r.bottom;
+            const showRail = r.top < windowHeight * 0.5 && bottom > 120;
             resultsRail.classList.toggle('visible', showRail);
         }
 
@@ -504,7 +507,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Section visibility management
         const showGeneralization = generalizationRect.top < windowHeight * 0.75;
         const showTransfer = transferRect.top < windowHeight * 0.75;
-        const showEfficiency = efficiencyRect.top < windowHeight * 0.75;
+        // efficiency (Training) only exists in Undirected mode; when hidden its rect collapses to 0,
+        // so gate on the mode to avoid wrongly hiding Transfer/Generalization in Focus mode
+        const showEfficiency = document.body.classList.contains('results-undirected') && efficiencyRect.top < windowHeight * 0.75;
 
         // Reset section states (null-safe)
         summarySection?.classList.remove('fade-out');
@@ -681,8 +686,26 @@ function initResultsTunnel() {
         mediaPanel.querySelectorAll('video').forEach(v => { try { v.playbackRate = 3; v.play().catch(function () {}); } catch (e) {} });
     };
 
-    window.resultsTunnelClear = clear;                 // let the Undirected toggle (phase 3) un-focus the table
-    apply('world');                                    // default: Q1, world-modeling claim
+    // ---- Focus / Undirected mode: Undirected reveals the full Training section as "all the evidence" ----
+    const modeWrap = document.getElementById('results-mode');
+    function setResultsMode(mode) {
+        const undirected = (mode === 'undirected');
+        document.body.classList.toggle('results-undirected', undirected);
+        if (modeWrap) modeWrap.querySelectorAll('.results-mode-btn').forEach(b => b.classList.toggle('is-on', b.dataset.mode === mode));
+        if (undirected) {
+            clear();                                                       // show the full, un-dimmed table
+            if (typeof refreshCharts === 'function') refreshCharts();      // size the now-visible plots
+            const sl = document.getElementById('iteration-slider');        // nudge the just-revealed scrubber videos
+            if (sl && typeof updateIteration === 'function') updateIteration(sl.value);
+            document.querySelectorAll('#efficiency-section video').forEach(v => { try { v.play().catch(function () {}); } catch (e) {} });
+        } else if (window.resultsActiveClaim) {
+            apply(window.resultsActiveClaim);                              // re-focus the active claim
+        }
+    }
+    if (modeWrap) modeWrap.querySelectorAll('.results-mode-btn').forEach(btn => btn.addEventListener('click', () => setResultsMode(btn.dataset.mode)));
+
+    window.resultsTunnelClear = clear;
+    apply('world');                                    // default: Q1, world-modeling claim, Focus mode
 }
 
 // Baseline Models — interactive component diagram

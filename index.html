@@ -14,7 +14,9 @@
     
     <section class="hero-section" id="hero">
         <div class="hero-inner">
-            <h1 class="hero-title">Online World Modeling<br>Enables<br>Real-World Inverse Reinforcement Learning from Observation</h1>
+            <!-- <h1 class="hero-title">Online World Modeling<br>Enables<br>Real-World Inverse Reinforcement Learning from Observation</h1> -->
+            <!-- <h1 class="hero-title">Online World Modeling<br>enables<br><u>real-world</u> inverse reinforcement learning from observation.</h1> -->
+            <h1 class="hero-title">Online World Modeling<br>enables <u>real-world</u><br> Inverse Reinforcement Learning (from observation).</h1>
             <!-- Authors Section -->
             <div id="authors-section" class="authors-section authors-section--always-visible">
                 <div class="authors-list">
@@ -67,11 +69,7 @@
         </a>
         <a href="#results-overview-section" class="timeline-item" data-section="results-overview">
             <span class="timeline-dot"></span>
-            <span class="timeline-label">Results Overview</span>
-        </a>
-        <a href="#efficiency-section" class="timeline-item" data-section="side-by-side">
-            <span class="timeline-dot"></span>
-            <span class="timeline-label">Training</span>
+            <span class="timeline-label">Results</span>
         </a>
         <a href="#generalization-section" class="timeline-item" data-section="generalization">
             <span class="timeline-dot"></span>
@@ -79,50 +77,34 @@
         </a>
     </nav>
 
-    
-    <div class="task-buttons-fixed" id="task-buttons-left">
-        <div class="task-btn-wrapper active" data-task="push">
-            <div class="task-icon push-icon">
-                <div class="icon-block"></div>
-                <div class="icon-block-dest"></div>
-                <div class="icon-arrow">→</div>
-            </div>
-            <button class="task-btn active" data-task="push" onclick="selectTask('push')">Push</button>
-        </div>
-        <div class="task-btn-wrapper" data-task="pick-place">
-            <div class="task-icon pick-icon">
-                <div class="pick-arrow arrow-up">↑</div>
-                <div class="pick-arrow arrow-right">→</div>
-                <div class="pick-arrow arrow-down">↓</div>
-                <div class="icon-block"></div>
-                <div class="icon-block-dest"></div>
-            </div>
-            <button class="task-btn" data-task="pick-place" onclick="selectTask('pick-place')">Pick and Place</button>
-        </div>
-    </div>
-
-    
 
     <!-- Results claim-driven control rail: pinned under the global nav while Results is in view.
          Lives at body level (not inside the section) so position:fixed resolves to the viewport. -->
     <div class="results-rail" id="results-rail" aria-label="Research questions and claims">
-        <div class="results-rail__rqs" role="tablist">
-            <button type="button" class="results-rq is-on" data-rq="q1" title="How does MPAIL2's design enable real-world IRLfO?">Q1</button>
-            <button type="button" class="results-rq" data-rq="q2" title="Does less supervision mean less performance?">Q2</button>
-            <button type="button" class="results-rq" data-rq="q3" title="How does MPAIL2 scale beyond single-task imitation?">Q3</button>
+        <div class="results-rail__focusctl">
+            <div class="results-rail__rqs" role="tablist">
+                <button type="button" class="results-rq is-on" data-rq="q1" title="How does MPAIL2's design enable real-world IRLfO?">Q1</button>
+                <button type="button" class="results-rq" data-rq="q2" title="Does less supervision mean less performance?">Q2</button>
+                <button type="button" class="results-rq" data-rq="q3" title="How does MPAIL2 scale beyond single-task imitation?">Q3</button>
+            </div>
+            <span class="results-rail__sep"></span>
+            <div class="results-rail__claims" id="results-claims">
+                <button type="button" class="tv-chip" data-claim="world" data-rq="q1">World modeling is critical</button>
+                <button type="button" class="tv-chip" data-claim="planning" data-rq="q1">Planning enables robustness</button>
+                <button type="button" class="tv-chip" data-claim="supervision" data-rq="q2">Less supervision &ne; less performance</button>
+                <button type="button" class="tv-chip" data-claim="transfer" data-rq="q3">Positive online transfer</button>
+                <button type="button" class="tv-chip" data-claim="video" data-rq="q3">Video-only demonstration</button>
+            </div>
+            <span class="results-rail__sep"></span>
         </div>
-        <span class="results-rail__sep"></span>
-        <div class="results-rail__claims" id="results-claims">
-            <button type="button" class="tv-chip" data-claim="world" data-rq="q1">World modeling is critical</button>
-            <button type="button" class="tv-chip" data-claim="planning" data-rq="q1">Planning enables robustness</button>
-            <button type="button" class="tv-chip" data-claim="supervision" data-rq="q2">Less supervision &ne; less performance</button>
-            <button type="button" class="tv-chip" data-claim="transfer" data-rq="q3">Positive online transfer</button>
-            <button type="button" class="tv-chip" data-claim="video" data-rq="q3">Video-only demonstration</button>
-        </div>
-        <span class="results-rail__sep"></span>
         <div class="results-rail__task" aria-label="Task">
             <button type="button" class="task-btn active" data-task="push" onclick="selectTask('push')">Push</button>
             <button type="button" class="task-btn" data-task="pick-place" onclick="selectTask('pick-place')">Pick</button>
+        </div>
+        <span class="results-rail__sep"></span>
+        <div class="results-mode" id="results-mode" aria-label="View">
+            <button type="button" class="results-mode-btn is-on" data-mode="focus">Focus</button>
+            <button type="button" class="results-mode-btn" data-mode="undirected" title="Show all the evidence at once">Undirected</button>
         </div>
     </div>
 
