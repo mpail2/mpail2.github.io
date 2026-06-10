@@ -611,8 +611,10 @@ function renderClaimPlot(key) {
     if (claimChartPush) { claimChartPush.destroy(); claimChartPush = null; }
     if (claimChartPick) { claimChartPick.destroy(); claimChartPick = null; }
     const wrap = document.getElementById('results-plot');
+    const hint = document.getElementById('results-plot-hint');
+    const show = (on) => { wrap.style.display = on ? '' : 'none'; if (hint) hint.style.display = on ? 'none' : ''; };
     if (!wrap) return;
-    if (document.body.classList.contains('results-undirected')) { wrap.style.display = 'none'; return; }  // hidden in Undirected
+    if (document.body.classList.contains('results-undirected')) { show(false); return; }   // hidden in Undirected
     const isTransfer = (key === 'transfer');
     const methods = CLAIM_PLOT_METHODS[key];
     const pick = (task) => {
@@ -630,8 +632,8 @@ function renderClaimPlot(key) {
         return Object.keys(s).length ? s : null;
     };
     const sp = pick('push'), sk = pick('pick');
-    if (!sp && !sk) { wrap.style.display = 'none'; return; }   // no plot for this claim (or data not loaded)
-    wrap.style.display = '';
+    if (!sp && !sk) { show(false); return; }   // no plot for this claim (or data not loaded)
+    show(true);
     const title = isTransfer ? 'Transfer' : 'Sample Efficiency';
     if (sp) claimChartPush = createResultChart('claim-chart-push', 'claim-chart-push-legend', title + ' — Block Push', sp);
     if (sk) claimChartPick = createResultChart('claim-chart-pick', 'claim-chart-pick-legend', title + ' — Pick-and-Place', sk);

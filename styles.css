@@ -2508,20 +2508,19 @@ body.dark-mode .transfer-demo-btn {
 
 .experiments-overview-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
+    grid-template-columns: repeat(4, 1fr);   /* all leading task videos in a single row */
+    gap: 16px;
     width: 100%;
-    max-width: 900px;
     margin: 10px auto 0 auto;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 760px) {
     .experiments-overview-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 440px) {
     .experiments-overview-grid {
         grid-template-columns: 1fr;
     }
@@ -2553,8 +2552,56 @@ body.dark-mode .transfer-demo-btn {
 }
 
 #results-overview-section .gen-video-label {
-    margin-top: 20px;
-    margin-bottom: 32px;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    font-size: 0.92rem;
+}
+
+/* ===== Results explorer: Research Questions | Table | Plots, side by side with hover-focus ===== */
+.results-controls {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    max-width: 1180px; margin: 40px auto 14px;
+}
+.results-reset {
+    font: 600 0.8rem 'Inter', sans-serif; color: #4b5563; background: rgba(102, 126, 234, 0.08);
+    border: 1px solid rgba(102, 126, 234, 0.28); border-radius: 999px; padding: 7px 16px; cursor: pointer;
+    transition: background .2s, color .2s, border-color .2s;
+}
+.results-reset:hover { color: #667eea; border-color: rgba(102, 126, 234, 0.5); background: rgba(102, 126, 234, 0.14); }
+body.dark-mode .results-reset { color: #c7cdda; background: rgba(165, 180, 252, 0.1); border-color: rgba(165, 180, 252, 0.3); }
+
+.results-explore { display: flex; align-items: stretch; gap: 14px; max-width: 1180px; margin: 0 auto; }
+.results-panel {
+    flex: 1 1 0; min-width: 0; background: #fff; border-radius: 12px; padding: 14px 16px; overflow: hidden;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06); border: 1px solid rgba(102, 126, 234, 0.12);
+    transition: flex-grow .3s ease, transform .3s ease, opacity .3s ease, box-shadow .3s ease;
+}
+body.dark-mode .results-panel { background: #0b1020; border-color: rgba(165, 180, 252, 0.16); }
+.results-panel--q { flex-grow: 0.9; }
+.results-panel--table { flex-grow: 1.5; }
+.results-panel--plots { flex-grow: 1.1; }
+/* hover any panel: it comes to the forefront; the others shrink + fall back */
+.results-explore:hover .results-panel { flex-grow: 0.6; transform: scale(.975); opacity: .68; }
+.results-explore .results-panel:hover {
+    flex-grow: 3 !important; transform: scale(1) !important; opacity: 1 !important;
+    z-index: 2; box-shadow: 0 12px 34px rgba(15, 23, 42, 0.14);
+}
+.results-panel__title { margin: 0 0 10px; font: 700 0.92rem 'Inter', sans-serif; color: #1f2937; }
+body.dark-mode .results-panel__title { color: #e8eaed; }
+.results-panel__hint { font-weight: 500; font-size: 0.72rem; color: #9ca3af; margin-left: 8px; }
+.results-table-scroll { overflow-x: auto; }
+.results-plot__hint { text-align: center; font-size: 0.82rem; color: #9ca3af; margin: 10px 0 0; }
+.results-stage-head { display: flex; align-items: center; gap: 12px; max-width: 1100px; margin: 30px auto 0; }
+/* the explorer + stage are the Focus experience; Undirected swaps to the Training section */
+body.results-undirected .results-controls, body.results-undirected .results-explore,
+body.results-undirected .results-stage-head, body.results-undirected #results-media { display: none; }
+/* the table panel: scrolls horizontally; its tunnel-vision still works inside */
+.results-panel--table .results-html-table { font-size: 0.74em; }
+.results-panel--plots .results-plot { margin: 0; max-width: none; flex-direction: column; gap: 14px; }
+.results-panel--plots .results-plot__one { max-width: none; }
+@media (max-width: 920px) {
+    .results-explore { flex-direction: column; }
+    .results-explore:hover .results-panel { flex-grow: 1; transform: none; opacity: 1; }
 }
 
 /* ── Video overlay badges ── */
