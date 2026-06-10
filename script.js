@@ -1283,7 +1283,9 @@ function initStoryScrub() {
         obsDeckWasOn = obsDeckOn; intDeckWasOn = intDeckOn;
         // layout state for renderLayout, then reflow (instant on first paint / forced capture / loop reset)
         LS = { encOn: onSet.has('obsEnc'), plannerOn: onSet.has('planner'), policyOn: onSet.has('policy') };
-        animateLayout(planeFor(b, onSet), !first && !story.dataset.forceP && !instant);
+        const doAnim = !first && !story.dataset.forceP && !instant;
+        animateLayout(planeFor(b, onSet), doAnim);
+        if (doAnim) enterDoneAt = performance.now() + ENTER_MS;   // when this arrival transition will finish
         if (counterEl && !instant) counterEl.textContent = 'frame ' + (i + 1) + ' / ' + BEATS.length;
     }
 
@@ -1293,7 +1295,8 @@ function initStoryScrub() {
     const animBarFill = animBar ? animBar.querySelector('span') : null;
     // a short hold at the start, the animation, then a short hold at the end, before replaying
     const ANIM_MS = 680, START_PAUSE = 340, END_PAUSE = 750, LOOP_MS = START_PAUSE + ANIM_MS + END_PAUSE;
-    let loopRAF = null, loopT0 = 0, loopGen = 0, lastScrollP = -1, lastScrollAt = 0;
+    const ENTER_MS = 620;   // ~duration of a beat's arrival transition (layout tween + deck/style fades)
+    let loopRAF = null, loopT0 = 0, loopGen = 0, enterDoneAt = 0, lastScrollP = -1, lastScrollAt = 0;
     // Loop ONLY a beat's specific "style change" animation, in isolation (reset just that property to its
     // "before" instantly, then play it to its "after") — NOT block introductions, relabels, collapses,
     // or layout/phase intros. Returns {reset, apply} or null if the beat shouldn't loop.
@@ -1337,23 +1340,32 @@ function initStoryScrub() {
         const rep = getReplay(beatIdx);
         if (!rep) return;
         const gen = ++loopGen;
-        // Each pass: jump to the start with transitions OFF and HOLD there briefly (START_PAUSE). The
-        // hold also lets the start state PAINT so it becomes the transition baseline (a single
-        // synchronous reflow is NOT enough — the start must actually paint or the transition never
-        // fires). Then re-enable transitions and play to the end, then hold again (END_PAUSE). The two
-        // holds bookend the motion so it reads as a deliberate loop rather than a restless flicker.
-        let applied = false;
+        // The arrival ("enter") transition is the animation's FIRST play. So the loop opens in an
+        // 'enter' phase: it lets that arrival transition finish and then holds a full END_PAUSE before
+        // the first reset — otherwise the idle interval (which fires ~240ms after scrolling stops, mid
+        // arrival) would snap the half-played animation back to its start, which reads as a stutter.
+        // After that the normal cycle runs: jump to start (transitions OFF, so the start state paints
+        // and becomes the transition baseline), hold START_PAUSE, play to the end, hold END_PAUSE.
+        let phase = 'enter', applied = false;
         const reset = () => { svg.classList.add('st-no-anim'); rep.reset(); applied = false; };
         if (animBar) animBar.classList.add('is-on');
-        loopT0 = performance.now(); reset();
+        loopT0 = performance.now();
+        const firstHoldUntil = Math.max(loopT0, enterDoneAt) + END_PAUSE;   // arrival finishes, then a full pause
         const step = (now) => {
             if (gen !== loopGen) return;
-            const t = now - loopT0;
-            if (!applied && t >= START_PAUSE) {            // start hold over: enable transitions + play to end
-                svg.classList.remove('st-no-anim'); rep.apply(); applied = true;
+            if (phase === 'enter') {
+                // fill the bar as the arrival animation completes, hold it full through the pause
+                const denom = Math.max(1, enterDoneAt - loopT0);
+                if (animBarFill) animBarFill.style.width = (Math.max(0, Math.min(1, (now - loopT0) / denom)) * 100) + '%';
+                if (now >= firstHoldUntil) { phase = 'loop'; loopT0 = now; reset(); }
+            } else {
+                const t = now - loopT0;
+                if (!applied && t >= START_PAUSE) {        // start hold over: enable transitions + play to end
+                    svg.classList.remove('st-no-anim'); rep.apply(); applied = true;
+                }
+                if (animBarFill) animBarFill.style.width = (Math.max(0, Math.min(1, (t - START_PAUSE) / ANIM_MS)) * 100) + '%';
+                if (t >= LOOP_MS) { loopT0 = now; reset(); }
             }
-            if (animBarFill) animBarFill.style.width = (Math.max(0, Math.min(1, (t - START_PAUSE) / ANIM_MS)) * 100) + '%';
-            if (t >= LOOP_MS) { loopT0 = now; reset(); }
             loopRAF = requestAnimationFrame(step);
         };
         loopRAF = requestAnimationFrame(step);
