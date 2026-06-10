@@ -822,7 +822,7 @@ function initBaselineDiagram() {
     // ----- hover explainer for each block -----
     const TIPS = {
         obs:      ['Task Observation', 'Demonstration frames of the task being performed. Used only to learn the reward &mdash; the actions are never observed.'],
-        int:      ['Direct Interaction', "The robot's own experience from acting in the environment (on-policy rollouts)."],
+        int:      ['Direct Interaction', "The robot's own experience from acting in the environment."],
         encoder:  ['Encoder', 'Compresses raw observations into a compact latent state that the world model reasons over.'],
         dynamics: ['Dynamics Model', 'The learned world model: predicts the next latent state from the current state and action &mdash; what makes planning and off-policy value learning possible.'],
         reward:   ['Reward', 'An <em>inferred</em> reward (inverse RL): scores how expert-like a state is, learned adversarially from observation alone.'],
