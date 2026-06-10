@@ -2850,7 +2850,7 @@ body.dark-mode .results-html-table.tv-active tbody td.tv-focus.col-result {
 /* The questions are presented as text at the top of the results section. The compact claim bar
    (.results-selector, fixed under the nav) only appears once that text scrolls above the top.
    The training controls (.results-undirected-bar) stick within the training section. */
-.results-questions { max-width: 760px; margin: 44px auto 6px; text-align: left; }
+.results-questions { margin: 44px auto 6px; text-align: left; }
 .results-questions__head {
     display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
     margin-bottom: 10px;
