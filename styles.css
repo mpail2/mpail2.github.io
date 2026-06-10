@@ -1643,14 +1643,12 @@ body.dark-mode .left-sidebar-hint::before {
     letter-spacing: 0.01em;
     white-space: nowrap;
     text-decoration: none;
-    background: linear-gradient(135deg, #9a8af0 0%, #c4b8ff 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: #b3a4ff;                                  /* fallback */
+    /* each letter is colored to its model box (M encoder, P dynamics, A reward, I value, L policy) */
+    color: #e8eaed;
     border-right: 1px solid rgba(255, 255, 255, 0.14);
     transition: filter 0.2s ease, opacity 0.2s ease;
 }
+.timeline-brand__num { color: #e8eaed; }
 .timeline-brand:hover { filter: brightness(1.18); }
 
 /* the chevron right after the brand gets the flat left edge the leftmost item would have */

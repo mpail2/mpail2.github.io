@@ -192,19 +192,14 @@ document.addEventListener('DOMContentLoaded', function() {
     orig.forEach(function(w) { list.appendChild(clone(w)); });              // copy below
     var all = Array.prototype.slice.call(list.children);                    // 3N, middle copy is the original
 
-    var i = 0;                                          // step within the middle copy (0..N-1)
-    // position only — the strip slides; focus is applied separately so a word only
-    // lights up once it is horizontally in-line with NO (i.e. settled at center).
-    function position(animate) {
+    var contC = 0;                                     // continuous offset of the strip, in word units
+    // set the words' heights + the strip position; the transform is driven by the continuous offset
+    function setStrip(animate) {
         var h = claim.clientHeight / N;                // N words exactly fill the video height
         all.forEach(function(el) { el.style.height = h + 'px'; });
         list.style.transition = animate ? '' : 'none';
-        var ty = claim.clientHeight / 2 - ((N + i) * h + h / 2);
-        list.style.transform = 'translateY(' + ty + 'px)';
-        if (!animate) { void list.offsetHeight; list.style.transition = ''; } // commit snap, restore transition
-    }
-    function focusCenter() {
-        all.forEach(function(el, k) { el.classList.toggle('is-active', (k % N) === (((i % N) + N) % N)); });
+        list.style.transform = 'translateY(' + (claim.clientHeight / 2 - ((N + contC) * h + h / 2)) + 'px)';
+        if (!animate) { void list.offsetHeight; list.style.transition = ''; }
     }
     // light up whichever word's center is within an epsilon of NO's center (used live while dragging)
     function highlightAtCenter(ty) {
@@ -224,40 +219,38 @@ document.addEventListener('DOMContentLoaded', function() {
             el.classList.toggle('is-active', Math.abs((r.top + r.height / 2) - center) < eps);
         });
     }
-    function runHighlightDuring(ms) {
-        if (hlRAF) cancelAnimationFrame(hlRAF);
-        var t0 = performance.now();
-        var tick = function(now) {
-            if (dragging) { hlRAF = null; return; }     // drag takes over the highlighting
-            highlightLive();
-            hlRAF = (now - t0 < ms) ? requestAnimationFrame(tick) : null;
-        };
-        hlRAF = requestAnimationFrame(tick);
-    }
-
-    position(false); focusCenter();
-    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function() { position(false); }); }
-    window.addEventListener('resize', function() { position(false); });
-    setTimeout(function() { position(false); }, 300);  // re-layout once the video sets the height
-    setTimeout(function() { position(false); }, 1200);
+    setStrip(false); highlightLive();
+    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function() { setStrip(false); }); }
+    window.addEventListener('resize', function() { setStrip(false); });
+    setTimeout(function() { setStrip(false); }, 300);  // re-layout once the video sets the height
+    setTimeout(function() { setStrip(false); }, 1200);
 
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // ----- auto-cycle (pausable while the user drags) -----
-    var cycleTimer = null, dragging = false;
+    // ----- continuous auto-cycle: the strip scrolls at a steady speed (no pausing), each word
+    //       lighting up as it passes NO; pausable while the user drags -----
+    var cycleRAF = null, lastFrame = 0, dragging = false;
+    var SPEED = 1 / 1500;                              // words per ms (~1.5s per word)
     function startCycle() {
-        if (reduce || N < 2 || cycleTimer) return;
-        cycleTimer = setInterval(function() {
-            if (dragging) return;
-            i += 1;
-            position(true);
-            runHighlightDuring(640);                   // light each word live as it passes NO (epsilon focus)
-            if (i >= N) {                              // wrapped onto the clone — snap back invisibly
-                setTimeout(function() { i -= N; position(false); highlightLive(); }, 560);
+        if (reduce || N < 2 || cycleRAF) return;
+        lastFrame = 0;
+        var tick = function(now) {
+            if (dragging) { cycleRAF = null; return; }
+            if (lastFrame) {
+                contC += (now - lastFrame) * SPEED;
+                if (contC >= N) contC -= N;            // seamless wrap (3 stacked copies)
+                var h = claim.clientHeight / N;
+                var ty = claim.clientHeight / 2 - ((N + contC) * h + h / 2);
+                list.style.transition = 'none';
+                list.style.transform = 'translateY(' + ty + 'px)';
+                highlightAtCenter(ty);                 // analytic — avoids a per-frame layout read
             }
-        }, 1900);
+            lastFrame = now;
+            cycleRAF = requestAnimationFrame(tick);
+        };
+        cycleRAF = requestAnimationFrame(tick);
     }
-    function stopCycle() { if (cycleTimer) { clearInterval(cycleTimer); cycleTimer = null; } }
+    function stopCycle() { if (cycleRAF) cancelAnimationFrame(cycleRAF); cycleRAF = null; lastFrame = 0; }
 
     // ----- drag to scrub through the assumptions; cycling resumes after release -----
     if (!reduce && N >= 2) {
@@ -271,9 +264,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var onDown = function(e) {
             dragging = true; stopCycle();
             startY = getY(e);
-            baseTy = claim.clientHeight / 2 - ((N + i) * wordH() + wordH() / 2);
+            baseTy = claim.clientHeight / 2 - ((N + contC) * wordH() + wordH() / 2);
             list.style.transition = 'none';
-            all.forEach(function(el) { el.classList.remove('is-active'); });
             claim.classList.add('is-dragging');
             e.preventDefault();
         };
@@ -287,15 +279,10 @@ document.addEventListener('DOMContentLoaded', function() {
         var onUp = function(e) {
             if (!dragging) return;
             dragging = false; claim.classList.remove('is-dragging');
-            i -= Math.round((getY(e) - startY) / wordH());   // drag down -> earlier words
-            list.style.transition = '';
-            position(true);
-            runHighlightDuring(640);                          // light words live as the strip settles
-            setTimeout(function() {                            // normalize into [0,N) invisibly, then resume
-                var ni = ((i % N) + N) % N;
-                if (ni !== i) { i = ni; position(false); }
-                highlightLive(); startCycle();
-            }, 560);
+            contC -= (getY(e) - startY) / wordH();            // drag down -> earlier words (continuous)
+            contC = ((contC % N) + N) % N;                    // normalize into [0,N)
+            highlightLive();
+            startCycle();                                     // resume the continuous scroll from here
         };
         claim.addEventListener('mousedown', onDown);
         window.addEventListener('mousemove', onMove);
@@ -466,9 +453,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (generalizationRect.top < windowHeight * 0.5) {
             activeSection = 'generalization';
         } else if (transferRect.top < windowHeight * 0.5) {
-            activeSection = 'side-by-side';
-        } else if (efficiencyRect.top < windowHeight * 0.5) {
-            activeSection = 'side-by-side';
+            activeSection = 'results-overview';   // Transfer: a results subsection (no own nav item)
+        } else if (document.body.classList.contains('results-undirected') && efficiencyRect.top < windowHeight * 0.5) {
+            activeSection = 'results-overview';   // Training: the Undirected view of Results (skip when hidden)
         } else if (resultsOverviewRect.top < windowHeight * 0.5) {
             activeSection = 'results-overview';
         } else if (baselinesRect.top < windowHeight * 0.5) {
