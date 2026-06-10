@@ -2991,6 +2991,20 @@ body.results-undirected #results-selector .results-rail__focusctl { display: non
 
 /* ===== Focus-mode media panel (per-claim evidence) ===== */
 .results-media { margin: 22px auto 0; max-width: 980px; }
+/* shared iteration scrubber over the comparison clips */
+.results-scrub {
+    display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+    margin: 4px auto 20px; max-width: 580px;
+}
+.results-scrub__label { font-size: 0.86rem; font-weight: 600; color: #4b5563; white-space: nowrap; }
+.results-scrub__label b { color: #667eea; }
+.results-scrub__max { color: #9ca3af; font-weight: 500; }
+.results-scrub__slider { flex: 1 1 200px; min-width: 160px; accent-color: #667eea; cursor: pointer; }
+.results-scrub__hint { font-size: 0.76rem; color: #9ca3af; white-space: nowrap; }
+body.dark-mode .results-scrub__label { color: #c7cdda; }
+body.dark-mode .results-scrub__label b { color: #a5b4fc; }
+body.dark-mode .results-scrub__slider { accent-color: #a5b4fc; }
+
 /* per-claim efficiency plots (one per real task), below the media */
 .results-plot { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin: 26px auto 0; max-width: 1000px; }
 .results-plot__one { flex: 1 1 400px; min-width: 280px; max-width: 520px; display: flex; flex-direction: column; }

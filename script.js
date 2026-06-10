@@ -657,13 +657,14 @@ function initResultsTunnel() {
     };
     // all tasks are shown at once (the viewer doesn't pick a task in Focus mode)
     const TASKS = [['Push', 'Block Push'], ['Pick', 'Pick-and-Place']];
-    function sideSrc(side, T) {
-        if (side.mpail2) return 'Media/Video/' + T + '/iter_100.mp4';
-        if (side.folder) return 'Media/Video/Comparison/' + side.folder + '/' + T + '/iter_100.mp4';
-        if (side.dir) return 'Media/Video/' + encodeURIComponent(side.dir) + '/' + T + '/iter_100.mp4';
+    const START_IT = 100;                              // default to the trained (final) iteration
+    function sidePrefix(side, T) {                      // path up to "iter_" so the iteration is swappable
+        if (side.mpail2) return 'Media/Video/' + T + '/iter_';
+        if (side.folder) return 'Media/Video/Comparison/' + side.folder + '/' + T + '/iter_';
+        if (side.dir) return 'Media/Video/' + encodeURIComponent(side.dir) + '/' + T + '/iter_';
         return '';
     }
-    const vidHTML = (src) => '<div class="video-display"><video autoplay muted loop playsinline preload="metadata"><source src="' + src + '" type="video/mp4"></video></div>';
+    const vidHTML = (prefix) => '<div class="video-display"><video autoplay muted loop playsinline preload="metadata" data-prefix="' + prefix + '"><source src="' + prefix + START_IT + '.mp4" type="video/mp4"></video></div>';
     const lblHTML = (s) => '<p class="results-vid__label">' + s.label + (s.sub ? '<span>' + s.sub + '</span>' : '') + '</p>';
     window.renderClaimMedia = function (key) {
         if (!mediaPanel) return;
@@ -676,16 +677,31 @@ function initResultsTunnel() {
                 (badges ? '<div class="video-badge-row">' + badges + '</div>' : '') + '</div></div>' +
                 '<p class="results-media__note">' + m.note + '</p>';
         } else {
-            // one comparison row per task, so every task's evidence is displayed at once
+            // one comparison row per task; a shared iteration slider scrubs every clip through training
             const rows = TASKS.map(function (t) {
                 return '<div class="results-taskrow"><div class="results-taskrow__label">' + t[1] + '</div>' +
                     '<div class="results-compare">' +
-                    '<div class="results-vid">' + lblHTML(m.left) + vidHTML(sideSrc(m.left, t[0])) + '</div>' +
+                    '<div class="results-vid">' + lblHTML(m.left) + vidHTML(sidePrefix(m.left, t[0])) + '</div>' +
                     '<div class="results-compare__vs">vs</div>' +
-                    '<div class="results-vid">' + lblHTML(m.right) + vidHTML(sideSrc(m.right, t[0])) + '</div>' +
+                    '<div class="results-vid">' + lblHTML(m.right) + vidHTML(sidePrefix(m.right, t[0])) + '</div>' +
                     '</div></div>';
             }).join('');
-            mediaPanel.innerHTML = rows + '<p class="results-media__note">' + m.note + '</p>';
+            const scrub = '<div class="results-scrub">' +
+                '<span class="results-scrub__label">Training iteration <b class="results-scrub__val">' + START_IT + '</b><span class="results-scrub__max"> / 100</span></span>' +
+                '<input type="range" class="results-scrub__slider" min="0" max="100" step="10" value="' + START_IT + '" aria-label="Training iteration">' +
+                '<span class="results-scrub__hint">drag to scrub through training</span></div>';
+            mediaPanel.innerHTML = scrub + rows + '<p class="results-media__note">' + m.note + '</p>';
+            const slider = mediaPanel.querySelector('.results-scrub__slider');
+            const valEl = mediaPanel.querySelector('.results-scrub__val');
+            if (slider) slider.addEventListener('input', function () {
+                const it = this.value;
+                if (valEl) valEl.textContent = it;
+                mediaPanel.querySelectorAll('video[data-prefix]').forEach(function (v) {
+                    const src = v.dataset.prefix + it + '.mp4', s = v.querySelector('source');
+                    if (s && s.getAttribute('src') !== src) { s.setAttribute('src', src); v.load(); v.play().catch(function () {}); }
+                    try { v.playbackRate = 3; } catch (e) {}
+                });
+            });
         }
         mediaPanel.querySelectorAll('video').forEach(v => { try { v.playbackRate = 3; v.play().catch(function () {}); } catch (e) {} });
     };
