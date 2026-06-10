@@ -1631,6 +1631,35 @@ body.dark-mode .left-sidebar-hint::before {
 .timeline-dot { display: none; }
 
 /* each step is a right-pointing chevron that interlocks with the next */
+/* Wordmark on the far left of the tracker — branding, not a chevron; clicking returns to the hero */
+.timeline-brand {
+    display: flex;
+    align-items: center;
+    padding: 6px 15px 6px 6px;
+    margin-right: 7px;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.92rem;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    text-decoration: none;
+    background: linear-gradient(135deg, #9a8af0 0%, #c4b8ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #b3a4ff;                                  /* fallback */
+    border-right: 1px solid rgba(255, 255, 255, 0.14);
+    transition: filter 0.2s ease, opacity 0.2s ease;
+}
+.timeline-brand:hover { filter: brightness(1.18); }
+
+/* the chevron right after the brand gets the flat left edge the leftmost item would have */
+.timeline-brand + .timeline-item {
+    padding-left: 18px;
+    clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 50%, calc(100% - 11px) 100%, 0 100%);
+    border-radius: 8px 0 0 8px;
+}
+
 .timeline-item {
     display: flex;
     align-items: center;
@@ -1676,6 +1705,7 @@ body.dark-mode .left-sidebar-hint::before {
     .timeline-nav { padding: 6px 8px; gap: 2px; }
     .timeline-item { padding: 6px 13px 6px 18px; margin-right: -7px; }
     .timeline-label { font-size: 0.7rem; }
+    .timeline-brand { font-size: 0.78rem; padding: 5px 10px 5px 4px; margin-right: 5px; }
 }
 
 @media (max-width: 1400px) {
