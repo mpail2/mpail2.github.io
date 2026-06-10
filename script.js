@@ -603,6 +603,7 @@ function initResultsTunnel() {
         const claim = CLAIMS[key];
         if (!claim) return;
         active = key;
+        window.resultsActiveClaim = key;               // so selectTask can refresh the focus media
         table.classList.add('tv-active');
         chips.forEach(b => b.classList.toggle('is-on', b.dataset.claim === key));
         const chip = chips.filter(c => c.dataset.claim === key)[0];
@@ -635,6 +636,50 @@ function initResultsTunnel() {
     // RQ tab -> reveal its claims and focus the first; claim chip -> focus that claim (always one active)
     rqTabs.forEach(tab => tab.addEventListener('click', () => { const f = RQ_FIRST[tab.dataset.rq]; if (f) apply(f); }));
     chips.forEach(btn => btn.addEventListener('click', () => apply(btn.dataset.claim)));
+
+    // ---- focus-mode media: per-claim evidence (side-by-side training clips or a single video) ----
+    const mediaPanel = document.getElementById('results-media');
+    const MEDIA = {
+        world:       { kind: 'compare', left: { label: 'MPAIL2', sub: 'world model', mpail2: true }, right: { label: 'Model-Free [−PM]', sub: 'no dynamics model', folder: 'mpail2_pm' },
+                       note: 'Only the model-based learner gains traction in the real world; dropping the world model (DAC) collapses to 0%.' },
+        planning:    { kind: 'compare', left: { label: 'MPAIL2', sub: 'with MPPI planner', mpail2: true }, right: { label: 'Without Planning [−P]', sub: 'policy only', folder: 'mpail2_p' },
+                       note: 'The planner stabilizes the adversarial objective, yielding markedly more robust behavior than the policy alone.' },
+        supervision: { kind: 'compare', left: { label: 'MPAIL2', sub: 'no reward, no actions', mpail2: true }, right: { label: 'RLPD', sub: 'dense reward + action labels', folder: 'rlpd' },
+                       note: 'With strictly less supervision, MPAIL2 still matches or beats RLPD.' },
+        transfer:    { kind: 'compare', left: { label: 'From scratch', sub: 'no prior task', dir: 'From Scratch' }, right: { label: 'Transferred', sub: 'initialized from a related task', dir: 'Transfer' },
+                       note: 'Transfer reaches higher success in roughly half the real-world training time.' },
+        video:       { kind: 'single', src: 'Media/Video/Push/Video_only/push_vid_only_h264.mp4', badges: ['Wrist Camera', 'Proprioception'],
+                       note: 'Learned from a single fixed, table-mounted camera — no wrist camera and no proprioception.' }
+    };
+    const taskDir = () => (window.currentTask === 'pick-place') ? 'Pick' : 'Push';
+    function sideSrc(side, T) {
+        if (side.mpail2) return 'Media/Video/' + T + '/iter_100.mp4';
+        if (side.folder) return 'Media/Video/Comparison/' + side.folder + '/' + T + '/iter_100.mp4';
+        if (side.dir) return 'Media/Video/' + encodeURIComponent(side.dir) + '/' + T + '/iter_100.mp4';
+        return '';
+    }
+    const vidHTML = (src) => '<div class="video-display"><video autoplay muted loop playsinline preload="metadata"><source src="' + src + '" type="video/mp4"></video></div>';
+    const lblHTML = (s) => '<p class="results-vid__label">' + s.label + (s.sub ? '<span>' + s.sub + '</span>' : '') + '</p>';
+    window.renderClaimMedia = function (key) {
+        if (!mediaPanel) return;
+        const m = MEDIA[key];
+        if (!m) { mediaPanel.innerHTML = ''; return; }
+        const T = taskDir();
+        if (m.kind === 'single') {
+            const badges = (m.badges || []).map(b => '<div class="video-badge video-badge--disabled"><span class="video-badge__cross">No</span>' + b + '</div>').join('');
+            mediaPanel.innerHTML = '<div class="results-single"><div class="video-display">' +
+                '<video autoplay muted loop playsinline preload="metadata"><source src="' + m.src + '" type="video/mp4"></video>' +
+                (badges ? '<div class="video-badge-row">' + badges + '</div>' : '') + '</div></div>' +
+                '<p class="results-media__note">' + m.note + '</p>';
+        } else {
+            mediaPanel.innerHTML = '<div class="results-compare">' +
+                '<div class="results-vid">' + lblHTML(m.left) + vidHTML(sideSrc(m.left, T)) + '</div>' +
+                '<div class="results-compare__vs">vs</div>' +
+                '<div class="results-vid">' + lblHTML(m.right) + vidHTML(sideSrc(m.right, T)) + '</div>' +
+                '</div><p class="results-media__note">' + m.note + '</p>';
+        }
+        mediaPanel.querySelectorAll('video').forEach(v => { try { v.playbackRate = 3; v.play().catch(function () {}); } catch (e) {} });
+    };
 
     window.resultsTunnelClear = clear;                 // let the Undirected toggle (phase 3) un-focus the table
     apply('world');                                    // default: Q1, world-modeling claim
@@ -1695,6 +1740,8 @@ function selectTask(task) {
     updateInitialDemonstrationVideos();
     updateResultsImages();
     if (typeof refreshCharts === 'function') refreshCharts();
+    // refresh the focus-mode results media for the new task
+    if (typeof window.renderClaimMedia === 'function' && window.resultsActiveClaim) window.renderClaimMedia(window.resultsActiveClaim);
 }
 
 function updateSliderRange() {
