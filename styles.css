@@ -2854,29 +2854,43 @@ body.dark-mode .results-html-table.tv-active tbody td.tv-focus.col-result {
 }
 .results-questions__intro { margin: 0; font-size: 0.92rem; line-height: 1.5; color: #4b5563; max-width: 48ch; }
 body.dark-mode .results-questions__intro { color: #c7cdda; }
-.rq-group { margin-bottom: 18px; }
-.rq-group:last-child { margin-bottom: 0; }
-.rq-group__q {
-    margin: 0 0 9px; font-size: 1rem; font-weight: 700; line-height: 1.4; color: #1f2937;
-    display: flex; align-items: baseline; gap: 9px;
+/* each question is a collapsible accordion: the question is a toggle, its claims tuck under it */
+.rq-group {
+    margin-bottom: 10px; border: 1px solid rgba(102, 126, 234, 0.18); border-radius: 9px; overflow: hidden;
 }
-body.dark-mode .rq-group__q { color: #e8eaed; }
+.rq-group:last-child { margin-bottom: 0; }
+body.dark-mode .rq-group { border-color: rgba(165, 180, 252, 0.2); }
+.rq-group__q {
+    width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+    margin: 0; padding: 12px 14px; font-size: 0.97rem; font-weight: 700; line-height: 1.4; color: #1f2937;
+    background: rgba(102, 126, 234, 0.05); border: none;
+    display: flex; align-items: center; gap: 10px; transition: background .2s;
+}
+.rq-group__q:hover { background: rgba(102, 126, 234, 0.1); }
+.rq-group__text { flex: 1 1 auto; }
+.rq-group__chev { flex: 0 0 auto; font-size: 1.25rem; line-height: 1; color: #667eea; transition: transform .25s ease; }
+.rq-group.is-open .rq-group__chev { transform: rotate(90deg); }
+body.dark-mode .rq-group__q { color: #e8eaed; background: rgba(165, 180, 252, 0.07); }
+body.dark-mode .rq-group__q:hover { background: rgba(165, 180, 252, 0.13); }
+body.dark-mode .rq-group__chev { color: #a5b4fc; }
 .rq-group__tag {
     flex: 0 0 auto; font: 700 0.72rem/1 'Space Grotesk', 'Inter', sans-serif; letter-spacing: .04em;
     color: #fff; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 6px; padding: 4px 7px;
 }
 body.dark-mode .rq-group__tag { color: #0e1117; background: #a5b4fc; }
+/* claims tucked under the question; collapsed unless the question is expanded */
+.rq-group__claims { overflow: hidden; max-height: 0; transition: max-height .3s ease; }
+.rq-group.is-open .rq-group__claims { max-height: 320px; }
 .rq-claim {
-    display: block; width: 100%; text-align: left; font: inherit; font-size: 0.92rem; line-height: 1.5;
-    color: #4b5563; cursor: pointer; margin: 0 0 6px; padding: 9px 12px;
-    background: transparent; border: 1px solid transparent; border-left: 3px solid rgba(102, 126, 234, 0.25);
-    border-radius: 6px; transition: background .2s, border-color .2s, color .2s;
+    display: block; width: 100%; text-align: left; font: inherit; font-size: 0.9rem; line-height: 1.5;
+    color: #4b5563; cursor: pointer; margin: 0; padding: 11px 14px 11px 17px;
+    background: transparent; border: none; border-top: 1px solid rgba(102, 126, 234, 0.12);
+    border-left: 3px solid transparent; transition: background .2s, border-color .2s, color .2s;
 }
-.rq-claim:last-child { margin-bottom: 0; }
 .rq-claim strong { color: #1f2937; font-weight: 700; }
 .rq-claim:hover { background: rgba(102, 126, 234, 0.06); border-left-color: rgba(102, 126, 234, 0.6); }
 .rq-claim.is-on { background: rgba(102, 126, 234, 0.1); border-left-color: #667eea; }
-body.dark-mode .rq-claim { color: #c7cdda; border-left-color: rgba(165, 180, 252, 0.3); }
+body.dark-mode .rq-claim { color: #c7cdda; border-top-color: rgba(165, 180, 252, 0.14); }
 body.dark-mode .rq-claim strong { color: #e8eaed; }
 body.dark-mode .rq-claim:hover { background: rgba(165, 180, 252, 0.08); }
 body.dark-mode .rq-claim.is-on { background: rgba(165, 180, 252, 0.14); border-left-color: #a5b4fc; }

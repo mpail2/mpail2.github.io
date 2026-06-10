@@ -634,6 +634,11 @@ function initResultsTunnel() {
         if (document.body.classList.contains('results-undirected')) setResultsMode('focus');
         apply(btn.dataset.claim);
     }));
+    // accordion: clicking a question expands/collapses its claims (collapsed by default)
+    document.querySelectorAll('.rq-group__q').forEach(q => q.addEventListener('click', () => {
+        const open = q.closest('.rq-group').classList.toggle('is-open');
+        q.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }));
 
     // ---- focus-mode media: per-claim evidence (side-by-side training clips or a single video) ----
     const mediaPanel = document.getElementById('results-media');
