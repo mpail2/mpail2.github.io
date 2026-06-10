@@ -584,12 +584,45 @@ function renderCharts() {
     if (trData && document.getElementById('transfer-chart-bottom')) {
         [transferChartTop, transferChartBottom] = createTransferBrokenChart(trData, newTaskX);
     }
+
+    // (re)render the focused claim's plot now that data is loaded
+    if (window.resultsActiveClaim) renderClaimPlot(window.resultsActiveClaim);
 }
 
 function refreshCharts() {
     if (!chartData) return;
     renderCharts();
 }
+
+// ─── Per-claim efficiency plots (Focus mode) ─────────────────────────────────
+// Each claim emphasises a subset of methods; render their Sample-Efficiency curves
+// for both real tasks under the claim's media. Efficiency-based claims only.
+const CLAIM_PLOT_METHODS = {
+    world:       ['MPAIL2', '[−P] (MAIRL)', '[−PM] (DAC)'],
+    planning:    ['MPAIL2', '[−P] (MAIRL)'],
+    supervision: ['MPAIL2', 'RLPD'],
+};
+let claimChartPush = null, claimChartPick = null;
+function renderClaimPlot(key) {
+    if (claimChartPush) { claimChartPush.destroy(); claimChartPush = null; }
+    if (claimChartPick) { claimChartPick.destroy(); claimChartPick = null; }
+    const wrap = document.getElementById('results-plot');
+    if (!wrap) return;
+    const methods = CLAIM_PLOT_METHODS[key];
+    const pick = (task) => {
+        const eff = chartData && chartData.efficiency && chartData.efficiency[task];
+        if (!eff || !methods) return null;
+        const s = {};
+        methods.forEach(m => { if (eff[m]) s[m] = eff[m]; });
+        return Object.keys(s).length ? s : null;
+    };
+    const sp = pick('push'), sk = pick('pick');
+    if (!sp && !sk) { wrap.style.display = 'none'; return; }   // no plot for this claim (or data not loaded)
+    wrap.style.display = '';
+    if (sp) claimChartPush = createResultChart('claim-chart-push', 'claim-chart-push-legend', 'Sample Efficiency — Block Push', sp);
+    if (sk) claimChartPick = createResultChart('claim-chart-pick', 'claim-chart-pick-legend', 'Sample Efficiency — Pick-and-Place', sk);
+}
+window.renderClaimPlot = renderClaimPlot;
 
 // Re-render on theme toggle
 const _origToggleTheme = window.toggleTheme;

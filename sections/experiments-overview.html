@@ -254,5 +254,17 @@
 
         <!-- focus-mode media: side-by-side training clips or a single video, swapped per claim by renderClaimMedia() -->
         <div class="results-media" id="results-media" aria-live="polite"></div>
+
+        <!-- focus-mode per-claim efficiency plots (filled by renderClaimPlot(); hidden when a claim has none) -->
+        <div class="results-plot" id="results-plot" style="display:none;">
+            <div class="results-plot__one">
+                <div class="results-chart-container"><canvas id="claim-chart-push"></canvas></div>
+                <div id="claim-chart-push-legend"></div>
+            </div>
+            <div class="results-plot__one">
+                <div class="results-chart-container"><canvas id="claim-chart-pick"></canvas></div>
+                <div id="claim-chart-pick-legend"></div>
+            </div>
+        </div>
     </div>
 </section>

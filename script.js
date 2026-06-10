@@ -624,7 +624,8 @@ function initResultsTunnel() {
         });
         caption.textContent = claim.text;
         caption.classList.add('is-on');
-        if (typeof window.renderClaimMedia === 'function') window.renderClaimMedia(key);   // phase 2 hook
+        if (typeof window.renderClaimMedia === 'function') window.renderClaimMedia(key);   // videos
+        if (typeof window.renderClaimPlot === 'function') window.renderClaimPlot(key);     // efficiency plots
     }
 
     // RQ tab -> reveal its claims and focus the first; any claim (text or chip) -> focus it (clicking a

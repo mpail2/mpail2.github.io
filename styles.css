@@ -2983,6 +2983,10 @@ body.results-undirected #results-selector .results-rail__focusctl { display: non
 
 /* ===== Focus-mode media panel (per-claim evidence) ===== */
 .results-media { margin: 22px auto 0; max-width: 980px; }
+/* per-claim efficiency plots (one per real task), below the media */
+.results-plot { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin: 26px auto 0; max-width: 1000px; }
+.results-plot__one { flex: 1 1 400px; min-width: 280px; max-width: 520px; display: flex; flex-direction: column; }
+body.results-undirected #results-plot { display: none !important; }
 .results-compare {
     display: flex; align-items: stretch; justify-content: center; gap: 14px; flex-wrap: nowrap;
 }
