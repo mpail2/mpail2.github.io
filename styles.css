@@ -2604,6 +2604,13 @@ body.results-undirected .results-stage-head, body.results-undirected #results-me
     .results-explore:hover .results-panel { flex-grow: 1; transform: none; opacity: 1; }
 }
 
+/* per-method mini "branding" component diagram (table method cells + stage labels) */
+.mini-diagram { display: block; }
+.mini-diagram-wrap { display: inline-flex; align-items: center; line-height: 0; }
+#tv-table td .mini-diagram-wrap { display: flex; justify-content: center; margin-top: 5px; }
+.mini-diagram-wrap--label { display: flex; justify-content: center; margin-bottom: 6px; }
+.results-vid__name { display: block; }
+
 /* ── Video overlay badges ── */
 .video-badge-row {
     position: absolute;

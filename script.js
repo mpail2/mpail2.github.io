@@ -544,6 +544,43 @@ function initResultsTunnel() {
     const subHead = headRows[1];
     if (subHead) Array.prototype.forEach.call(subHead.children, (th, i) => { th.dataset.col = COLS[i + 1]; });
 
+    // ----- per-method mini "branding" diagram (the CoRL Q1 reference): a gold Planner enclosure (when
+    // the method plans) wrapping the components it has — Dynamics(red) Reward(green/gold) Value(gold)
+    // Policy(purple). Shown in the table's method cells and the stage's method labels. -----
+    const METHOD_PARTS = {   // table key -> {planner, parts:[ [letter, color], ... ]}
+        mpail2: { planner: 1, parts: [['D', '#E0705A'], ['R', '#7FB069'], ['V', '#E0A53B'], ['P', '#A99BF5']] },
+        mairl:  { planner: 0, parts: [['D', '#E0705A'], ['R', '#7FB069'], ['V', '#E0A53B'], ['P', '#A99BF5']] },
+        dac:    { planner: 0, parts: [['R', '#7FB069'], ['V', '#E0A53B'], ['P', '#A99BF5']] },
+        rlpd:   { planner: 0, parts: [['R', '#E0A53B'], ['V', '#E0A53B'], ['P', '#A99BF5']] },   // hand reward = gold
+        bc:     { planner: 0, parts: [['P', '#A99BF5']] }
+    };
+    function miniDiagram(methodKey) {
+        const m = METHOD_PARTS[methodKey];
+        if (!m) return '';
+        const bw = 14, bh = 15, gap = 3, pad = m.planner ? 4 : 0;
+        const W = m.parts.length * bw + (m.parts.length - 1) * gap + pad * 2, H = bh + pad * 2;
+        let s = '<svg class="mini-diagram" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+        if (m.planner) s += '<rect x="0.7" y="0.7" width="' + (W - 1.4).toFixed(1) + '" height="' + (H - 1.4).toFixed(1) + '" rx="5" fill="none" stroke="#E0A53B" stroke-width="1.3"/>';
+        m.parts.forEach((p, i) => {
+            const x = pad + i * (bw + gap);
+            s += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="' + p[1] + '26" stroke="' + p[1] + '" stroke-width="1.3"/>';
+            s += '<text x="' + (x + bw / 2) + '" y="' + (pad + bh / 2) + '" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="700" fill="' + p[1] + '">' + p[0] + '</text>';
+        });
+        return s + '</svg>';
+    }
+    function sideMethodKey(side) {   // map a stage side (MEDIA config) -> table method key
+        if (side.mpail2 || side.dir) return 'mpail2';
+        if (side.folder === 'mpail2_p') return 'mairl';
+        if (side.folder === 'mpail2_pm') return 'dac';
+        if (side.folder === 'rlpd') return 'rlpd';
+        return null;
+    }
+    // drop the diagram into each table method cell (below the name)
+    bodyRows.forEach(tr => {
+        const cell = tr.children[0], svg = miniDiagram(tr.dataset.method);
+        if (cell && svg) cell.insertAdjacentHTML('beforeend', '<span class="mini-diagram-wrap">' + svg + '</span>');
+    });
+
     // each claim = the methods (rows) and metrics (columns) that constitute its evidence, dimming the rest
     const SCRATCH = ['res-bp', 'res-pnp', 'res-mop'];
     const CLAIMS = {
@@ -665,7 +702,11 @@ function initResultsTunnel() {
         return '';
     }
     const vidHTML = (prefix) => '<div class="video-display"><video autoplay muted loop playsinline preload="metadata" data-prefix="' + prefix + '"><source src="' + prefix + START_IT + '.mp4" type="video/mp4"></video></div>';
-    const lblHTML = (s) => '<p class="results-vid__label">' + s.label + (s.sub ? '<span>' + s.sub + '</span>' : '') + '</p>';
+    const lblHTML = (s) => {
+        const svg = miniDiagram(sideMethodKey(s));
+        return '<p class="results-vid__label">' + (svg ? '<span class="mini-diagram-wrap mini-diagram-wrap--label">' + svg + '</span>' : '') +
+            '<span class="results-vid__name">' + s.label + '</span>' + (s.sub ? '<span>' + s.sub + '</span>' : '') + '</p>';
+    };
     window.renderClaimMedia = function (key) {
         if (!mediaPanel) return;
         const m = MEDIA[key];
