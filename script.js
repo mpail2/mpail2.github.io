@@ -443,17 +443,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 taskButtonsLeft.classList.remove('visible');
             }
         }
-
-        // Show/hide the Results rail while the results section is in view; in Undirected mode the
-        // revealed Training section is contiguous below, so extend the range through its bottom.
-        const resultsRail = document.getElementById('results-rail');
-        if (resultsRail) {
-            const r = resultsOverviewRect;
-            const undirected = document.body.classList.contains('results-undirected');
-            const bottom = (undirected && efficiencyRect.bottom) ? efficiencyRect.bottom : r.bottom;
-            const showRail = r.top < windowHeight * 0.5 && bottom > 120;
-            resultsRail.classList.toggle('visible', showRail);
-        }
+        // (the Results selector / training bars are position:sticky, so they appear on overflow on
+        //  their own — no scroll-gating needed here)
 
         if (themeToggle) {
             if (scrollY > windowHeight * 0.9) {
@@ -582,7 +573,7 @@ function initResultsTunnel() {
         }
     };
 
-    const rail = document.getElementById('results-rail');
+    const rail = document.getElementById('results-selector');
     const rqTabs = rail ? Array.prototype.slice.call(rail.querySelectorAll('.results-rq')) : [];
     const chips = Array.prototype.slice.call(chipsWrap.querySelectorAll('.tv-chip'));
     const RQ_FIRST = { q1: 'world', q2: 'supervision', q3: 'transfer' };   // first claim shown per RQ
@@ -656,7 +647,8 @@ function initResultsTunnel() {
         video:       { kind: 'single', src: 'Media/Video/Push/Video_only/push_vid_only_h264.mp4', badges: ['Wrist Camera', 'Proprioception'],
                        note: 'Learned from a single fixed, table-mounted camera — no wrist camera and no proprioception.' }
     };
-    const taskDir = () => (window.currentTask === 'pick-place') ? 'Pick' : 'Push';
+    // all tasks are shown at once (the viewer doesn't pick a task in Focus mode)
+    const TASKS = [['Push', 'Block Push'], ['Pick', 'Pick-and-Place']];
     function sideSrc(side, T) {
         if (side.mpail2) return 'Media/Video/' + T + '/iter_100.mp4';
         if (side.folder) return 'Media/Video/Comparison/' + side.folder + '/' + T + '/iter_100.mp4';
@@ -669,7 +661,6 @@ function initResultsTunnel() {
         if (!mediaPanel) return;
         const m = MEDIA[key];
         if (!m) { mediaPanel.innerHTML = ''; return; }
-        const T = taskDir();
         if (m.kind === 'single') {
             const badges = (m.badges || []).map(b => '<div class="video-badge video-badge--disabled"><span class="video-badge__cross">No</span>' + b + '</div>').join('');
             mediaPanel.innerHTML = '<div class="results-single"><div class="video-display">' +
@@ -677,21 +668,26 @@ function initResultsTunnel() {
                 (badges ? '<div class="video-badge-row">' + badges + '</div>' : '') + '</div></div>' +
                 '<p class="results-media__note">' + m.note + '</p>';
         } else {
-            mediaPanel.innerHTML = '<div class="results-compare">' +
-                '<div class="results-vid">' + lblHTML(m.left) + vidHTML(sideSrc(m.left, T)) + '</div>' +
-                '<div class="results-compare__vs">vs</div>' +
-                '<div class="results-vid">' + lblHTML(m.right) + vidHTML(sideSrc(m.right, T)) + '</div>' +
-                '</div><p class="results-media__note">' + m.note + '</p>';
+            // one comparison row per task, so every task's evidence is displayed at once
+            const rows = TASKS.map(function (t) {
+                return '<div class="results-taskrow"><div class="results-taskrow__label">' + t[1] + '</div>' +
+                    '<div class="results-compare">' +
+                    '<div class="results-vid">' + lblHTML(m.left) + vidHTML(sideSrc(m.left, t[0])) + '</div>' +
+                    '<div class="results-compare__vs">vs</div>' +
+                    '<div class="results-vid">' + lblHTML(m.right) + vidHTML(sideSrc(m.right, t[0])) + '</div>' +
+                    '</div></div>';
+            }).join('');
+            mediaPanel.innerHTML = rows + '<p class="results-media__note">' + m.note + '</p>';
         }
         mediaPanel.querySelectorAll('video').forEach(v => { try { v.playbackRate = 3; v.play().catch(function () {}); } catch (e) {} });
     };
 
-    // ---- Focus / Undirected mode: Undirected reveals the full Training section as "all the evidence" ----
-    const modeWrap = document.getElementById('results-mode');
+    // ---- Focus / Undirected mode: Undirected reveals the full Training section as "all the evidence".
+    //      There are two mode toggles (the selector + the training bar), so wire them by class. ----
     function setResultsMode(mode) {
         const undirected = (mode === 'undirected');
         document.body.classList.toggle('results-undirected', undirected);
-        if (modeWrap) modeWrap.querySelectorAll('.results-mode-btn').forEach(b => b.classList.toggle('is-on', b.dataset.mode === mode));
+        document.querySelectorAll('.results-mode-btn').forEach(b => b.classList.toggle('is-on', b.dataset.mode === mode));
         if (undirected) {
             clear();                                                       // show the full, un-dimmed table
             if (typeof refreshCharts === 'function') refreshCharts();      // size the now-visible plots
@@ -702,7 +698,7 @@ function initResultsTunnel() {
             apply(window.resultsActiveClaim);                              // re-focus the active claim
         }
     }
-    if (modeWrap) modeWrap.querySelectorAll('.results-mode-btn').forEach(btn => btn.addEventListener('click', () => setResultsMode(btn.dataset.mode)));
+    document.querySelectorAll('.results-mode-btn').forEach(btn => btn.addEventListener('click', () => setResultsMode(btn.dataset.mode)));
 
     window.resultsTunnelClear = clear;
     apply('world');                                    // default: Q1, world-modeling claim, Focus mode
@@ -1775,8 +1771,6 @@ function selectTask(task) {
     updateInitialDemonstrationVideos();
     updateResultsImages();
     if (typeof refreshCharts === 'function') refreshCharts();
-    // refresh the focus-mode results media for the new task
-    if (typeof window.renderClaimMedia === 'function' && window.resultsActiveClaim) window.renderClaimMedia(window.resultsActiveClaim);
 }
 
 function updateSliderRange() {

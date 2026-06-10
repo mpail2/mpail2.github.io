@@ -55,6 +55,31 @@
             </div>
         </div>
 
+        <!-- Claim selector: sits inline after the overview videos and becomes a sticky top bar only
+             when the evidence below overflows the screen and the viewer scrolls past it. -->
+        <div class="results-selector" id="results-selector">
+            <div class="results-rail__focusctl">
+                <div class="results-rail__rqs" role="tablist">
+                    <button type="button" class="results-rq is-on" data-rq="q1" title="How does MPAIL2's design enable real-world IRLfO?">Q1</button>
+                    <button type="button" class="results-rq" data-rq="q2" title="Does less supervision mean less performance?">Q2</button>
+                    <button type="button" class="results-rq" data-rq="q3" title="How does MPAIL2 scale beyond single-task imitation?">Q3</button>
+                </div>
+                <span class="results-rail__sep"></span>
+                <div class="results-rail__claims" id="results-claims">
+                    <button type="button" class="tv-chip" data-claim="world" data-rq="q1">World modeling is critical</button>
+                    <button type="button" class="tv-chip" data-claim="planning" data-rq="q1">Planning enables robustness</button>
+                    <button type="button" class="tv-chip" data-claim="supervision" data-rq="q2">Less supervision &ne; less performance</button>
+                    <button type="button" class="tv-chip" data-claim="transfer" data-rq="q3">Positive online transfer</button>
+                    <button type="button" class="tv-chip" data-claim="video" data-rq="q3">Video-only demonstration</button>
+                </div>
+            </div>
+            <span class="results-rail__sep"></span>
+            <div class="results-mode" aria-label="View">
+                <button type="button" class="results-mode-btn is-on" data-mode="focus">Focus</button>
+                <button type="button" class="results-mode-btn" data-mode="undirected" title="Show all the evidence at once">Undirected</button>
+            </div>
+        </div>
+
         <div class="content-block" id="experiment-settings-block" style="margin-top: 32px; text-align: left;">
             <h3 class="subsection-header">Experiment Settings</h3>
                     <div class="collapsible-body">

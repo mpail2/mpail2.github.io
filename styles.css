@@ -2845,79 +2845,83 @@ body.dark-mode .results-html-table.tv-active tbody td.tv-focus.col-result {
 /* keep the highlight-row tint from competing with the dim while a claim is active */
 .results-html-table.tv-active tbody tr.table-highlight-row td.tv-dim { background: transparent; }
 
-/* ===== Results control rail: RQ + claim selector pinned under the global nav ===== */
-.results-rail {
-    position: fixed;
-    top: 52px; left: 50%;
-    transform: translateX(-50%) translateY(-8px);
-    z-index: 998;                                  /* under timeline-nav (1000) and task rail (999) */
-    display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: center;
-    max-width: 94vw; padding: 6px 9px;
-    background: rgba(14, 17, 23, 0.66);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 999px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.4,0,.2,1);
+/* ===== Results control bars: claim selector (Focus) + training controls (Undirected) =====
+   Both are pill bars that sit inline and stick to the top of the viewport only once the content
+   below them overflows the screen and the viewer scrolls past. Light by default (the results /
+   training sections are light cards), dark in dark mode. */
+.results-selector, .results-undirected-bar {
+    position: sticky; top: 52px; z-index: 30;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+    width: max-content; max-width: 96%; margin: 26px auto 10px; padding: 6px 9px;
+    background: rgba(245, 247, 255, 0.94);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 999px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
 }
-.results-rail.visible { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+body.dark-mode .results-selector, body.dark-mode .results-undirected-bar {
+    background: rgba(5, 8, 22, 0.9); border-color: rgba(165, 180, 252, 0.2); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
 .results-rail__rqs { display: flex; gap: 3px; }
 .results-rq {
     font: 600 0.74rem/1 'Space Grotesk', 'Inter', sans-serif; letter-spacing: .03em;
-    color: #8a93a8; background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 999px;
-    padding: 6px 12px; cursor: pointer;
-    transition: color .2s, background .2s, border-color .2s;
+    color: #4b5563; background: rgba(102, 126, 234, 0.08);
+    border: 1px solid rgba(102, 126, 234, 0.28); border-radius: 999px;
+    padding: 6px 12px; cursor: pointer; transition: color .2s, background .2s, border-color .2s;
 }
-.results-rq:hover { color: #fff; border-color: rgba(169, 155, 245, 0.5); }
-.results-rq.is-on { color: #fff; background: linear-gradient(135deg, #6E59C7, #9a8af0); border-color: transparent; }
-.results-rail__sep { width: 1px; align-self: stretch; min-height: 22px; background: rgba(255, 255, 255, 0.13); }
+.results-rq:hover { color: #667eea; border-color: rgba(102, 126, 234, 0.5); }
+.results-rq.is-on { color: #fff; background: linear-gradient(135deg, #667eea, #764ba2); border-color: transparent; }
+body.dark-mode .results-rq { color: #c7cdda; background: rgba(165, 180, 252, 0.1); border-color: rgba(165, 180, 252, 0.3); }
+body.dark-mode .results-rq:hover { color: #fff; }
+body.dark-mode .results-rq.is-on { color: #0e1117; background: #a5b4fc; border-color: transparent; }
+.results-rail__sep { width: 1px; align-self: stretch; min-height: 22px; background: rgba(102, 126, 234, 0.22); }
+body.dark-mode .results-rail__sep { background: rgba(255, 255, 255, 0.14); }
 .results-rail__claims { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-/* only the active RQ's claim chips are shown */
-.results-rail__claims .tv-chip { display: none; }
+.results-rail__claims .tv-chip { display: none; }            /* only the active RQ's chips show */
 .results-rail__claims .tv-chip.rq-on { display: inline-flex; }
+.results-rail__focusctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
-/* the RQ + claim controls group together so they can hide as a unit in Undirected mode */
-.results-rail__focusctl { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: center; }
-/* mode toggle (Focus / Undirected), styled like the overview's mode toggle */
+/* mode toggle (Focus / Undirected) */
 .results-mode { display: inline-flex; gap: 2px; padding: 2px; border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); }
+    background: rgba(102, 126, 234, 0.08); border: 1px solid rgba(102, 126, 234, 0.2); }
+body.dark-mode .results-mode { background: rgba(165, 180, 252, 0.1); border-color: rgba(165, 180, 252, 0.22); }
 .results-mode-btn { font: 600 0.72rem/1 'Space Grotesk', 'Inter', sans-serif; letter-spacing: .02em;
-    color: #8a93a8; background: transparent; border: none; border-radius: 999px; padding: 6px 12px;
+    color: #6b7280; background: transparent; border: none; border-radius: 999px; padding: 6px 12px;
     cursor: pointer; transition: color .2s, background .2s; }
-.results-mode-btn:hover { color: #fff; }
-.results-mode-btn.is-on { color: #fff; background: linear-gradient(135deg, #6E59C7, #9a8af0); }
-/* mode-driven show/hide: Focus shows the claim media + Training stays hidden; Undirected reveals
-   the full Training (efficiency) section and drops the focus media + claim controls */
-#efficiency-section { display: none; }
-/* in Undirected mode force the Training section fully visible, overriding the legacy section-fade
-   classes (.hidden-below / .fade-out set opacity:0) that otherwise keep it hidden at this scroll pos */
-body.results-undirected #efficiency-section {
-    display: block !important;
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-    pointer-events: auto !important;
-}
-body.results-undirected #results-media { display: none; }
-body.results-undirected .results-rail__focusctl { display: none; }
+.results-mode-btn:hover { color: #667eea; }
+.results-mode-btn.is-on { color: #fff; background: linear-gradient(135deg, #667eea, #764ba2); }
+body.dark-mode .results-mode-btn { color: #8a93a8; }
+body.dark-mode .results-mode-btn:hover { color: #fff; }
+body.dark-mode .results-mode-btn.is-on { color: #0e1117; background: #a5b4fc; }
 
-/* task toggle inside the rail (reuses .task-btn so selectTask keeps it in sync; chip-styled here) */
+/* task toggle (Undirected only); reuses .task-btn so selectTask keeps it in sync */
 .results-rail__task { display: flex; gap: 4px; }
-.results-rail .task-btn {
+.results-undirected-bar .task-btn {
     font-family: 'Space Grotesk', 'Inter', sans-serif;
     padding: 6px 13px; min-width: 0; font-size: 0.74rem; font-weight: 600; letter-spacing: .03em;
-    border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04); color: #8a93a8; box-shadow: none;
+    border-radius: 999px; border: 1px solid rgba(102, 126, 234, 0.28);
+    background: rgba(102, 126, 234, 0.08); color: #4b5563; box-shadow: none;
     transition: color .2s, background .2s, border-color .2s;
 }
-.results-rail .task-btn:hover { color: #fff; border-color: rgba(169, 155, 245, 0.5); background: rgba(255, 255, 255, 0.06); }
-.results-rail .task-btn.active { color: #fff; background: linear-gradient(135deg, #6E59C7, #9a8af0); border-color: transparent; }
+.results-undirected-bar .task-btn:hover { color: #667eea; border-color: rgba(102, 126, 234, 0.5); }
+.results-undirected-bar .task-btn.active { color: #fff; background: linear-gradient(135deg, #667eea, #764ba2); border-color: transparent; }
+body.dark-mode .results-undirected-bar .task-btn { color: #c7cdda; background: rgba(165, 180, 252, 0.1); border-color: rgba(165, 180, 252, 0.3); }
+body.dark-mode .results-undirected-bar .task-btn.active { color: #0e1117; background: #a5b4fc; border-color: transparent; }
+
+/* mode-driven show/hide: Focus shows the claim media + Training stays hidden; Undirected reveals the
+   full Training section and drops the focus media + claim controls (force-visible overrides the
+   legacy .hidden-below / .fade-out classes that otherwise keep it hidden at this scroll position) */
+#efficiency-section { display: none; }
+body.results-undirected #efficiency-section {
+    display: block !important; opacity: 1 !important; transform: none !important;
+    filter: none !important; pointer-events: auto !important;
+}
+body.results-undirected #results-media { display: none; }
+body.results-undirected #results-selector .results-rail__focusctl { display: none; }
 
 @media (max-width: 760px) {
-    .results-rail { gap: 6px; padding: 5px 7px; }
+    .results-selector, .results-undirected-bar { gap: 6px; padding: 5px 7px; }
     .results-rq { font-size: 0.68rem; padding: 5px 9px; }
-    .results-rail .task-btn { font-size: 0.68rem; padding: 5px 10px; }
+    .results-undirected-bar .task-btn { font-size: 0.68rem; padding: 5px 10px; }
 }
 
 /* ===== Focus-mode media panel (per-claim evidence) ===== */
@@ -2933,11 +2937,21 @@ body.results-undirected .results-rail__focusctl { display: none; }
 .results-vid .video-display { width: 100%; }
 .results-vid .video-display video { width: 100%; display: block; border-radius: 12px; }
 .results-vid__label {
-    text-align: center; margin: 0 0 8px; font-weight: 600; font-size: 0.92rem; color: #e8eaed;
+    text-align: center; margin: 0 0 8px; font-weight: 600; font-size: 0.9rem; color: #1f2937;
 }
+body.dark-mode .results-vid__label { color: #e8eaed; }
 .results-vid__label span {
-    display: block; font-weight: 500; font-size: 0.76rem; color: #8a93a8; margin-top: 1px;
+    display: block; font-weight: 500; font-size: 0.75rem; color: #6b7280; margin-top: 1px;
 }
+body.dark-mode .results-vid__label span { color: #8a93a8; }
+/* one comparison row per task; the task name heads each row */
+.results-taskrow { margin: 0 auto 22px; }
+.results-taskrow:last-of-type { margin-bottom: 4px; }
+.results-taskrow__label {
+    text-align: center; margin: 0 0 9px; font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-weight: 700; font-size: 0.82rem; letter-spacing: .04em; text-transform: uppercase; color: #667eea;
+}
+body.dark-mode .results-taskrow__label { color: #a5b4fc; }
 .results-single { display: flex; justify-content: center; }
 .results-single .video-display { max-width: 560px; width: 100%; position: relative; }
 .results-single .video-display video { width: 100%; display: block; border-radius: 12px; }

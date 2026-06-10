@@ -1,4 +1,17 @@
         <section class="tasks-section scroll-section" id="efficiency-section">
+            <!-- Undirected-view controls: the task toggle (Undirected has control over tasks) + a way
+                 back to Focus. Sticks to the top while scrolling the (long) training content. -->
+            <div class="results-undirected-bar" id="results-undirected-bar">
+                <div class="results-rail__task" aria-label="Task">
+                    <button type="button" class="task-btn active" data-task="push" onclick="selectTask('push')">Push</button>
+                    <button type="button" class="task-btn" data-task="pick-place" onclick="selectTask('pick-place')">Pick and Place</button>
+                </div>
+                <span class="results-rail__sep"></span>
+                <div class="results-mode" aria-label="View">
+                    <button type="button" class="results-mode-btn" data-mode="focus">Focus</button>
+                    <button type="button" class="results-mode-btn is-on" data-mode="undirected">Undirected</button>
+                </div>
+            </div>
             <h2 class="section-header" id="experiments-section">Training
                 <span class="section-subtitle">
                     All experiments are trained <strong>entirely from scratch in the real world</strong> with <strong>no pre-training or prior data of any kind</strong> (beyond task observations). Behavior Cloning via Diffusion Policy is also evaluated and its results can be viewed in the evaluation tables as it is an offline algorithm.
