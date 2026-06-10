@@ -3070,6 +3070,9 @@ a:hover {
 
 /* encoders (right-pointing wedge) */
 .bl-enc{fill:rgba(91,177,232,.16); stroke:#5BB1E8; stroke-width:1.9; stroke-linejoin:round;}
+/* opaque backing (diagram bg) drawn under each translucent encoder wedge so the feeder it sits over
+   is occluded rather than showing through; matches .story background so the wedge looks unchanged */
+.story__diagram .bl-enc-bg{fill:#0E1117; stroke:none;}
 .bl-enc-label{text-anchor:middle; font-weight:700; font-size:10px; fill:#E8EAED;}
 
 /* input image panels */

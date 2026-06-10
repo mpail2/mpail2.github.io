@@ -1091,7 +1091,7 @@ function initStoryScrub() {
         if (intEncG) intEncG.setAttribute('transform', encT);
         if (stRvp) stRvp.setAttribute('transform', 'translate(' + S.rvpDx.toFixed(2) + ',0)');
         if (dynGroup) dynGroup.setAttribute('transform', 'translate(' + S.dynDx.toFixed(2) + ',0)');
-        const sx = ((LS.encOn ? 274 : 200) + S.imgDx).toFixed(1);   // feeder resumes at encoder tip when present
+        const sx = (200 + S.imgDx).toFixed(1);   // feeder runs the full width; the opaque-backed encoder occludes its middle
         const ex = (456 + S.rvpDx).toFixed(1);
         if (wObs) wObs.setAttribute('d', roundOrtho('M' + sx + ',80 H' + ex + ' V141', 8));
         if (wInt) wInt.setAttribute('d', roundOrtho('M' + sx + ',271 H' + ex + ' V209', 8));

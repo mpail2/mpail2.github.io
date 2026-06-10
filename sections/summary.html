@@ -120,15 +120,17 @@
                     <rect class="bl-panel-frame" x="20" y="222" width="180" height="98" rx="13"/>
                     <text class="bl-label" x="110" y="337">Direct Interaction</text>
                 </g>
-                <!-- encoders. The panel->encoder stub lives here so it appears/clears with the wedge;
-                     the feeder then resumes from the encoder tip (x274), so no wire crosses the label. -->
+                <!-- encoders. The feeder runs the full width underneath; each wedge has an OPAQUE backing
+                     (bg-colored) so it occludes the feeder where it sits (no wire crosses the label, and
+                     nothing shows through the translucent wedge). The connector therefore persists even
+                     while the wedge fades in/out on the loop. -->
                 <g class="bl-comp bl-comp--fade is-off" data-comp="obsEnc">
-                    <path class="bl-wire" d="M200,80 H230"/>
+                    <polygon class="bl-enc-bg" points="230,112 274,98 274,62 230,48"/>
                     <polygon class="bl-enc" points="230,112 274,98 274,62 230,48"/>
                     <text class="bl-enc-label" x="250" y="85">Enc</text>
                 </g>
                 <g class="bl-comp bl-comp--fade is-off" data-comp="intEnc">
-                    <path class="bl-wire" d="M200,271 H230"/>
+                    <polygon class="bl-enc-bg" points="230,303 274,289 274,253 230,239"/>
                     <polygon class="bl-enc" points="230,303 274,289 274,253 230,239"/>
                     <text class="bl-enc-label" x="250" y="276">Enc</text>
                 </g>
