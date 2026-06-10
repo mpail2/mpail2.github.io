@@ -2665,7 +2665,11 @@ body.dark-mode .experiment-settings-table tr.table-group-header td {
     font-size: 0.82em;
     text-align: center;
     margin: 0 auto;
+    /* tabular figures so the success-rate digits line up (proportional figures look ragged) */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
 }
+.experiment-settings-table { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
 
 .results-html-table .col-model {
     text-align: center;
