@@ -1479,26 +1479,52 @@ body.dark-mode .results-chart-container {
     font-weight: 500;
 }
 
+/* Task selector — a sub-tracker pill rail pinned just beneath the global timeline-nav while the
+   Training section is in view (mirrors the overview's chapter rail). */
 .task-buttons-fixed {
     position: fixed;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%) translateZ(0);
+    top: 52px; left: 50%;
+    transform: translateX(-50%) translateY(-8px) translateZ(0);
     display: flex;
-    flex-direction: column;
-    gap: 15px;
-    z-index: 100;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    z-index: 999;            /* just under the timeline-nav (1000) */
+    padding: 5px 7px;
+    background: rgba(14, 17, 23, 0.62);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s ease;
-    will-change: opacity;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.4,0,.2,1);
+    will-change: opacity, transform;
 }
 
 .task-buttons-fixed.visible {
     opacity: 1;
     pointer-events: auto;
+    transform: translateX(-50%) translateY(0) translateZ(0);
+}
+
+/* compact chip look (icons hidden); ID-scoped so it wins in both light and dark themes */
+#task-buttons-left .task-icon { display: none; }
+#task-buttons-left .task-btn-wrapper { flex-direction: row; align-items: center; gap: 0; margin: 0; }
+#task-buttons-left .task-btn {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    padding: 6px 15px; min-width: 0; font-size: 0.76rem; font-weight: 600; letter-spacing: .03em;
+    border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04); color: #8a93a8; box-shadow: none;
+    transition: color .25s, background .25s, border-color .25s;
+}
+#task-buttons-left .task-btn:hover {
+    color: #fff; border-color: rgba(169, 155, 245, 0.5); background: rgba(255, 255, 255, 0.06);
+}
+#task-buttons-left .task-btn.active {
+    color: #fff; background: linear-gradient(135deg, #6E59C7, #9a8af0);
+    border-color: transparent; box-shadow: none;
 }
 
 /* Hint tooltip pointing to left task sidebar */
@@ -1524,18 +1550,19 @@ body.dark-mode .results-chart-container {
 .left-sidebar-hint.visible {
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(-50%) translateX(0);
+    transform: translateY(0);
 }
 
+/* upward arrow: the hint sits below the horizontal task rail */
 .left-sidebar-hint::before {
     content: '';
     position: absolute;
-    left: -8px;
-    top: var(--hint-arrow-y, 50%);
-    transform: translateY(-50%);
+    top: -8px;
+    left: var(--hint-arrow-x, 50%);
+    transform: translateX(-50%);
     border-width: 8px;
     border-style: solid;
-    border-color: transparent #111827 transparent transparent;
+    border-color: transparent transparent #111827 transparent;
 }
 
 .left-sidebar-hint .hint-close {
@@ -1953,14 +1980,10 @@ body.dark-mode .left-sidebar-hint::before {
 }
 
 @media (max-width: 1200px) {
-    .task-buttons-fixed {
-        left: 5px;
-        gap: 10px;
-    }
-    .task-btn {
-        font-size: 0.8em;
-        padding: 8px 14px;
-        min-width: 100px;
+    #task-buttons-left .task-btn {
+        font-size: 0.72rem;
+        padding: 5px 12px;
+        min-width: 0;
     }
 }
 

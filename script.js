@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
     leftSidebarHint.className = 'left-sidebar-hint';
     leftSidebarHint.innerHTML = `
         <button class="hint-close" aria-label="Dismiss hint" title="Dismiss">×</button>
-        <strong>Tip:</strong> Use the left sidebar to switch between experiment tasks.
+        <strong>Tip:</strong> Switch between experiment tasks here.
     `;
     document.body.appendChild(leftSidebarHint);
     let dismissedLeftHint = false;
@@ -341,9 +341,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const hintRect = leftSidebarHint.getBoundingClientRect();
 
-        const gap = 12;
-        const left = sidebarRect.right + gap;
-        const top = sidebarRect.top + (sidebarRect.height / 2) - (hintRect.height / 2);
+        // the selector is now a horizontal rail at top-center, so the hint sits centered just below it
+        const gap = 10;
+        const left = sidebarRect.left + (sidebarRect.width / 2) - (hintRect.width / 2);
+        const top = sidebarRect.bottom + gap;
         const clampedLeft = Math.max(8, Math.min(left, window.innerWidth - hintRect.width - 8));
         const clampedTop = Math.max(8, Math.min(top, window.innerHeight - hintRect.height - 8));
 
@@ -351,9 +352,9 @@ document.addEventListener('DOMContentLoaded', function() {
         leftSidebarHint.style.top = `${clampedTop}px`;
         leftSidebarHint.style.transform = 'translateY(0)';
 
-        // Put the arrow vertically aligned with sidebar center
-        const arrowY = (sidebarRect.top + sidebarRect.height / 2) - clampedTop;
-        leftSidebarHint.style.setProperty('--hint-arrow-y', `${Math.max(12, Math.min(hintRect.height - 12, arrowY))}px`);
+        // point the (upward) arrow at the horizontal center of the rail
+        const arrowX = (sidebarRect.left + sidebarRect.width / 2) - clampedLeft;
+        leftSidebarHint.style.setProperty('--hint-arrow-x', `${Math.max(16, Math.min(hintRect.width - 16, arrowX))}px`);
 
         if (wasHidden) {
             leftSidebarHint.style.display = 'none';
