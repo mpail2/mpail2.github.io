@@ -574,16 +574,20 @@ function renderCharts() {
         ? (chartData.transfer?.meta?.new_task_x_pick ?? null)
         : (chartData.transfer?.meta?.new_task_x_push ?? null);
 
-    if (effData && document.getElementById('efficiency-chart')) {
-        efficiencyChart = createResultChart(
-            'efficiency-chart', 'efficiency-chart-legend',
-            `Sample Efficiency – Real: ${taskLabel}`, effData
-        );
-    }
-
-    if (trData && document.getElementById('transfer-chart-bottom')) {
-        [transferChartTop, transferChartBottom] = createTransferBrokenChart(trData, newTaskX);
-    }
+    // only build the Training/Transfer charts when their (Undirected-only) section is actually visible —
+    // creating a Chart on a display:none / 0-size canvas can throw and abort the rest of this function
+    const visible = (id) => { const el = document.getElementById(id); return !!el && el.offsetWidth > 0; };
+    try {
+        if (effData && visible('efficiency-chart')) {
+            efficiencyChart = createResultChart(
+                'efficiency-chart', 'efficiency-chart-legend',
+                `Sample Efficiency – Real: ${taskLabel}`, effData
+            );
+        }
+        if (trData && visible('transfer-chart-bottom')) {
+            [transferChartTop, transferChartBottom] = createTransferBrokenChart(trData, newTaskX);
+        }
+    } catch (e) { console.error('training/transfer chart render failed:', e); }
 
     // (re)render the focused claim's plot now that data is loaded
     if (window.resultsActiveClaim) renderClaimPlot(window.resultsActiveClaim);
@@ -608,6 +612,7 @@ function renderClaimPlot(key) {
     if (claimChartPick) { claimChartPick.destroy(); claimChartPick = null; }
     const wrap = document.getElementById('results-plot');
     if (!wrap) return;
+    if (document.body.classList.contains('results-undirected')) { wrap.style.display = 'none'; return; }  // hidden in Undirected
     const isTransfer = (key === 'transfer');
     const methods = CLAIM_PLOT_METHODS[key];
     const pick = (task) => {
