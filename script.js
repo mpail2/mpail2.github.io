@@ -1005,15 +1005,17 @@ function initStoryScrub() {
         layoutRAF = requestAnimationFrame(step);
     }
 
-    // obs/interaction stacks: fan OUT when newly appearing, fan IN (collapse) on exit, else stay fanned.
+    // obs/interaction stacks: fan OUT (animated) when newly appearing, fan IN (collapse, animated) on
+    // exit, else stay fanned. A pending fan-out rAF is cancelled first so it can't undo a later collapse.
     let obsDeckWasOn = false, intDeckWasOn = false;
     function setDeckState(group, on, wasOn, collapseFlag, instant) {
-        if (collapseFlag) { group.classList.add('st-collapse'); return; }
+        if (group._deckRAF) { cancelAnimationFrame(group._deckRAF); group._deckRAF = 0; group.classList.remove('st-deck-instant'); }
+        if (collapseFlag) { group.classList.add('st-collapse'); return; }   // fan in (animates via the .6s transition)
         if (on && !wasOn && !instant) {              // newly appearing -> animate the fan-out from collapsed
             group.classList.add('st-deck-instant', 'st-collapse');
             void group.offsetWidth;                  // commit the collapsed start with transitions off
             group.classList.remove('st-deck-instant');
-            requestAnimationFrame(() => group.classList.remove('st-collapse'));   // then fan out
+            group._deckRAF = requestAnimationFrame(() => { group.classList.remove('st-collapse'); group._deckRAF = 0; });
             return;
         }
         group.classList.remove('st-collapse');
@@ -1066,8 +1068,8 @@ function initStoryScrub() {
     // (jump to the start instantly, then play to the end), with a progress bar above the caption. -----
     const animBar = document.getElementById('story-animbar');
     const animBarFill = animBar ? animBar.querySelector('span') : null;
-    const ANIM_MS = 620, LOOP_MS = ANIM_MS + 1500;
-    let loopRAF = null, loopT0 = 0, parkTimer = null;
+    const ANIM_MS = 680, LOOP_MS = ANIM_MS + 750;   // animation, then a short hold before replaying
+    let loopRAF = null, loopT0 = 0, lastScrollP = -1, lastScrollAt = 0;
     // Loop ONLY a beat's specific "style change" animation, in isolation (reset just that property to its
     // "before" instantly, then play it to its "after") — NOT block introductions, relabels, collapses,
     // or layout/phase intros. Returns {reset, apply} or null if the beat shouldn't loop.
@@ -1075,20 +1077,25 @@ function initStoryScrub() {
     function getReplay(idx) {
         const b = BEATS[idx], p = BEATS[idx - 1] || { on: [] };
         if ((b.imgPhase || 'col') !== (p.imgPhase || 'col')) return null;   // layout/phase intro, not a style loop
-        const deck = (g) => ({ reset: () => g.classList.add('st-collapse'), apply: () => g.classList.remove('st-collapse') });
-        if (has(b, 'obsDeck') && !has(p, 'obsDeck')) return deck(obsDeckG);  // data-stack expansion (fan out)
-        if (has(b, 'intDeck') && !has(p, 'intDeck')) return deck(intDeckG);  // interaction-stack expansion
-        if (!!b.sim && !p.sim) return {                                       // stack turns simulation/terminal-style
-            reset: () => intDeckG.classList.remove('is-sim'), apply: () => intDeckG.classList.add('is-sim') };
-        if (b.prior === 'gone' && p.prior !== 'gone') return {               // "(prior)" crossout
-            reset: () => { dynBox.classList.remove('st-dyn-online'); dynBox.classList.add('st-prior-show'); },
-            apply: () => { dynBox.classList.remove('st-prior-show'); dynBox.classList.add('st-dyn-online'); } };
-        if (has(b, 'recycleX') && !has(p, 'recycleX')) return {              // recycle loop ✕ crossout
-            reset: () => setComp('recycleX', false), apply: () => setComp('recycleX', true) };
-        if (!!b.sketchy && !p.sketchy) return {                              // return connector turns brittle
-            reset: () => svg.querySelectorAll('.st-return').forEach(e => e.classList.remove('st-sketchy')),
-            apply: () => svg.querySelectorAll('.st-return').forEach(e => e.classList.add('st-sketchy')) };
-        return null;
+        const R = [], A = [];                                               // reset / apply actions for this beat
+        // a small element fading in (NOT a model box) — encoders, the interaction->dynamics wire, the ✕
+        const appear = (c) => { if (has(b, c) && !has(p, c)) { R.push(() => setComp(c, false)); A.push(() => setComp(c, true)); } };
+        const deck = (g) => { R.push(() => { if (g._deckRAF) { cancelAnimationFrame(g._deckRAF); g._deckRAF = 0; } g.classList.add('st-collapse'); }); A.push(() => g.classList.remove('st-collapse')); };
+        if (has(b, 'obsDeck') && !has(p, 'obsDeck')) deck(obsDeckG);         // data-stack expansion (fan out)
+        if (has(b, 'intDeck') && !has(p, 'intDeck')) deck(intDeckG);         // interaction-stack expansion
+        if (!!b.sim && !p.sim) { R.push(() => intDeckG.classList.remove('is-sim')); A.push(() => intDeckG.classList.add('is-sim')); } // sim/terminal-style
+        if (b.prior === 'show' && p.prior !== 'show') { R.push(() => dynBox.classList.remove('st-prior-show')); A.push(() => dynBox.classList.add('st-prior-show')); } // "(prior)" appears
+        if (b.prior === 'gone' && p.prior !== 'gone') {                      // "(prior)" crossout
+            R.push(() => { dynBox.classList.remove('st-dyn-online'); dynBox.classList.add('st-prior-show'); });
+            A.push(() => { dynBox.classList.remove('st-prior-show'); dynBox.classList.add('st-dyn-online'); });
+        }
+        if (!!b.sketchy && !p.sketchy) {                                     // return connector turns brittle
+            R.push(() => svg.querySelectorAll('.st-return').forEach(e => e.classList.remove('st-sketchy')));
+            A.push(() => svg.querySelectorAll('.st-return').forEach(e => e.classList.add('st-sketchy')));
+        }
+        appear('recycleX'); appear('obsEnc'); appear('intEnc'); appear('wIntDyn');
+        if (!R.length) return null;                                          // block intro / no style change
+        return { reset: () => R.forEach(f => f()), apply: () => A.forEach(f => f()) };
     }
     function stopLoop() {
         if (loopRAF) { cancelAnimationFrame(loopRAF); loopRAF = null; }
@@ -1096,7 +1103,7 @@ function initStoryScrub() {
     }
     function startLoop(beatIdx) {
         stopLoop();
-        if (story.dataset.forceP || beatIdx <= 0) return;
+        if ((story.dataset.forceP && !story.dataset.testLoop) || beatIdx <= 0) return;
         const rep = getReplay(beatIdx);
         if (!rep) return;
         const cycle = () => {
@@ -1128,7 +1135,9 @@ function initStoryScrub() {
         const t = p * duration;
         // active beat / caption / chapter = last whose threshold <= current time
         let bi = 0; for (let i = 0; i < BEATS.length; i++) if (BEATS[i].t <= t + 0.01) bi = i;
-        stopLoop();                         // a scroll/resize cancels any running animation loop
+        const scrolled = Math.abs(p - lastScrollP) > 1e-4;   // ignore stray onScroll (resize, etc.) that don't move
+        lastScrollP = p;
+        if (scrolled) stopLoop();           // an actual scroll cancels any running animation loop
         applyBeat(bi);
         let ci = -1; for (let i = 0; i < caps.length; i++) if (parseFloat(caps[i].dataset.t) <= t + 0.01) ci = i;
         caps.forEach((c, i) => c.classList.toggle('is-on', i === ci));
@@ -1137,9 +1146,19 @@ function initStoryScrub() {
         setCite(hi);
         if (bar) bar.style.width = (p * 100) + '%';
         story.classList.toggle('is-scrolling', p > 0.008);
-        // once scrolling settles, replay the current beat's enter animation on a loop
-        if (!story.dataset.forceP) { clearTimeout(parkTimer); parkTimer = setTimeout(() => startLoop(curBeat), 450); }
+        if (scrolled) lastScrollAt = performance.now();   // the idle detector below restarts the loop
     }
+    // Robustly run the current beat's animation loop whenever scrolling has been idle a moment.
+    setInterval(() => {
+        if (loopRAF || story.classList.contains('story--narrated')) return;        // already looping / narrated
+        if (story.dataset.forceP && !story.dataset.testLoop) return;                // capture mode
+        if (performance.now() - lastScrollAt < 240) return;                         // still settling
+        if (!story.dataset.forceP) {                                                // only when the stage fills the view
+            const r = story.getBoundingClientRect();
+            if (r.bottom < window.innerHeight * 0.5 || r.top > window.innerHeight * 0.5) return;
+        }
+        startLoop(curBeat);
+    }, 200);
 
     // dev verification hook: ?storyp=0.42 forces a fixed progress and pins the
     // sticky stage into view so a headless screenshot captures that beat.
@@ -1147,6 +1166,24 @@ function initStoryScrub() {
     if (sp !== null) {
         story.dataset.forceP = sp;
         story.classList.add('story--forced');   // pins the stage to the viewport for capture
+    }
+    // dev: ?testloop=N pins the stage on beat N and runs its animation loop (for verifying the loop)
+    const tl = new URLSearchParams(location.search).get('testloop');
+    if (tl !== null) {
+        const n = parseInt(tl, 10);
+        story.dataset.forceP = ((BEATS[n].t + 0.5) / duration).toString();   // pin onScroll to beat N
+        story.dataset.testLoop = '1';
+        story.classList.add('story--forced');
+        // NOTE: no direct startLoop() — the idle interval must trigger it (verifies the real path)
+    }
+    // dev: ?autoloop=N scrolls to beat N (no forcing) so the real idle-interval loop must trigger it
+    const al = new URLSearchParams(location.search).get('autoloop');
+    if (al !== null) {
+        const n = parseInt(al, 10);
+        setTimeout(() => {
+            const range = story.offsetHeight - window.innerHeight;
+            window.scrollTo(0, story.offsetTop + ((BEATS[n].t + 0.5) / duration) * range);
+        }, 200);
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });

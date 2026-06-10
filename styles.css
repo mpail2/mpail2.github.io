@@ -3151,7 +3151,8 @@ video:-webkit-full-screen {
 .story__diagram.st-dim-imgs .bl-input image{opacity:0.42;}
 /* story-only wire flavors */
 .story__diagram .bl-wire--red{stroke:#E0705A;}
-.story__diagram .st-return{transition:stroke .45s ease, stroke-width .45s ease, stroke-dasharray .45s ease;}
+/* solid base dasharray (60 0) so toggling to the brittle (3 7) actually animates the line breaking up */
+.story__diagram .st-return{stroke-dasharray:60 0; transition:stroke .5s ease, stroke-width .5s ease, stroke-dasharray .5s ease;}
 .story__diagram .st-return.st-sketchy{stroke:#E0705A; stroke-width:2.4; stroke-dasharray:3 7;}
 /* deck groups fade by OPACITY ONLY (no transform reset) so they fade in place instead of snapping
    to home — the layout engine keeps positioning them via the transform attribute even while hidden */
@@ -3176,8 +3177,9 @@ video:-webkit-full-screen {
 .story__diagram .st-term-2{transform:translate(16px,-24px);}
 .story__diagram .st-term-3{transform:translate(8px,-12px);}
 /* collapse: plain rects (positioned at x44/36/28) retract to the base; terminal frames go to 0 */
-/* during an expand, snap to the collapsed start with transitions off, then fan out */
-.story__diagram .st-deck-grp.st-deck-instant .st-deck--red,
+/* during an expand, snap to the collapsed start with transitions off, then fan out
+   (.st-deck covers both the obs stack and the interaction plain stack; .st-term-frame the sim stack) */
+.story__diagram .st-deck-grp.st-deck-instant .st-deck,
 .story__diagram .st-deck-grp.st-deck-instant .st-term-frame{transition:none !important;}
 .story__diagram [data-comp="intDeck"].st-collapse .st-deck--red:nth-of-type(1){transform:translate(-24px,36px);}
 .story__diagram [data-comp="intDeck"].st-collapse .st-deck--red:nth-of-type(2){transform:translate(-16px,24px);}
@@ -3313,11 +3315,12 @@ video:-webkit-full-screen {
 /* animation-loop progress bar (small, just above the caption) */
 .story__animbar{
     position:absolute; left:50%; bottom:24%; transform:translateX(-50%);
-    width:132px; height:3px; border-radius:3px; overflow:hidden; z-index:4;
-    background:rgba(255,255,255,0.12); opacity:0; transition:opacity .35s ease; pointer-events:none;
+    width:172px; height:4px; border-radius:4px; overflow:hidden; z-index:4;
+    background:rgba(255,255,255,0.16); opacity:0; transition:opacity .35s ease; pointer-events:none;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.05);
 }
 .story__animbar.is-on{opacity:1;}
-.story__animbar span{display:block; height:100%; width:0; border-radius:3px; background:linear-gradient(90deg,#6E59C7,#9a8af0);}
+.story__animbar span{display:block; height:100%; width:0; border-radius:4px; background:linear-gradient(90deg,#7d68e0,#b3a4ff);}
 .story--narrated .story__animbar{display:none;}
 /* used during a loop reset to jump to the start instantly (no transitions/keyframes) */
 .story__diagram.st-no-anim, .story__diagram.st-no-anim *{transition:none !important; animation:none !important;}
