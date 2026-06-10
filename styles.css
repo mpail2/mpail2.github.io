@@ -3223,8 +3223,14 @@ video:-webkit-full-screen {
 .story__diagram .st-planner .bl-planner.st-as-policy{stroke:#A99BF5; fill:rgba(169,155,245,.16); stroke-width:1.5;}
 /* the policy box fades in place (no 58px drop) as the planner grows over it */
 .story__diagram .bl-box[data-comp="policy"].st-morph-out.is-off{transform:none;}
-/* the reward/value/policy cluster slides as a unit (transform set on #st-rvp by the layout engine) */
-.story__diagram #st-rvp{transition:none;}
+/* the reward/value/policy cluster slides as a unit (transform set on #st-rvp by the layout engine).
+   The springy transition layers a little overshoot on the position tween so the cluster "jiggles"
+   into place, matching the dynamics box. */
+.story__diagram #st-rvp{transition:transform .3s cubic-bezier(.34,1.3,.5,1);}
+/* dynamics: the wrapper carries the position (same springy slide as #st-rvp); the inner box EXPANDS
+   in place when introduced (scale up about its own center) rather than dropping in from below. */
+.story__diagram #st-dyn-pos{transition:transform .3s cubic-bezier(.34,1.3,.5,1);}
+.story__diagram [data-comp="dynamics"].is-off{transform:scale(0.4);}
 /* mode toggle (scroll vs narrated), top-right of the stage */
 .story__mode{
     position:absolute; top:54px; right:18px; z-index:7; display:inline-flex; gap:3px; padding:4px;

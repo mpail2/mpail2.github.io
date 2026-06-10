@@ -137,11 +137,15 @@
                      Dynamics is fixed at the left of the box stage. Reward + Value + Policy and the
                      wires between them ride in #st-rvp, which the layout engine slides as a unit so
                      the cluster stays centered and only spreads to make room when a box is added. -->
-                <g class="bl-comp bl-box bl-box--dynamics is-off" data-comp="dynamics" id="st-dyn">
-                    <rect x="320" y="143" width="88" height="64" rx="12"/>
-                    <text x="364" y="175">Dynamics</text>
-                    <text class="bl-box-sub st-dyn-sub" id="st-dyn-sub" x="364" y="193">(prior)</text>
-                    <line class="st-strike" id="st-dyn-strike" x1="338" y1="189" x2="390" y2="189"/>
+                <!-- outer wrapper carries the layout translate (attribute); the inner box owns the
+                     entrance scale (CSS, about its own center) so the two transforms don't collide -->
+                <g id="st-dyn-pos">
+                    <g class="bl-comp bl-box bl-box--dynamics is-off" data-comp="dynamics" id="st-dyn">
+                        <rect x="320" y="143" width="88" height="64" rx="12"/>
+                        <text x="364" y="175">Dynamics</text>
+                        <text class="bl-box-sub st-dyn-sub" id="st-dyn-sub" x="364" y="193">(prior)</text>
+                        <line class="st-strike" id="st-dyn-strike" x1="338" y1="189" x2="390" y2="189"/>
+                    </g>
                 </g>
 
                 <g id="st-rvp">

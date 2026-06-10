@@ -916,7 +916,7 @@ function initStoryScrub() {
     const DYN_HOME = 320, GAP = 28;
     const OBS_C = { x: 110, y: 80 }, INT_C = { x: 110, y: 271 };     // panel centers (for center-scaling)
     const stRvp = document.getElementById('st-rvp');
-    const dynGroup = document.getElementById('st-dyn');
+    const dynGroup = document.getElementById('st-dyn-pos');   // wrapper that carries the layout translate
     const intPanel = svg.querySelector('[data-comp="intPanel"]');
     const obsEncG = svg.querySelector('[data-comp="obsEnc"]');
     const intEncG = svg.querySelector('[data-comp="intEnc"]');
@@ -945,12 +945,15 @@ function initStoryScrub() {
             let W = GAP * Math.max(0, present.length - 1); present.forEach(c => W += CW[c]);
             const imgDx = 226 - W / 2;                      // centers image(180)+gap(120)+core on viewBox center
             S.imgDx = imgDx; S.obsTx = imgDx; S.intTx = imgDx;
+            // dynamics is always the leftmost core box, so its slot is at imgDx whether or not it is
+            // present yet. Pre-positioning it there means it EXPANDS in place when the planner introduces
+            // it (a pure scale, no slide-in) instead of dropping in from below.
+            S.dynDx = imgDx;
             if (present.length) {
                 const firstLeft = DYN_HOME + imgDx;        // leftmost core box sits a fixed gap from the images
                 let cur = firstLeft; const left = {};
                 present.forEach(c => { left[c] = cur; cur += CW[c] + GAP; });
                 for (const c of ['reward', 'value', 'policy']) if (c in left) { S.rvpDx = left[c] - HOME[c]; break; }
-                if ('dynamics' in left) S.dynDx = left.dynamics - DYN_HOME;
                 const last = present[present.length - 1];
                 // planner enclosure wraps every present core box. Before the planner exists it sits
                 // exactly on the policy box (same geom + color) so MPAIL's planner can MORPH out of it:
