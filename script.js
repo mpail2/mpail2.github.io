@@ -1392,11 +1392,42 @@ function initStoryScrub() {
     }
 
     const videoEl = document.getElementById('story-video');
+
+    // ----- narrated mini-player: while the narration plays, float it into a corner as the overview
+    // scrolls out of view (the video element is *moved*, not recreated, so playback never stops). -----
+    let pipBox = null;
+    function ensurePipBox() {
+        if (pipBox) return pipBox;
+        pipBox = document.createElement('div');
+        pipBox.className = 'story__pip';
+        pipBox.innerHTML = '<span class="story__pip-label">Narrated overview</span>' +
+            '<button type="button" class="story__pip-close" aria-label="Close mini player" title="Close">&times;</button>';
+        pipBox.querySelector('.story__pip-close').addEventListener('click', closePip);
+        document.body.appendChild(pipBox);
+        return pipBox;
+    }
+    function enterPip() {
+        if (!videoEl || document.body.classList.contains('story-pip-on')) return;
+        ensurePipBox().insertBefore(videoEl, pipBox.firstChild);   // move the playing video into the corner
+        document.body.classList.add('story-pip-on');
+    }
+    function exitPip() {
+        if (!videoEl || !document.body.classList.contains('story-pip-on')) return;
+        const stage = story.querySelector('.story__stage'), diagram = document.getElementById('story-diagram');
+        if (stage) stage.insertBefore(videoEl, diagram || null);   // put it back before the diagram
+        document.body.classList.remove('story-pip-on');
+    }
+    function closePip() { try { videoEl.pause(); } catch (e) {} exitPip(); }
+    story._exitPip = exitPip;                                       // let the mode toggle dock it on exit
+
     function onScroll() {
         const rect = story.getBoundingClientRect();
-        // narrated mode: no scrubbing; just pause the video once it scrolls out of view
+        // narrated mode: no scrubbing. If the narration is playing, float it into a corner mini-player
+        // as the overview scrolls out of view; dock it back when the overview returns.
         if (story.classList.contains('story--narrated')) {
-            if (videoEl && (rect.bottom < 40 || rect.top > window.innerHeight - 40)) { try { videoEl.pause(); } catch (e) {} }
+            const outOfView = rect.bottom < 40 || rect.top > window.innerHeight - 40;
+            if (outOfView) { if (videoEl && !videoEl.paused) enterPip(); }
+            else exitPip();
             return;
         }
         const range = story.offsetHeight - window.innerHeight;
@@ -1540,6 +1571,7 @@ function initStoryScrub() {
             if (videoEl) { try { videoEl.muted = false; videoEl.currentTime = 0; const pr = videoEl.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {} }
         } else {
             story.classList.remove('story--narrated');
+            if (story._exitPip) story._exitPip();          // dock the mini-player back before pausing
             if (videoEl) { try { videoEl.pause(); } catch (e) {} }
         }
         onScroll();
