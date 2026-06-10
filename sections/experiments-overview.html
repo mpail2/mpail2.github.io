@@ -55,28 +55,30 @@
             </div>
         </div>
 
-        <!-- Claim selector: sits inline after the overview videos and becomes a sticky top bar only
-             when the evidence below overflows the screen and the viewer scrolls past it. -->
-        <div class="results-selector" id="results-selector">
-            <div class="results-rail__focusctl">
-                <div class="results-rail__rqs" role="tablist">
-                    <button type="button" class="results-rq is-on" data-rq="q1" title="How does MPAIL2's design enable real-world IRLfO?">Q1</button>
-                    <button type="button" class="results-rq" data-rq="q2" title="Does less supervision mean less performance?">Q2</button>
-                    <button type="button" class="results-rq" data-rq="q3" title="How does MPAIL2 scale beyond single-task imitation?">Q3</button>
-                </div>
-                <span class="results-rail__sep"></span>
-                <div class="results-rail__claims" id="results-claims">
-                    <button type="button" class="tv-chip" data-claim="world" data-rq="q1">World modeling is critical</button>
-                    <button type="button" class="tv-chip" data-claim="planning" data-rq="q1">Planning enables robustness</button>
-                    <button type="button" class="tv-chip" data-claim="supervision" data-rq="q2">Less supervision &ne; less performance</button>
-                    <button type="button" class="tv-chip" data-claim="transfer" data-rq="q3">Positive online transfer</button>
-                    <button type="button" class="tv-chip" data-claim="video" data-rq="q3">Video-only demonstration</button>
+        <!-- Research questions + claims, presented as readable text (primary). Click a claim to focus
+             its evidence below. The compact bar (body-level, in index.html) only appears once this
+             block has scrolled above the top. -->
+        <div class="results-questions" id="results-questions">
+            <div class="results-questions__head">
+                <p class="results-questions__intro">Click a finding to focus its supporting evidence below — or switch to the <strong>Undirected</strong> view to explore everything at once.</p>
+                <div class="results-mode" aria-label="View">
+                    <button type="button" class="results-mode-btn is-on" data-mode="focus">Focus</button>
+                    <button type="button" class="results-mode-btn" data-mode="undirected" title="Show all the evidence at once">Undirected</button>
                 </div>
             </div>
-            <span class="results-rail__sep"></span>
-            <div class="results-mode" aria-label="View">
-                <button type="button" class="results-mode-btn is-on" data-mode="focus">Focus</button>
-                <button type="button" class="results-mode-btn" data-mode="undirected" title="Show all the evidence at once">Undirected</button>
+            <div class="rq-group">
+                <h3 class="rq-group__q"><span class="rq-group__tag">Q1</span> How does MPAIL2's design enable real-world IRLfO?</h3>
+                <button type="button" class="rq-claim" data-claim="world" data-rq="q1"><strong>World modeling is critical.</strong> Only IRL learners with a learned dynamics model gain any real-world traction; dropping the model collapses to 0%.</button>
+                <button type="button" class="rq-claim" data-claim="planning" data-rq="q1"><strong>Planning enables robustness.</strong> The MPPI planner stabilizes the adversarial objective, yielding far more robust behavior than the policy alone.</button>
+            </div>
+            <div class="rq-group">
+                <h3 class="rq-group__q"><span class="rq-group__tag">Q2</span> Does less supervision mean less performance?</h3>
+                <button type="button" class="rq-claim" data-claim="supervision" data-rq="q2"><strong>Less supervision &ne; less performance.</strong> MPAIL2 and its IRL ablations match or beat RLPD and BC despite using no hand-designed reward and no action labels.</button>
+            </div>
+            <div class="rq-group">
+                <h3 class="rq-group__q"><span class="rq-group__tag">Q3</span> How does MPAIL2 scale beyond single-task imitation?</h3>
+                <button type="button" class="rq-claim" data-claim="transfer" data-rq="q3"><strong>Positive online transfer.</strong> Initialized from a related task, MPAIL2 reaches higher success in roughly half the real-world training time.</button>
+                <button type="button" class="rq-claim" data-claim="video" data-rq="q3"><strong>Video-only demonstration.</strong> It learns from a single fixed, table-mounted camera &mdash; no wrist camera and no proprioception.</button>
             </div>
         </div>
 

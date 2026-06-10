@@ -2843,21 +2843,66 @@ body.dark-mode .results-html-table.tv-active tbody td.tv-focus.col-result {
 /* keep the highlight-row tint from competing with the dim while a claim is active */
 .results-html-table.tv-active tbody tr.table-highlight-row td.tv-dim { background: transparent; }
 
-/* ===== Results control bars: claim selector (Focus) + training controls (Undirected) =====
-   Both are pill bars that sit inline and stick to the top of the viewport only once the content
-   below them overflows the screen and the viewer scrolls past. Light by default (the results /
-   training sections are light cards), dark in dark mode. */
-.results-selector, .results-undirected-bar {
+/* ===== Results: readable questions/claims text (primary) + compact pill bars ===== */
+/* The questions are presented as text at the top of the results section. The compact claim bar
+   (.results-selector, fixed under the nav) only appears once that text scrolls above the top.
+   The training controls (.results-undirected-bar) stick within the training section. */
+.results-questions { max-width: 760px; margin: 30px auto 6px; text-align: left; }
+.results-questions__head {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.results-questions__intro { margin: 0; font-size: 0.92rem; line-height: 1.5; color: #4b5563; max-width: 48ch; }
+body.dark-mode .results-questions__intro { color: #c7cdda; }
+.rq-group { margin-bottom: 18px; }
+.rq-group:last-child { margin-bottom: 0; }
+.rq-group__q {
+    margin: 0 0 9px; font-size: 1rem; font-weight: 700; line-height: 1.4; color: #1f2937;
+    display: flex; align-items: baseline; gap: 9px;
+}
+body.dark-mode .rq-group__q { color: #e8eaed; }
+.rq-group__tag {
+    flex: 0 0 auto; font: 700 0.72rem/1 'Space Grotesk', 'Inter', sans-serif; letter-spacing: .04em;
+    color: #fff; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 6px; padding: 4px 7px;
+}
+body.dark-mode .rq-group__tag { color: #0e1117; background: #a5b4fc; }
+.rq-claim {
+    display: block; width: 100%; text-align: left; font: inherit; font-size: 0.92rem; line-height: 1.5;
+    color: #4b5563; cursor: pointer; margin: 0 0 6px; padding: 9px 12px;
+    background: transparent; border: 1px solid transparent; border-left: 3px solid rgba(102, 126, 234, 0.25);
+    border-radius: 6px; transition: background .2s, border-color .2s, color .2s;
+}
+.rq-claim:last-child { margin-bottom: 0; }
+.rq-claim strong { color: #1f2937; font-weight: 700; }
+.rq-claim:hover { background: rgba(102, 126, 234, 0.06); border-left-color: rgba(102, 126, 234, 0.6); }
+.rq-claim.is-on { background: rgba(102, 126, 234, 0.1); border-left-color: #667eea; }
+body.dark-mode .rq-claim { color: #c7cdda; border-left-color: rgba(165, 180, 252, 0.3); }
+body.dark-mode .rq-claim strong { color: #e8eaed; }
+body.dark-mode .rq-claim:hover { background: rgba(165, 180, 252, 0.08); }
+body.dark-mode .rq-claim.is-on { background: rgba(165, 180, 252, 0.14); border-left-color: #a5b4fc; }
+
+/* compact claim bar: fixed under the global nav, shown only when scrolled past the text */
+.results-selector {
+    position: fixed; top: 52px; left: 50%; transform: translateX(-50%) translateY(-8px);
+    z-index: 998; opacity: 0; pointer-events: none;
+    transition: opacity .3s ease, transform .3s cubic-bezier(.4,0,.2,1);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+    max-width: 94vw; padding: 6px 9px; border-radius: 999px;
+    background: rgba(245, 247, 255, 0.96);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid rgba(102, 126, 234, 0.2); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+}
+.results-selector.visible { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+.results-undirected-bar {
     position: sticky; top: 52px; z-index: 30;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
-    width: max-content; max-width: 96%; margin: 26px auto 10px; padding: 6px 9px;
+    width: max-content; max-width: 96%; margin: 4px auto 18px; padding: 6px 9px; border-radius: 999px;
     background: rgba(245, 247, 255, 0.94);
     -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-    border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 999px;
-    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.2); box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
 }
 body.dark-mode .results-selector, body.dark-mode .results-undirected-bar {
-    background: rgba(5, 8, 22, 0.9); border-color: rgba(165, 180, 252, 0.2); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    background: rgba(5, 8, 22, 0.92); border-color: rgba(165, 180, 252, 0.2); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 .results-rail__rqs { display: flex; gap: 3px; }
 .results-rq {

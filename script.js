@@ -430,8 +430,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 taskButtonsLeft.classList.remove('visible');
             }
         }
-        // (the Results selector / training bars are position:sticky, so they appear on overflow on
-        //  their own — no scroll-gating needed here)
+        // Compact claim bar (Focus mode): show it only once the readable questions text has scrolled
+        // above the top and there is still evidence below to scroll through.
+        const resultsSelector = document.getElementById('results-selector');
+        const questionsEl = document.getElementById('results-questions');
+        if (resultsSelector && questionsEl) {
+            const undirected = document.body.classList.contains('results-undirected');
+            const show = !undirected &&
+                questionsEl.getBoundingClientRect().bottom < 58 &&   // text scrolled above the nav
+                resultsOverviewRect.bottom > 140;                    // evidence still in/around view
+            resultsSelector.classList.toggle('visible', show);
+        }
 
         if (themeToggle) {
             if (scrollY > windowHeight * 0.9) {
@@ -562,7 +571,9 @@ function initResultsTunnel() {
 
     const rail = document.getElementById('results-selector');
     const rqTabs = rail ? Array.prototype.slice.call(rail.querySelectorAll('.results-rq')) : [];
-    const chips = Array.prototype.slice.call(chipsWrap.querySelectorAll('.tv-chip'));
+    const chips = Array.prototype.slice.call(chipsWrap.querySelectorAll('.tv-chip'));   // compact-bar chips (RQ-filtered)
+    // every clickable claim: the text claims up top + the compact-bar chips
+    const claimBtns = Array.prototype.slice.call(document.querySelectorAll('.tv-chip[data-claim], .rq-claim[data-claim]'));
     const RQ_FIRST = { q1: 'world', q2: 'supervision', q3: 'transfer' };   // first claim shown per RQ
     let active = null;
 
@@ -578,7 +589,7 @@ function initResultsTunnel() {
         table.classList.remove('tv-active');
         cells.forEach(c => c.classList.remove('tv-dim', 'tv-focus'));
         caption.classList.remove('is-on');
-        chips.forEach(b => b.classList.remove('is-on'));
+        claimBtns.forEach(b => b.classList.remove('is-on'));
         active = null;
     }
 
@@ -588,9 +599,9 @@ function initResultsTunnel() {
         active = key;
         window.resultsActiveClaim = key;               // so selectTask can refresh the focus media
         table.classList.add('tv-active');
-        chips.forEach(b => b.classList.toggle('is-on', b.dataset.claim === key));
-        const chip = chips.filter(c => c.dataset.claim === key)[0];
-        if (chip) showRQ(chip.dataset.rq);             // keep the rail's RQ + visible chips in sync
+        claimBtns.forEach(b => b.classList.toggle('is-on', b.dataset.claim === key));
+        const chip = claimBtns.filter(c => c.dataset.claim === key)[0];
+        if (chip) showRQ(chip.dataset.rq);             // keep the compact bar's RQ + visible chips in sync
         const colSet = new Set(claim.cols), rowSet = new Set(claim.rows);
         bodyRows.forEach(tr => {
             const rowOn = rowSet.has(tr.dataset.method);
@@ -616,9 +627,13 @@ function initResultsTunnel() {
         if (typeof window.renderClaimMedia === 'function') window.renderClaimMedia(key);   // phase 2 hook
     }
 
-    // RQ tab -> reveal its claims and focus the first; claim chip -> focus that claim (always one active)
+    // RQ tab -> reveal its claims and focus the first; any claim (text or chip) -> focus it (clicking a
+    // claim while in Undirected switches back to Focus so the focusing is visible)
     rqTabs.forEach(tab => tab.addEventListener('click', () => { const f = RQ_FIRST[tab.dataset.rq]; if (f) apply(f); }));
-    chips.forEach(btn => btn.addEventListener('click', () => apply(btn.dataset.claim)));
+    claimBtns.forEach(btn => btn.addEventListener('click', () => {
+        if (document.body.classList.contains('results-undirected')) setResultsMode('focus');
+        apply(btn.dataset.claim);
+    }));
 
     // ---- focus-mode media: per-claim evidence (side-by-side training clips or a single video) ----
     const mediaPanel = document.getElementById('results-media');
