@@ -7,6 +7,8 @@
     <title>MPAIL2</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
     <script src="script.js"></script>
     <script src="charts.js"></script>
 </head>
@@ -16,7 +18,7 @@
         <div class="hero-inner">
             <!-- <h1 class="hero-title">Online World Modeling<br>Enables<br>Real-World Inverse Reinforcement Learning from Observation</h1> -->
             <!-- <h1 class="hero-title">Online World Modeling<br>enables<br><u>real-world</u> inverse reinforcement learning from observation.</h1> -->
-            <h1 class="hero-title">Online World Modeling<br>enables <u>real-world</u><br> Inverse Reinforcement Learning from observation</h1>
+            <h1 class="hero-title">Online world modeling<br>enables <u>real-world</u><br> Inverse Reinforcement Learning from Observation</h1>
             <!-- Authors Section -->
             <div id="authors-section" class="authors-section authors-section--always-visible">
                 <div class="authors-list">
@@ -54,7 +56,7 @@
     
     <nav class="timeline-nav" id="timeline-nav">
         <div class="timeline-line"></div>
-        <a href="#hero" class="timeline-brand" aria-label="MPAIL2 — back to top"><span style="color:#5BB1E8">M</span><span style="color:#E0705A">P</span><span style="color:#7FB069">A</span><span style="color:#E0A53B">I</span><span style="color:#A99BF5">L</span><span class="timeline-brand__num">2</span></a>
+        <a href="#hero" class="timeline-brand" aria-label="MPAIL2 — back to top"><span class="timeline-brand__box"><span style="color:#5BB1E8">M</span><span style="color:#E0705A">P</span><span style="color:#7FB069">A</span><span style="color:#E0A53B">I</span><span style="color:#A99BF5">L</span></span><span class="timeline-brand__num">2</span></a>
         <a href="#summary-section" class="timeline-item active" data-section="summary">
             <span class="timeline-dot"></span>
             <span class="timeline-label">Overview</span>
@@ -71,9 +73,9 @@
             <span class="timeline-dot"></span>
             <span class="timeline-label">Results</span>
         </a>
-        <a href="#generalization-section" class="timeline-item" data-section="generalization">
+        <a href="#generalization-section" class="timeline-item timeline-item--standalone" data-section="generalization">
             <span class="timeline-dot"></span>
-            <span class="timeline-label">Generalization</span>
+            <span class="timeline-label">Gallery</span>
         </a>
     </nav>
 

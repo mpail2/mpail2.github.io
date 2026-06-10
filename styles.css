@@ -437,6 +437,90 @@ body.dark-mode .card-auto {
     max-width: 100%;
 }
 
+/* ===== Method: interactive architecture figure ↔ training algorithm ===== */
+.method-cue { display: block; margin-top: 10px; font-size: 0.86em; color: #667eea; }
+body.dark-mode .method-cue { color: #a5b4fc; }
+.method-explorer { max-width: 1180px; margin: 26px auto 0; }
+.method-cols { display: flex; gap: 22px; align-items: flex-start; }
+.method-figcol { flex: 1 1 auto; min-width: 0; }
+.method-figure { position: relative; }
+.method-video { margin-top: 14px; transition: opacity .22s ease; }
+.method-video .video-display { width: 100%; transition: box-shadow .22s ease, transform .22s ease; border-radius: 12px; }
+.method-video .video-display video { width: 100%; display: block; border-radius: 12px; }
+.method-video__cap { text-align: center; margin: 10px 0 0; color: #6b7280; line-height: 1.45; }
+body.dark-mode .method-video__cap { color: #9aa3b5; }
+/* the rollout video belongs to the planner: it dims with the rest while another component is focused,
+   and lifts (gold ring + raise) when the planner is focused */
+.method-explorer.is-active .method-video { opacity: .5; }
+.method-video.is-focus { opacity: 1 !important; }
+.method-video.is-focus .video-display { box-shadow: 0 0 0 3px #E0A53B, 0 14px 28px rgba(15, 23, 42, .3); transform: translateY(-3px); }
+
+.method-figure__svg { position: relative; z-index: 1; transition: opacity .22s ease, filter .22s ease; }
+.method-figure__svg svg { width: 100%; height: auto; display: block; color-scheme: light; }
+body.dark-mode .method-figure__svg svg { color-scheme: dark; }
+/* the exported diagram labels declare 'Lucida Console' (Windows-only), which falls back to a serif
+   default elsewhere — normalize the figure's text labels to the site font (math is embedded images) */
+.method-figure__svg svg foreignObject div,
+.method-figure__svg svg text { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif !important; }
+/* while a component is focused, the base figure recedes (dims) and the lift overlay raises the focus */
+/* focus = a dim veil over the figure with the focused component's REAL shape cells cloned on top and
+   raised. Highlights the actual objects (trapezoid / connector / node), not a rectangular crop. */
+.method-veil { opacity: 0; transition: opacity .22s ease; pointer-events: none;
+    fill: rgba(255, 255, 255, 0.66); }
+body.dark-mode .method-veil { fill: rgba(8, 10, 20, 0.62); }
+.method-lift-layer { pointer-events: none; }
+.method-liftcell { transform-box: fill-box; transform-origin: center; transform: scale(1) translateY(0);
+    transition: transform .24s cubic-bezier(.34, 1.34, .5, 1);
+    filter: drop-shadow(0 6px 10px rgba(15, 23, 42, .42)) drop-shadow(0 2px 3px rgba(15, 23, 42, .3)); }
+.method-liftcell.is-up { transform: scale(1.13) translateY(-5px); }
+body.dark-mode .method-liftcell { filter: drop-shadow(0 7px 12px rgba(0, 0, 0, .72)) drop-shadow(0 2px 4px rgba(0, 0, 0, .6)); }
+
+.method-figure__hot { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; z-index: 3; }
+.method-hot { fill: transparent; cursor: pointer; pointer-events: all; }
+
+/* dynamic caption: spans the full width above both columns, fixed height so it never reflows */
+.method-explain { background: #fff; border: 1px solid rgba(102, 126, 234, 0.16); border-radius: 12px;
+    padding: 12px 18px; margin-bottom: 16px; height: 86px; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: center; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06); }
+body.dark-mode .method-explain { background: #0b1020; border-color: rgba(165, 180, 252, 0.18); }
+.method-explain__title { margin: 0 0 5px; font: 700 0.98rem 'Inter', sans-serif; color: #1f2937; }
+body.dark-mode .method-explain__title { color: #e8eaed; }
+.method-explain__body { margin: 0; font-size: 0.9rem; line-height: 1.5; color: #4b5563; }
+body.dark-mode .method-explain__body { color: #c7cdda; }
+
+.method-algo { flex: 0 1 472px; max-width: 472px; min-width: 0; align-self: stretch; background: #fbfbfe; border: 1px solid rgba(102, 126, 234, 0.16); border-radius: 12px; padding: 15px 16px; text-align: left; font-family: 'Inter', system-ui, sans-serif; }
+body.dark-mode .method-algo { background: #0b1020; border-color: rgba(165, 180, 252, 0.18); }
+.algo__title { font: 700 0.86rem 'Inter', sans-serif; color: #1f2937; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(102, 126, 234, 0.14); }
+body.dark-mode .algo__title { color: #e8eaed; }
+.algo__req { margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px dashed rgba(120, 130, 150, 0.25); }
+.algo-line { position: relative; display: flex; align-items: center; flex-wrap: wrap; gap: 7px; padding: 2.5px 8px;
+    border-radius: 7px; font-size: 0.9rem; color: #374151; border-left: 3px solid transparent; transition: background .15s ease, border-color .15s ease; }
+body.dark-mode .algo-line { color: #c7cdda; }
+.algo-step { cursor: pointer; }
+.algo-step:hover { background: rgba(102, 126, 234, 0.06); }
+.algo-line.is-on { background: color-mix(in srgb, var(--c) 14%, transparent); border-left-color: var(--c); }
+.algo-i1 { margin-left: 18px; }
+.algo-kw { font-weight: 700; color: #9673a6; font-size: 0.75rem; letter-spacing: .02em; text-transform: uppercase; }
+body.dark-mode .algo-kw { color: #c4a7e7; }
+.algo-kwline { color: #6b7280; font-size: 0.8rem; }
+.algo-num { flex: 0 0 auto; width: 17px; height: 17px; border-radius: 50%; background: rgba(102, 126, 234, 0.14);
+    color: #667eea; font: 700 0.66rem/17px 'Inter', sans-serif; text-align: center; }
+body.dark-mode .algo-num { background: rgba(165, 180, 252, 0.2); color: #a5b4fc; }
+.algo-do { min-width: 0; }
+.algo-cmt { color: #9ca3af; font-size: 0.74rem; font-style: italic; margin-left: auto; white-space: nowrap; }
+/* equations stay collapsed until their line is focused, keeping the algorithm compact */
+.algo-eq { flex-basis: 100%; margin: 0 0 0 24px; max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height .25s ease, opacity .2s ease, margin .2s ease; }
+.algo-line.is-on .algo-eq { max-height: 90px; opacity: 1; margin: 3px 0 2px 24px; }
+.method-algo .katex { font-size: 1em; }
+.algo-line.is-on .algo-num { background: var(--c); color: #fff; }
+@media (max-width: 900px) {
+    .method-cols { flex-direction: column; }
+    .method-figcol { width: 100%; flex-basis: auto; }
+    .method-explain { height: auto; min-height: 86px; }
+    .algo-cmt { margin-left: 8px; }
+}
+
 .method-mppi-video {
     margin-top: 24px;
     max-width: 900px;
@@ -1635,7 +1719,8 @@ body.dark-mode .left-sidebar-hint::before {
 .timeline-brand {
     display: flex;
     align-items: center;
-    padding: 6px 15px 6px 6px;
+    gap: 3px;
+    padding: 4px 6px;
     margin-right: 7px;
     font-family: 'Space Grotesk', 'Inter', sans-serif;
     font-weight: 700;
@@ -1647,6 +1732,12 @@ body.dark-mode .left-sidebar-hint::before {
     color: #e8eaed;
     border-right: 1px solid rgba(255, 255, 255, 0.14);
     transition: filter 0.2s ease, opacity 0.2s ease;
+}
+/* gold enclosure echoing the planner box in the branding diagrams — frames only the MPAIL letters
+   (the components); the version "2" sits outside, like the planner box wraps just its components */
+.timeline-brand__box {
+    display: inline-flex; align-items: center; line-height: 1;
+    padding: 0 4px; border: 1.4px solid #E0A53B; border-radius: 5px;
 }
 .timeline-brand__num { color: #e8eaed; }
 .timeline-brand:hover { filter: brightness(1.18); }
@@ -1698,6 +1789,26 @@ body.dark-mode .left-sidebar-hint::before {
     color: #fff;
 }
 .timeline-item.active .timeline-label { font-weight: 700; }
+
+/* Gallery sits apart from the chevron steps — a standalone pill (still part of the tracker).
+   (.timeline-item.timeline-item--standalone to outspecify .timeline-item:last-child) */
+.timeline-item.timeline-item--standalone {
+    position: relative;
+    margin-left: 15px; margin-right: 0;
+    padding: 7px 16px;
+    clip-path: none;
+    border-radius: 8px;
+}
+.timeline-item--standalone::before {
+    content: ""; position: absolute; left: -8px; top: 16%; height: 68%; width: 1px;
+    background: rgba(255, 255, 255, 0.22);
+}
+/* the last chevron before the gap gets a clean flat right edge */
+.timeline-item:has(+ .timeline-item--standalone) {
+    margin-right: 0; padding-right: 19px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 11px 50%);
+    border-radius: 0 8px 8px 0;
+}
 
 @media (max-width: 760px) {
     .timeline-nav { padding: 6px 8px; gap: 2px; }
@@ -2570,38 +2681,76 @@ body.dark-mode .transfer-demo-btn {
 .results-reset:hover { color: #667eea; border-color: rgba(102, 126, 234, 0.5); background: rgba(102, 126, 234, 0.14); }
 body.dark-mode .results-reset { color: #c7cdda; background: rgba(165, 180, 252, 0.1); border-color: rgba(165, 180, 252, 0.3); }
 
-.results-explore { display: flex; align-items: stretch; gap: 14px; max-width: 1180px; margin: 0 auto; }
-.results-panel {
-    flex: 1 1 0; min-width: 0; background: #fff; border-radius: 12px; padding: 14px 16px; overflow: hidden;
+/* two columns: research questions on the left, the table (above a single plot) on the right */
+.results-explore { display: flex; align-items: flex-start; gap: 16px; max-width: 1180px; margin: 0 auto; }
+.results-explore .results-panel {
+    background: #fff; border-radius: 12px; padding: 14px 16px; margin-top: 0; min-width: 0;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06); border: 1px solid rgba(102, 126, 234, 0.12);
-    transition: flex-grow .3s ease, transform .3s ease, opacity .3s ease, box-shadow .3s ease;
 }
-body.dark-mode .results-panel { background: #0b1020; border-color: rgba(165, 180, 252, 0.16); }
-.results-panel--q { flex-grow: 0.9; }
-.results-panel--table { flex-grow: 1.5; }
-.results-panel--plots { flex-grow: 1.1; }
-/* hover any panel: it comes to the forefront; the others shrink + fall back */
-.results-explore:hover .results-panel { flex-grow: 0.6; transform: scale(.975); opacity: .68; }
-.results-explore .results-panel:hover {
-    flex-grow: 3 !important; transform: scale(1) !important; opacity: 1 !important;
-    z-index: 2; box-shadow: 0 12px 34px rgba(15, 23, 42, 0.14);
-}
+body.dark-mode .results-explore .results-panel { background: #0b1020; border-color: rgba(165, 180, 252, 0.16); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.results-panel--q { flex: 0 0 290px; align-self: stretch; }
+.results-panel--right { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.results-block { min-width: 0; }
+.results-block--plot { border-top: 1px solid rgba(102, 126, 234, 0.14); padding-top: 12px; }
+body.dark-mode .results-block--plot { border-color: rgba(165, 180, 252, 0.18); }
+
 .results-panel__title { margin: 0 0 10px; font: 700 0.92rem 'Inter', sans-serif; color: #1f2937; }
 body.dark-mode .results-panel__title { color: #e8eaed; }
 .results-panel__hint { font-weight: 500; font-size: 0.72rem; color: #9ca3af; margin-left: 8px; }
 .results-table-scroll { overflow-x: auto; }
+
+/* freeze ONLY the method column so it stays visible while the table scrolls horizontally.
+   (target the Method header by its class — the sub-header row's first child is "Reward", which must
+   NOT be frozen or it would overlap the method column.) */
+#tv-table thead th.col-model, #tv-table tbody td:first-child {
+    position: sticky; left: 0; background: #fff; z-index: 2;
+    box-shadow: 1px 0 0 rgba(102, 126, 234, 0.18);
+}
+#tv-table thead th.col-model { z-index: 4; }
+body.dark-mode #tv-table thead th.col-model, body.dark-mode #tv-table tbody td:first-child { background: #0b1020; }
+#tv-table tr.table-highlight-row td:first-child { background: #fff; }
+body.dark-mode #tv-table tr.table-highlight-row td:first-child { background: #0b1020; }
+/* keep the frozen column's background fully opaque so scrolled cells never show through it;
+   dim only the text/diagram (not the box) when the row is outside the active claim */
+#tv-table thead th.col-model, #tv-table tbody td:first-child { opacity: 1 !important; }
+#tv-table tbody td:first-child.tv-dim { color: rgba(31, 41, 55, 0.32); }
+#tv-table tbody td:first-child.tv-dim strong { color: inherit; }
+#tv-table tbody td:first-child.tv-dim .mini-diagram { opacity: 0.32; }
+body.dark-mode #tv-table tbody td:first-child.tv-dim { color: rgba(232, 234, 237, 0.32); }
+
 .results-plot__hint { text-align: center; font-size: 0.82rem; color: #9ca3af; margin: 10px 0 0; }
-.results-stage-head { display: flex; align-items: center; gap: 12px; max-width: 1100px; margin: 30px auto 0; }
+.results-plot-tip { margin: 0 0 6px; font-size: 0.78rem; line-height: 1.45; color: #6b7280; }
+.results-plot-tip strong { color: #667eea; font-weight: 600; }
+body.dark-mode .results-plot-tip { color: #9aa3b5; }
+body.dark-mode .results-plot-tip strong { color: #a5b4fc; }
+.results-chart-container--claim { max-width: 640px; width: 100%; margin: 0 auto; }
+.results-plot__one { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.results-plot__one + .results-plot__one { margin-top: 14px; }
+.results-shared-legend { margin-top: 10px; display: flex; justify-content: center; }
+/* plot header + Aggregate / By-task view toggle */
+.results-plot-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.results-plot-head .results-panel__title { margin: 0; }
+.results-plot-views { display: inline-flex; gap: 2px; padding: 2px; border-radius: 999px;
+    background: rgba(102, 126, 234, 0.08); border: 1px solid rgba(102, 126, 234, 0.18); }
+body.dark-mode .results-plot-views { background: rgba(165, 180, 252, 0.1); border-color: rgba(165, 180, 252, 0.22); }
+.plot-view-btn { font: 600 0.7rem/1 'Space Grotesk', 'Inter', sans-serif; letter-spacing: .02em;
+    border: none; background: transparent; color: #6b7280; padding: 5px 11px; border-radius: 999px; cursor: pointer; transition: color .2s, background .2s; }
+.plot-view-btn:hover { color: #667eea; }
+.plot-view-btn.is-on { color: #fff; background: linear-gradient(135deg, #667eea, #764ba2); }
+.plot-view-btn.is-disabled, .plot-view-btn:disabled { color: #c2c7d2; background: transparent; cursor: not-allowed; }
+.plot-view-btn.is-disabled:hover { color: #c2c7d2; }
+body.dark-mode .plot-view-btn.is-disabled, body.dark-mode .plot-view-btn:disabled { color: #4b5163; }
+body.dark-mode .plot-view-btn { color: #8a93a8; }
+body.dark-mode .plot-view-btn:hover { color: #fff; }
+body.dark-mode .plot-view-btn.is-on { color: #0e1117; background: #a5b4fc; }
+.results-stage-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 1180px; margin: 30px auto 0; }
 /* the explorer + stage are the Focus experience; Undirected swaps to the Training section */
 body.results-undirected .results-controls, body.results-undirected .results-explore,
 body.results-undirected .results-stage-head, body.results-undirected #results-media { display: none; }
-/* the table panel: scrolls horizontally; its tunnel-vision still works inside */
-.results-panel--table .results-html-table { font-size: 0.74em; }
-.results-panel--plots .results-plot { margin: 0; max-width: none; flex-direction: column; gap: 14px; }
-.results-panel--plots .results-plot__one { max-width: none; }
+.results-block--table .results-html-table { font-size: 0.74em; }
 @media (max-width: 920px) {
     .results-explore { flex-direction: column; }
-    .results-explore:hover .results-panel { flex-grow: 1; transform: none; opacity: 1; }
+    .results-panel--q { flex: 1 1 auto; align-self: auto; }
 }
 
 /* per-method mini "branding" component diagram (table method cells + stage labels) */
@@ -2905,10 +3054,10 @@ body.dark-mode .results-html-table.tv-active tbody td.tv-focus.col-result {
 .results-html-table.tv-active tbody tr.table-highlight-row td.tv-dim { background: transparent; }
 
 /* table-as-control-surface: cells that map to a stageable clip read as clickable; the cue strengthens
-   while the table panel is hovered/focused. Row & column headers bulk-select. */
+   while the table is hovered. Row & column headers bulk-select. */
 .results-html-table .tv-pick { cursor: pointer; position: relative; }
 .results-html-table tbody td[data-col="method"] { cursor: pointer; }
-.results-panel--table:hover .results-html-table .tv-pick { box-shadow: inset 0 0 0 1px rgba(102, 126, 234, 0.28); }
+#tv-table:hover .tv-pick { box-shadow: inset 0 0 0 1px rgba(102, 126, 234, 0.28); }
 .results-html-table .tv-pick:hover { background: rgba(102, 126, 234, 0.14) !important; }
 .results-html-table thead th[data-col]:hover,
 .results-html-table tbody td[data-col="method"]:hover { background: rgba(102, 126, 234, 0.12); cursor: pointer; }
@@ -3077,28 +3226,101 @@ body.dark-mode .results-scrub__label { color: #c7cdda; }
 body.dark-mode .results-scrub__label b { color: #a5b4fc; }
 body.dark-mode .results-scrub__slider { accent-color: #a5b4fc; }
 
-/* per-claim efficiency plots (one per real task), below the media */
-.results-plot { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin: 26px auto 0; max-width: 1000px; }
-.results-plot__one { flex: 1 1 400px; min-width: 280px; max-width: 520px; display: flex; flex-direction: column; }
+/* single per-claim efficiency plot (all relevant tasks overlaid), below the table */
+.results-plot { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0 auto; max-width: none; }
 body.results-undirected #results-plot { display: none !important; }
-/* results stage: a responsive grid of method×task tiles, each a labelled clip */
+/* results stage: a responsive grid of method×task tiles, each a labelled clip. The tile width is
+   driven by --stage-tile-w (set by the Size slider) so the viewer can resize the staged videos. */
 .results-stage-grid {
-    display: grid; gap: 18px 16px; margin: 4px auto 0;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    display: grid; gap: 18px 16px; margin: 4px auto 0; justify-content: center;
+    grid-template-columns: repeat(auto-fit, var(--stage-tile-w, 220px));
 }
-.results-stage-grid--single { grid-template-columns: minmax(0, 540px); justify-content: center; }
+.results-stage-grid--single { grid-template-columns: var(--stage-tile-w, 540px); justify-content: center; }
 .results-tile { min-width: 0; display: flex; flex-direction: column; }
 .results-tile .video-display { width: 100%; position: relative; }
-.results-tile .video-display video { width: 100%; display: block; border-radius: 12px; }
-.results-vid__label {
-    text-align: center; margin: 0 0 8px; font-weight: 600; font-size: 0.9rem; color: #1f2937;
+/* all clips are 16:9 — lock the box so every video is the same height and the row stays aligned */
+.results-tile .video-display video { width: 100%; display: block; border-radius: 12px; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
+
+/* in-video tags: branding diagram top-left (reveals the method name on hover/focus), abbreviated
+   task name top-right — each on a translucent background so it stays legible over any frame */
+.results-tag {
+    position: absolute; top: 7px; z-index: 3; display: flex; align-items: center; gap: 5px;
+    max-width: calc(100% - 14px); padding: 3px 7px; border-radius: 8px;
+    background: rgba(12, 15, 26, 0.62); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); color: #fff;
+    font: 700 0.7rem/1 'Inter', sans-serif;
 }
-body.dark-mode .results-vid__label { color: #e8eaed; }
-.results-vid__label span.results-vid__name { display: block; }
-.results-vid__label span {
-    display: block; font-weight: 500; font-size: 0.75rem; color: #6b7280; margin-top: 1px;
+.results-tag--brand { left: 7px; cursor: help; }
+.results-tag--task { right: 7px; letter-spacing: .03em; }
+.results-tag__diagram { display: flex; line-height: 0; }
+.results-tag__diagram svg { display: block; height: 16px; width: auto; }   /* scale the diagram into the tag */
+.results-tag__name {
+    max-width: 0; overflow: hidden; opacity: 0; white-space: nowrap;
+    transition: max-width .28s ease, opacity .2s ease;
 }
-body.dark-mode .results-vid__label span { color: #8a93a8; }
+.results-tag--brand:hover .results-tag__name,
+.results-tag--brand:focus .results-tag__name,
+.results-tag--brand:focus-within .results-tag__name { max-width: 170px; opacity: 1; }
+/* stage video-only badges sit at the bottom so they don't collide with the top tags */
+.results-tile .video-badge-row { top: auto; bottom: 8px; right: 8px; }
+
+/* grouped stage: bordered groups (by method or task); within a group a grid aligns each clip into
+   the column slot of its cross-dimension, with empty placeholders preserving alignment across groups */
+.results-groups { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin: 4px auto 0; }
+.results-group {
+    border: 1px solid rgba(102, 126, 234, 0.28); border-radius: 14px; padding: 12px 14px 14px;
+    background: rgba(102, 126, 234, 0.035);
+}
+body.dark-mode .results-group { border-color: rgba(165, 180, 252, 0.26); background: rgba(165, 180, 252, 0.05); }
+.results-group__label {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    text-align: center; margin: 0 0 10px; font: 700 0.92rem 'Inter', sans-serif; color: #1f2937;
+}
+body.dark-mode .results-group__label { color: #e8eaed; }
+.results-group__grid { display: grid; gap: 12px; }
+.results-group__grid .results-tile { width: var(--stage-tile-w, 190px); }
+.results-tile--empty {
+    border: 1px dashed rgba(120, 130, 150, 0.28); border-radius: 12px; aspect-ratio: 16 / 9;
+}
+
+/* stage grouping toggle (sits in the stage header) */
+.results-stage-opts { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+.results-stage-opts__label { font: 600 0.74rem 'Inter', sans-serif; color: #6b7280; }
+body.dark-mode .results-stage-opts__label { color: #9aa3b5; }
+.results-stage-size { display: inline-flex; align-items: center; gap: 6px; }
+.results-stage-size input[type=range] { width: 96px; accent-color: #667eea; cursor: pointer; }
+body.dark-mode .results-stage-size input[type=range] { accent-color: #a5b4fc; }
+
+/* controls bar: reset + full-width grouped on the right */
+.results-controls__right { display: inline-flex; align-items: center; gap: 10px; }
+#results-fullwidth.is-on { color: #fff; background: linear-gradient(135deg, #667eea, #764ba2); border-color: transparent; }
+body.dark-mode #results-fullwidth.is-on { color: #0e1117; background: #a5b4fc; }
+
+/* "Full width" expands the explorer just enough that the full table fits with no horizontal scroll
+   (sizes to content, capped at the viewport) — the stage, controls and the rest stay put. */
+body.results-fullwidth .results-explore {
+    max-width: min(100%, calc(100vw - 40px)); width: -moz-fit-content; width: fit-content;
+    margin-left: auto; margin-right: auto;
+}
+body.results-fullwidth .results-table-scroll { overflow-x: visible; }
+body.results-fullwidth .results-block--table .results-html-table { width: -moz-max-content; width: max-content; }
+.stage-group-btn {
+    font: 600 0.72rem/1 'Space Grotesk', 'Inter', sans-serif; letter-spacing: .02em;
+    border: none; background: transparent; color: #6b7280; padding: 6px 13px; border-radius: 999px;
+    cursor: pointer; transition: color .2s, background .2s;
+}
+.stage-group-btn:hover { color: #667eea; }
+.stage-group-btn.is-on { color: #fff; background: linear-gradient(135deg, #667eea, #764ba2); }
+body.dark-mode .stage-group-btn { color: #8a93a8; }
+body.dark-mode .stage-group-btn:hover { color: #fff; }
+body.dark-mode .stage-group-btn.is-on { color: #0e1117; background: #a5b4fc; }
+
+/* branding diagram: always centered above the method name / group label */
+.results-vid__label .mini-diagram-wrap, .results-group__label .mini-diagram-wrap {
+    display: flex; justify-content: center; width: 100%; margin: 0 auto;
+}
+.results-vid__label .mini-diagram-wrap--label { margin-bottom: 5px; }
+.mini-diagram { display: block; margin: 0 auto; }
 .results-stage-empty {
     text-align: center; margin: 8px auto; max-width: 56ch; padding: 28px 20px;
     font-size: 0.92rem; line-height: 1.55; color: #6b7280;
@@ -3295,6 +3517,7 @@ a:hover {
     transition:border-color .2s, background .2s, color .2s, box-shadow .2s, transform .12s;
 }
 .baseline-btn:hover{transform:translateY(-2px); border-color:#b9c0d0;}
+.baseline-btn__diagram{display:flex; justify-content:center; align-items:center; line-height:0; margin-bottom:4px; min-height:23px;}
 .baseline-btn__name{font-weight:700; font-size:1.12em;}
 .baseline-btn__sub{font-size:.8em; color:#8a93a3;}
 .baseline-btn.active{border-color:#6E59C7; background:#efeaff; color:#4a3fb0; box-shadow:0 5px 16px rgba(110,89,199,.2);}
@@ -3788,3 +4011,4 @@ body.story-pip-on .story__pip{display:block;}   /* the fly-in/out is FLIP-animat
 .contrib__claims li::before{content:""; position:absolute; left:3px; top:13px; width:8px; height:8px;
     border-radius:50%; background:var(--ca); opacity:.85;}
 .contrib__claims b{color:#eef1f7; font-weight:700;}
+

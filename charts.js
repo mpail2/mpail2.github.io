@@ -42,7 +42,7 @@ const LEGEND_HIDDEN = new Set([
 // ─── Build Chart.js datasets ──────────────────────────────────────────────────
 // Use two-dataset fill (+1) so the shaded region covers only the SE band,
 // not the full area down to y=0.
-function buildDatasets(seriesMap) {
+function buildDatasets(seriesMap, bands = true) {
     const datasets = [];
     for (const [label, series] of Object.entries(seriesMap)) {
         const c = styleFor(label);
@@ -50,22 +50,24 @@ function buildDatasets(seriesMap) {
         const upperPts = series.mean.map((m, i) => ({ x: series.x[i], y: +(m + series.std[i]).toFixed(4) }));
         const lowerPts = series.mean.map((m, i) => ({ x: series.x[i], y: Math.max(0, +(m - series.std[i]).toFixed(4)) }));
 
-        // Upper boundary – fills DOWN to the lower boundary dataset (+1 index)
-        datasets.push({
-            label: `${label}__upper`,
-            data: upperPts,
-            fill: '+1', backgroundColor: c.fill, borderWidth: 0,
-            pointRadius: 0, pointHoverRadius: 0,
-            tension: 0.3, order: 10,
-        });
-        // Lower boundary – just the boundary line, no fill
-        datasets.push({
-            label: `${label}__lower`,
-            data: lowerPts,
-            fill: false, borderWidth: 0,
-            pointRadius: 0, pointHoverRadius: 0,
-            tension: 0.3, order: 10,
-        });
+        if (bands) {
+            // Upper boundary – fills DOWN to the lower boundary dataset (+1 index)
+            datasets.push({
+                label: `${label}__upper`,
+                data: upperPts,
+                fill: '+1', backgroundColor: c.fill, borderWidth: 0,
+                pointRadius: 0, pointHoverRadius: 0,
+                tension: 0.3, order: 10,
+            });
+            // Lower boundary – just the boundary line, no fill
+            datasets.push({
+                label: `${label}__lower`,
+                data: lowerPts,
+                fill: false, borderWidth: 0,
+                pointRadius: 0, pointHoverRadius: 0,
+                tension: 0.3, order: 10,
+            });
+        }
         datasets.push({
             label,
             data: meanPts,
@@ -371,7 +373,60 @@ function tooltipOpts() {
 }
 
 // ─── Create a standard (single) chart ────────────────────────────────────────
-function createResultChart(canvasId, legendContainerId, title, seriesMap) {
+// draws each (mean) line's own label at its right end, coloured to match — used by the aggregate view
+// initial reveal: instead of the default zoom/grow-from-baseline, wipe the lines in left→right by
+// clipping the datasets layer to a width that eases 0→full. Only the data layer is clipped (axes,
+// grid and titles stay put). Enabled per-chart via options._grow.
+const GROW_MS = 850;
+const growHorizontalPlugin = {
+    id: 'growHorizontal',
+    beforeDatasetsDraw(chart) {
+        if (!chart.options._grow) return;
+        const a = chart.chartArea; if (!a) return;
+        if (chart._growT0 == null) chart._growT0 = performance.now();
+        const t = Math.min(1, (performance.now() - chart._growT0) / GROW_MS);
+        const p = 1 - Math.pow(1 - t, 3);                  // easeOutCubic
+        chart._growP = t;
+        const ctx = chart.ctx;
+        ctx.save(); chart._growSaved = true;
+        ctx.beginPath();
+        ctx.rect(a.left - 1, a.top - 2, (a.right - a.left) * p + 1, a.bottom - a.top + 4);
+        ctx.clip();
+        if (t < 1) requestAnimationFrame(() => { try { chart.draw(); } catch (e) {} });
+    },
+    afterDatasetsDraw(chart) {
+        if (chart._growSaved) { chart.ctx.restore(); chart._growSaved = false; }
+    },
+};
+Chart.register(growHorizontalPlugin);
+
+const inlineLabelPlugin = {
+    id: 'inlineLabels',
+    afterDatasetsDraw(chart) {
+        if (!chart.options._inlineLabels) return;
+        if (chart._growP != null && chart._growP < 0.999) return;   // hold labels until the lines finish drawing
+        const ctx = chart.ctx;
+        const placed = [];                                  // [y] already used, to dodge overlaps
+        chart.data.datasets.forEach((ds, i) => {
+            if (!ds.label || ds.label.includes('__')) return;   // skip SE-band datasets
+            const meta = chart.getDatasetMeta(i);
+            if (!meta || meta.hidden || !meta.data || !meta.data.length) return;
+            const pt = meta.data[meta.data.length - 1];
+            if (!pt) return;
+            let y = pt.y;
+            while (placed.some(p => Math.abs(p - y) < 13)) y -= 13;   // nudge up if it collides
+            placed.push(y);
+            ctx.save();
+            ctx.font = '700 11px Inter, sans-serif';
+            ctx.fillStyle = ds.borderColor || '#333';
+            ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+            ctx.fillText(ds.label, pt.x + 7, y);
+            ctx.restore();
+        });
+    }
+};
+
+function createResultChart(canvasId, legendContainerId, title, seriesMap, bands = true, xTitle = 'Number of Iterations', inlineLabels = false, newTaskX = null, xRange = null) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return null;
     const isDark    = document.body.classList.contains('dark-mode');
@@ -381,10 +436,16 @@ function createResultChart(canvasId, legendContainerId, title, seriesMap) {
 
     const chart = new Chart(canvas, {
         type: 'line',
-        data: { datasets: buildDatasets(seriesMap) },
+        data: { datasets: buildDatasets(seriesMap, bands) },
+        plugins: inlineLabels ? [inlineLabelPlugin] : [],
         options: {
             responsive: true,
+            animation: false,                                          // default zoom off; grow plugin wipes L→R
             interaction: { mode: 'xValue', intersect: false },
+            layout: inlineLabels ? { padding: { right: 116 } } : {},   // room for the on-line labels
+            _inlineLabels: inlineLabels,
+            _grow: true,
+            _newTaskX: newTaskX,                                       // vertical "New Task" separator (transfer)
             plugins: {
                 title: { display: true, text: title, color: txtColor,
                     font: { size: 14, weight: '600', family: 'Inter, sans-serif' }, padding: { bottom: 10 } },
@@ -394,7 +455,8 @@ function createResultChart(canvasId, legendContainerId, title, seriesMap) {
             scales: {
                 x: {
                     type: 'linear',
-                    title: { display: true, text: 'Number of Iterations',
+                    ...(xRange ? { min: xRange.min, max: xRange.max } : {}),
+                    title: { display: true, text: xTitle,
                         color: tickColor, font: { family: 'Inter, sans-serif', size: 11 } },
                     grid: { color: gridColor },
                     ticks: { color: tickColor, font: { family: 'Inter, sans-serif' } },
@@ -409,7 +471,8 @@ function createResultChart(canvasId, legendContainerId, title, seriesMap) {
             },
         },
     });
-    renderHtmlLegend(legendContainerId, seriesMap, 'efficiency');
+    if (inlineLabels) { const el = document.getElementById(legendContainerId); if (el) el.innerHTML = ''; }   // labels live on the lines
+    else renderHtmlLegend(legendContainerId, seriesMap, 'efficiency');
     return chart;
 }
 
@@ -598,47 +661,256 @@ function refreshCharts() {
     renderCharts();
 }
 
-// ─── Per-claim efficiency plots (Focus mode) ─────────────────────────────────
-// Each claim emphasises a subset of methods; render their Sample-Efficiency curves
-// for both real tasks under the claim's media. Efficiency-based claims only.
+// ─── Per-claim efficiency plot (Focus mode) ──────────────────────────────────
+// One dynamic plot per claim, overlaying every relevant task on a single canvas:
+// method → colour, task → line dash. Efficiency-based claims only (video has none).
 const CLAIM_PLOT_METHODS = {
     world:       ['MPAIL2', '[−P] (MAIRL)', '[−PM] (DAC)'],
     planning:    ['MPAIL2', '[−P] (MAIRL)'],
-    supervision: ['MPAIL2', 'RLPD'],
+    supervision: ['MPAIL2', '[−P] (MAIRL)', '[−PM] (DAC)', 'RLPD'],
 };
-let claimChartPush = null, claimChartPick = null;
+const PLOT_TASKS = [['push', 'Block Push', []], ['pick', 'Pick-and-Place', [7, 4]]];
+const AGG_GRID = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];   // % of training
+
+// sample a series at a fraction p∈[0,1] of its own training schedule (linear interpolation)
+function interpAtFrac(series, p) {
+    const xs = series.x, last = xs.length - 1, xt = p * xs[last];
+    if (xt <= xs[0]) return { mean: series.mean[0], std: series.std[0] };
+    for (let i = 1; i <= last; i++) {
+        if (xt <= xs[i]) {
+            const f = (xt - xs[i - 1]) / ((xs[i] - xs[i - 1]) || 1);
+            return { mean: series.mean[i - 1] + (series.mean[i] - series.mean[i - 1]) * f,
+                     std:  series.std[i - 1]  + (series.std[i]  - series.std[i - 1])  * f };
+        }
+    }
+    return { mean: series.mean[last], std: series.std[last] };
+}
+// The aggregate view collapses the claim to its rhetorical contrast: each line is the mean over the
+// listed methods × both tasks, labelled by the claim's framing (drawn on the line). Colour comes from
+// the first method in each group.
+const AGG_LABELS = {
+    world:       [['+ Dynamics', ['MPAIL2', '[−P] (MAIRL)']], ['− Dynamics', ['[−PM] (DAC)']]],
+    planning:    [['With Planning', ['MPAIL2']], ['Without Planning', ['[−P] (MAIRL)']]],
+    supervision: [['Observation-only', ['MPAIL2', '[−P] (MAIRL)', '[−PM] (DAC)']], ['Obs. + Reward + Actions', ['RLPD']]],
+};
+function aggregateEfficiency(key) {
+    const groups = AGG_LABELS[key] || (CLAIM_PLOT_METHODS[key] || []).map(m => [m, [m]]);
+    const out = {};
+    groups.forEach(([label, methodList]) => {
+        const series = [];
+        methodList.forEach(m => ['push', 'pick'].forEach(t => { const eff = chartData && chartData.efficiency && chartData.efficiency[t]; if (eff && eff[m]) series.push(eff[m]); }));
+        if (!series.length) return;
+        const x = [], mean = [], std = [];
+        AGG_GRID.forEach(p => {
+            let sm = 0, ss = 0;
+            series.forEach(s => { const v = interpAtFrac(s, p / 100); sm += v.mean; ss += v.std; });
+            x.push(p); mean.push(+(sm / series.length).toFixed(4)); std.push(+(ss / series.length).toFixed(4));
+        });
+        if (!ALGO_STYLES[label]) { const base = styleFor(methodList[0]); ALGO_STYLES[label] = { line: base.line, fill: base.fill, dash: [], width: 2.5 }; }
+        out[label] = { x, mean, std };
+    });
+    return out;
+}
+
+// interpolate a series at an absolute x value
+function interpAtX(s, xt) {
+    const xs = s.x, last = xs.length - 1;
+    if (xt <= xs[0]) return { mean: s.mean[0], std: s.std[0] };
+    for (let i = 1; i <= last; i++) {
+        if (xt <= xs[i]) {
+            const f = (xt - xs[i - 1]) / ((xs[i] - xs[i - 1]) || 1);
+            return { mean: s.mean[i - 1] + (s.mean[i] - s.mean[i - 1]) * f, std: s.std[i - 1] + (s.std[i] - s.std[i - 1]) * f };
+        }
+    }
+    return { mean: s.mean[last], std: s.std[last] };
+}
+// Transfer claim, aggregated: MPAIL2's Transferred vs From-Scratch runs, averaged over both tasks
+// against the new-task training progress (%) — conveys positive online transfer in one contrast.
+const TRANSFER_AGG = [
+    ['Transferred', { push: 'MPAIL2 (Full Transfer)', pick: 'MPAIL2 (Transferred)' }, []],
+    ['From Scratch', { push: 'MPAIL2 (From Scratch)', pick: 'MPAIL2 (From Scratch)' }, [6, 4]],
+];
+function aggregateTransfer() {
+    const meta = (chartData && chartData.transfer && chartData.transfer.meta) || {};
+    const out = {};
+    TRANSFER_AGG.forEach(([label, keys, dash]) => {
+        const runs = [];
+        ['push', 'pick'].forEach(t => {
+            const tr = chartData && chartData.transfer && chartData.transfer[t];
+            const s = tr && tr[keys[t]];
+            if (!s) return;
+            const ntx = (t === 'pick') ? (meta.new_task_x_pick ?? 0) : (meta.new_task_x_push ?? 0);
+            const xmax = (t === 'pick') ? (meta.x_max_pick ?? s.x[s.x.length - 1]) : (meta.x_max_push ?? s.x[s.x.length - 1]);
+            runs.push({ s, ntx, xmax });
+        });
+        if (!runs.length) return;
+        const x = [], mean = [], std = [];
+        AGG_GRID.forEach(p => {
+            let sm = 0, ss = 0, n = 0;
+            runs.forEach(({ s, ntx, xmax }) => { const v = interpAtX(s, ntx + (p / 100) * (xmax - ntx)); if (v) { sm += v.mean; ss += v.std; n++; } });
+            if (n) { x.push(p); mean.push(+(sm / n).toFixed(4)); std.push(+(ss / n).toFixed(4)); }
+        });
+        if (!ALGO_STYLES[label]) { const base = styleFor(label === 'Transferred' ? 'MPAIL2' : 'MPAIL2 (From Scratch)'); ALGO_STYLES[label] = { line: base.line, fill: base.fill, dash: dash, width: 2.5 }; }
+        out[label] = { x, mean, std };
+    });
+    return out;
+}
+
+// table method key → efficiency-series label, and result column → its task curve
+const EFF_METHOD = { mpail2: 'MPAIL2', mairl: '[−P] (MAIRL)', dac: '[−PM] (DAC)', rlpd: 'RLPD' };
+const COL_TASK = {
+    'res-bp':  { task: 'push', label: 'Block Push', dash: [] },
+    'res-pnp': { task: 'pick', label: 'Pick-and-Place', dash: [7, 4] },
+};
+// the "Claim" (aggregated) view is only meaningful with a claim selected; grey it out otherwise
+function setClaimBtnEnabled(on) {
+    const b = document.querySelector('#results-plot-views .plot-view-btn[data-view="claim"]');
+    if (!b) return;
+    b.disabled = !on;
+    b.classList.toggle('is-disabled', !on);
+    b.title = on ? "The claim's aggregated curves" : 'Select a finding (claim) above to enable the aggregated view';
+}
+
+let currentClaimKey = null, currentSelection = null, plotView = 'claim', claimCharts = [];
+function clearClaimCharts() { claimCharts.forEach(c => c && c.destroy()); claimCharts = []; }
 function renderClaimPlot(key) {
-    if (claimChartPush) { claimChartPush.destroy(); claimChartPush = null; }
-    if (claimChartPick) { claimChartPick.destroy(); claimChartPick = null; }
+    if (key && key[0] !== '_') { currentClaimKey = key; currentSelection = null; }   // entering claim mode
+    clearClaimCharts();
     const wrap = document.getElementById('results-plot');
     const hint = document.getElementById('results-plot-hint');
-    const show = (on) => { wrap.style.display = on ? '' : 'none'; if (hint) hint.style.display = on ? 'none' : ''; };
+    const views = document.getElementById('results-plot-views');
+    const show = (on) => { if (wrap) wrap.style.display = on ? '' : 'none'; if (hint) hint.style.display = on ? 'none' : ''; };
     if (!wrap) return;
-    if (document.body.classList.contains('results-undirected')) { show(false); return; }   // hidden in Undirected
+    wrap.innerHTML = '';
+    const hideViews = () => { if (views) views.style.display = 'none'; };
+    if (document.body.classList.contains('results-undirected')) { show(false); hideViews(); return; }
     const isTransfer = (key === 'transfer');
     const methods = CLAIM_PLOT_METHODS[key];
-    const pick = (task) => {
-        if (isTransfer) {                                   // transfer-vs-scratch curves (drop _init helpers)
-            const tr = chartData && chartData.transfer && chartData.transfer[task];
-            if (!tr) return null;
-            const s = {};
-            Object.keys(tr).forEach(k => { if (k[0] !== '_') s[k] = tr[k]; });
-            return Object.keys(s).length ? s : null;
+    if (!isTransfer && !methods) { show(false); hideViews(); return; }   // e.g. the video claim has no curves
+
+    // Transfer (Q3): "Claim" aggregates MPAIL2's Transferred vs From-Scratch over both tasks; "By task"
+    // separates the two per-task plots (Block Push, Pick-and-Place), each mirroring the Undirected view —
+    // a continuous x-axis with the shared initial-task training (the _init_* curves) then the new task's
+    // runs shifted after it, with a dashed "New Task" separator.
+    if (isTransfer) {
+        if (views) views.style.display = '';
+        setClaimBtnEnabled(true);
+        document.querySelectorAll('#results-plot-views .plot-view-btn').forEach(b => b.classList.toggle('is-on', b.dataset.view === plotView));
+
+        if (plotView === 'claim') {
+            const agg = aggregateTransfer();
+            if (!Object.keys(agg).length) { show(false); return; }
+            show(true);
+            wrap.insertAdjacentHTML('beforeend',
+                '<div class="results-chart-container results-chart-container--claim"><canvas id="claim-chart"></canvas></div><div id="claim-chart-legend"></div>');
+            claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend',
+                'Transfer — transferred vs from scratch', agg, true, 'New-task progress (%)', true));
+            return;
         }
+        // by task: the two per-task transfer plots, sharing ONE legend (built from the union of series)
+        const meta = (chartData && chartData.transfer && chartData.transfer.meta) || {};
+        let any = false; const unionSeries = {};
+        PLOT_TASKS.forEach(([task, taskLabel]) => {
+            const tr = chartData && chartData.transfer && chartData.transfer[task];
+            if (!tr || !Object.keys(tr).length) return;
+            any = true;
+            Object.keys(tr).forEach(k => { if (k[0] !== '_' && !(k in unionSeries)) unionSeries[k] = tr[k]; });
+            const ntx = (task === 'pick') ? (meta.new_task_x_pick ?? null) : (meta.new_task_x_push ?? null);
+            const xMax = (task === 'pick') ? (meta.x_max_pick ?? null) : (meta.x_max_push ?? null);
+            const cid = 'claim-chart-' + task;
+            wrap.insertAdjacentHTML('beforeend',
+                '<div class="results-plot__one"><div class="results-chart-container results-chart-container--claim"><canvas id="' + cid + '"></canvas></div></div>');
+            claimCharts.push(createResultChart(cid, null, 'Transfer — ' + taskLabel, tr, true,    // null legend → suppressed
+                'Number of Iterations', false, ntx, xMax != null ? { min: 0, max: xMax } : null));
+        });
+        if (any) {
+            wrap.insertAdjacentHTML('beforeend', '<div id="claim-transfer-legend" class="results-shared-legend"></div>');
+            renderHtmlLegend('claim-transfer-legend', unionSeries, 'efficiency');
+        }
+        show(any);
+        return;
+    }
+
+    // Efficiency claims: a single plot — the claim's aggregate (default) or overlaid by task.
+    if (views) views.style.display = '';
+    setClaimBtnEnabled(true);                                   // a claim is active, so "Claim" is available
+    document.querySelectorAll('#results-plot-views .plot-view-btn').forEach(b => b.classList.toggle('is-on', b.dataset.view === plotView));
+    wrap.insertAdjacentHTML('beforeend',
+        '<div class="results-chart-container results-chart-container--claim"><canvas id="claim-chart"></canvas></div><div id="claim-chart-legend"></div>');
+
+    if (plotView === 'claim') {
+        const agg = aggregateEfficiency(key);
+        if (!Object.keys(agg).length) { show(false); return; }
+        show(true);
+        claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend',
+            'Sample Efficiency — tasks aggregated', agg, true, 'Training Progress (%)', true));
+        return;
+    }
+
+    // by-task overlay: one line per (method × task); colour = method, dash = task
+    const merged = {};
+    PLOT_TASKS.forEach(([task, taskLabel, dash]) => {
         const eff = chartData && chartData.efficiency && chartData.efficiency[task];
-        if (!eff || !methods) return null;
-        const s = {};
-        methods.forEach(m => { if (eff[m]) s[m] = eff[m]; });
-        return Object.keys(s).length ? s : null;
-    };
-    const sp = pick('push'), sk = pick('pick');
-    if (!sp && !sk) { show(false); return; }   // no plot for this claim (or data not loaded)
+        if (!eff) return;
+        methods.forEach(m => {
+            if (!eff[m]) return;
+            const mLabel = m + ' · ' + taskLabel;
+            if (!ALGO_STYLES[mLabel]) { const base = styleFor(m); ALGO_STYLES[mLabel] = { line: base.line, fill: base.fill, dash: dash, width: base.width }; }
+            merged[mLabel] = eff[m];
+        });
+    });
+    if (!Object.keys(merged).length) { show(false); return; }
     show(true);
-    const title = isTransfer ? 'Transfer' : 'Sample Efficiency';
-    if (sp) claimChartPush = createResultChart('claim-chart-push', 'claim-chart-push-legend', title + ' — Block Push', sp);
-    if (sk) claimChartPick = createResultChart('claim-chart-pick', 'claim-chart-pick-legend', title + ' — Pick-and-Place', sk);
+    claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend', 'Sample Efficiency — by task', merged, false));
 }
 window.renderClaimPlot = renderClaimPlot;
+
+// plot the table's hand-picked cells: one efficiency curve per selected (method × task) cell that has
+// data (the BP / PnP result columns). Always shown alongside a selection; the "Claim" view is greyed.
+function renderSelectionPlot(cells) {
+    currentSelection = cells || [];
+    clearClaimCharts();
+    const wrap = document.getElementById('results-plot');
+    const hint = document.getElementById('results-plot-hint');
+    const views = document.getElementById('results-plot-views');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (document.body.classList.contains('results-undirected')) { wrap.style.display = 'none'; if (hint) hint.style.display = 'none'; if (views) views.style.display = 'none'; return; }
+    if (views) views.style.display = '';
+    setClaimBtnEnabled(false);                                  // no claim → aggregated view unavailable
+    plotView = 'bytask';
+    document.querySelectorAll('#results-plot-views .plot-view-btn').forEach(b => b.classList.toggle('is-on', b.dataset.view === 'bytask'));
+
+    const merged = {};
+    (currentSelection || []).forEach(([m, col]) => {
+        const t = COL_TASK[col], label = EFF_METHOD[m];
+        if (!t || !label) return;
+        const eff = chartData && chartData.efficiency && chartData.efficiency[t.task];
+        if (!eff || !eff[label]) return;
+        const mLabel = label + ' · ' + t.label;
+        if (!ALGO_STYLES[mLabel]) { const base = styleFor(label); ALGO_STYLES[mLabel] = { line: base.line, fill: base.fill, dash: t.dash, width: base.width }; }
+        merged[mLabel] = eff[label];
+    });
+    wrap.insertAdjacentHTML('beforeend',
+        '<div class="results-chart-container results-chart-container--claim"><canvas id="claim-chart"></canvas></div><div id="claim-chart-legend"></div>');
+    if (!Object.keys(merged).length) {                         // selection has no efficiency curves (e.g. only MoP/transfer)
+        wrap.style.display = 'none';
+        if (hint) { hint.style.display = ''; hint.textContent = 'The selected cells have no sample-efficiency curves.'; }
+        return;
+    }
+    wrap.style.display = ''; if (hint) hint.style.display = 'none';
+    claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend', 'Sample Efficiency — selection', merged, false));
+}
+window.renderSelectionPlot = renderSelectionPlot;
+
+// plot view toggle (Claim / By task) — delegated since the buttons load with the section
+document.addEventListener('click', e => {
+    const b = e.target.closest('#results-plot-views .plot-view-btn');
+    if (!b || b.disabled || b.classList.contains('is-disabled')) return;
+    plotView = b.dataset.view;
+    if (currentSelection) renderSelectionPlot(currentSelection);
+    else if (currentClaimKey) renderClaimPlot(currentClaimKey);
+});
 
 // Re-render on theme toggle
 const _origToggleTheme = window.toggleTheme;

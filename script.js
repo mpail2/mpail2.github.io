@@ -46,6 +46,7 @@ async function loadSections() {
     document.querySelectorAll('.content-block .collapsible-body').forEach((bodyEl) => {
         const block = bodyEl.closest('.content-block');
         if (!block) return;
+        if (block.id === 'experiment-settings-block') return;   // always visible — no collapse toggle
         const header = block.querySelector('.subsection-header');
         if (!header) return;
 
@@ -230,15 +231,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // ----- continuous auto-cycle: the strip scrolls at a steady speed (no pausing), each word
     //       lighting up as it passes NO; pausable while the user drags -----
     var cycleRAF = null, lastFrame = 0, dragging = false;
-    var SPEED = 1 / 1500;                              // words per ms (~1.5s per word)
+    var SPEED = 1 / 1500;                              // nominal words per ms (~1.5s per word)
+    var MAX_SPEED = 1 / 60;                            // cap a flick at ~one word / 60ms
+    var RETURN_TAU = 650;                              // ms time-constant easing speed back to nominal
+    var curSpeed = SPEED;                              // live speed (signed); a flick sets it, then it decays
+    // keep contC within [-0.5, N-0.5) so the seam (copy-swap) always lands in the dim gap between words
+    function wrapC() { contC = ((contC + 0.5) % N + N) % N - 0.5; }
     function startCycle() {
         if (reduce || N < 2 || cycleRAF) return;
         lastFrame = 0;
         var tick = function(now) {
             if (dragging) { cycleRAF = null; return; }
             if (lastFrame) {
-                contC += (now - lastFrame) * SPEED;
-                if (contC >= N) contC -= N;            // seamless wrap (3 stacked copies)
+                var dt = now - lastFrame;
+                curSpeed = SPEED + (curSpeed - SPEED) * Math.exp(-dt / RETURN_TAU);  // ease back to nominal
+                contC += dt * curSpeed;
+                wrapC();
                 var h = claim.clientHeight / N;
                 var ty = claim.clientHeight / 2 - ((N + contC) * h + h / 2);
                 list.style.transition = 'none';
@@ -256,6 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!reduce && N >= 2) {
         var wordH = function() { return claim.clientHeight / N; };
         var startY = 0, baseTy = 0;
+        var lastY = 0, lastT = 0, dragVel = 0;                // px & px/ms, for release momentum
         var getY = function(e) {
             if (e.touches && e.touches[0]) return e.touches[0].clientY;
             if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0].clientY;
@@ -264,6 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var onDown = function(e) {
             dragging = true; stopCycle();
             startY = getY(e);
+            lastY = startY; lastT = performance.now(); dragVel = 0;
             baseTy = claim.clientHeight / 2 - ((N + contC) * wordH() + wordH() / 2);
             list.style.transition = 'none';
             claim.classList.add('is-dragging');
@@ -271,7 +281,9 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         var onMove = function(e) {
             if (!dragging) return;
-            var ty = baseTy + (getY(e) - startY);
+            var y = getY(e), t = performance.now(), dtm = t - lastT;
+            if (dtm > 0) { dragVel = dragVel * 0.6 + ((y - lastY) / dtm) * 0.4; lastY = y; lastT = t; }  // smoothed px/ms
+            var ty = baseTy + (y - startY);
             list.style.transform = 'translateY(' + ty + 'px)';
             highlightAtCenter(ty);             // words light up as they pass NO
             e.preventDefault();
@@ -280,7 +292,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!dragging) return;
             dragging = false; claim.classList.remove('is-dragging');
             contC -= (getY(e) - startY) / wordH();            // drag down -> earlier words (continuous)
-            contC = ((contC % N) + N) % N;                    // normalize into [0,N)
+            wrapC();                                          // normalize into [-0.5, N-0.5)
+            // hand off the release velocity as the cycle speed; it eases back to nominal in startCycle.
+            // contC moves opposite to drag-Y (see above), so negate; stale flick (paused before release) -> 0.
+            if (performance.now() - lastT > 120) dragVel = 0;
+            var v = -dragVel / wordH();                       // words/ms in contC space
+            curSpeed = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, v));
             highlightLive();
             startCycle();                                     // resume the continuous scroll from here
         };
@@ -548,10 +565,10 @@ function initResultsTunnel() {
     // the method plans) wrapping the components it has — Dynamics(red) Reward(green/gold) Value(gold)
     // Policy(purple). Shown in the table's method cells and the stage's method labels. -----
     const METHOD_PARTS = {   // table key -> {planner, parts:[ [letter, color], ... ]}
-        mpail2: { planner: 1, parts: [['D', '#E0705A'], ['R', '#7FB069'], ['V', '#E0A53B'], ['P', '#A99BF5']] },
-        mairl:  { planner: 0, parts: [['D', '#E0705A'], ['R', '#7FB069'], ['V', '#E0A53B'], ['P', '#A99BF5']] },
-        dac:    { planner: 0, parts: [['R', '#7FB069'], ['V', '#E0A53B'], ['P', '#A99BF5']] },
-        rlpd:   { planner: 0, parts: [['R', '#E0A53B'], ['V', '#E0A53B'], ['P', '#A99BF5']] },   // hand reward = gold
+        mpail2: { planner: 1, parts: [['D', '#E0705A'], ['R', '#7FB069'], ['Q', '#E0A53B'], ['P', '#A99BF5']] },
+        mairl:  { planner: 0, parts: [['D', '#E0705A'], ['R', '#7FB069'], ['Q', '#E0A53B'], ['P', '#A99BF5']] },
+        dac:    { planner: 0, parts: [['R', '#7FB069'], ['Q', '#E0A53B'], ['P', '#A99BF5']] },
+        rlpd:   { planner: 0, parts: [['R', '#E0A53B'], ['Q', '#E0A53B'], ['P', '#A99BF5']] },   // hand reward = gold
         bc:     { planner: 0, parts: [['P', '#A99BF5']] }
     };
     function miniDiagram(methodKey) {
@@ -645,6 +662,17 @@ function initResultsTunnel() {
             if (th.classList.contains('col-model')) { th.classList.remove('tv-dim'); th.classList.add('tv-focus'); }
             else { th.classList.add('tv-dim'); th.classList.remove('tv-focus'); }
         });
+        // if the table is collapsed (scrollable), slide it so the highlighted columns come into view
+        const scroller = table.closest('.results-table-scroll');
+        if (scroller && subHead && scroller.scrollWidth > scroller.clientWidth + 4) {
+            const cols = Array.prototype.slice.call(subHead.children).filter(th => colSet.has(th.dataset.col));
+            if (cols.length) {
+                const sRect = scroller.getBoundingClientRect();
+                const a = cols[0].getBoundingClientRect(), b = cols[cols.length - 1].getBoundingClientRect();
+                const center = (a.left + b.right) / 2 - sRect.left + scroller.scrollLeft;
+                scroller.scrollTo({ left: Math.max(0, center - scroller.clientWidth / 2), behavior: 'smooth' });
+            }
+        }
     }
 
     function apply(key) {
@@ -674,15 +702,13 @@ function initResultsTunnel() {
         if (document.body.classList.contains('results-undirected')) setResultsMode('focus');
         apply(btn.dataset.claim);
     }));
-    // accordion: clicking a question expands/collapses its claims and stages all its evidence
+    // accordion: clicking a question only expands/collapses its claims — it does NOT change what's
+    // active, so opening another question never undoes the currently focused claim. (Stage the whole
+    // RQ's evidence via its claim chips / the compact-bar Q1–Q3 tabs.)
     document.querySelectorAll('.rq-group__q').forEach(q => q.addEventListener('click', () => {
         const group = q.closest('.rq-group');
         const open = group.classList.toggle('is-open');
         q.setAttribute('aria-expanded', open ? 'true' : 'false');
-        if (open && group.dataset.rq) {
-            if (document.body.classList.contains('results-undirected')) setResultsMode('focus');
-            applyRQ(group.dataset.rq);
-        }
     }));
     // reset: clear claims, selections, and the stage back to a neutral state
     const resetBtn = document.getElementById('results-reset');
@@ -735,56 +761,102 @@ function initResultsTunnel() {
     const CLAIM_CELLS = {
         world:       [['mpail2', 'res-bp'], ['dac', 'res-bp'], ['mpail2', 'res-pnp'], ['dac', 'res-pnp']],
         planning:    [['mpail2', 'res-bp'], ['mairl', 'res-bp'], ['mpail2', 'res-pnp'], ['mairl', 'res-pnp']],
-        supervision: [['mpail2', 'res-bp'], ['rlpd', 'res-bp'], ['mpail2', 'res-pnp'], ['rlpd', 'res-pnp']],
+        supervision: [['mpail2', 'res-bp'], ['mairl', 'res-bp'], ['dac', 'res-bp'], ['rlpd', 'res-bp'],
+                      ['mpail2', 'res-pnp'], ['mairl', 'res-pnp'], ['dac', 'res-pnp'], ['rlpd', 'res-pnp']],
         transfer:    [['mpail2', 'sc-bp'], ['mpail2', 'tr-bp'], ['mpail2', 'sc-pnp'], ['mpail2', 'tr-pnp']],
         video:       [['mpail2', 'vid-bp']]
     };
     const CLAIM_NOTE = {
         world:       'Only the model-based learner gains traction in the real world; dropping the world model (DAC) collapses to 0%.',
         planning:    'The planner stabilizes the adversarial objective, yielding markedly more robust behavior than the policy alone.',
-        supervision: 'With strictly less supervision, MPAIL2 still matches or beats RLPD.',
+        supervision: 'With no hand-designed reward and no action labels, the observation-only IRL methods (MPAIL2 and its ablations) match or beat the fully-supervised RLPD.',
         transfer:    'Transfer reaches higher success in roughly half the real-world training time.',
         video:       'Learned from a single fixed, table-mounted camera — no wrist camera and no proprioception.'
     };
     const RQ_CLAIMS = { q1: ['world', 'planning'], q2: ['supervision'], q3: ['transfer', 'video'] };
 
-    const tileLabel = (methodKey, task) => {
-        const svg = miniDiagram(methodKey);
-        return '<p class="results-vid__label">' + (svg ? '<span class="mini-diagram-wrap mini-diagram-wrap--label">' + svg + '</span>' : '') +
-            '<span class="results-vid__name">' + (METHOD_NAME[methodKey] || methodKey) + '</span>' +
-            (task ? '<span>' + task + '</span>' : '') + '</p>';
+    // column -> task label, independent of method (used when grouping the stage by task)
+    const COL_LABEL = {
+        'res-bp': 'Block Push', 'res-pnp': 'Pick-and-Place', 'res-mop': 'Mug-on-Plate',
+        'tr-bp': 'Block Push · transfer', 'tr-pnp': 'Pick-and-Place · transfer',
+        'sc-bp': 'Block Push · scratch', 'sc-pnp': 'Pick-and-Place · scratch', 'vid-bp': 'Block Push · video-only'
+    };
+    const METHOD_ORDER = ['mpail2', 'mairl', 'dac', 'bc', 'rlpd'];
+    // abbreviated task name shown as the in-video tag (top-right)
+    const COL_ABBR = {
+        'res-bp': 'BP', 'res-pnp': 'PnP', 'res-mop': 'MoP',
+        'tr-bp': 'BP·tr', 'tr-pnp': 'PnP·tr', 'sc-bp': 'BP·sc', 'sc-pnp': 'PnP·sc', 'vid-bp': 'BP·vid'
     };
     const iterFor = (pct, max) => Math.round(pct / 100 * max / 10) * 10;   // % of schedule -> nearest available iter
 
-    // render the stage from a list of [method, col] cells (+ optional note)
+    const diagramWrap = (methodKey) => {                 // mini branding diagram, centered above a group label
+        const svg = miniDiagram(methodKey);
+        return svg ? '<span class="mini-diagram-wrap mini-diagram-wrap--label">' + svg + '</span>' : '';
+    };
+    // in-video overlay tags: branding diagram top-left (method name on hover), abbreviated task top-right
+    function overlays(methodKey, col) {
+        const svg = miniDiagram(methodKey);
+        const brand = '<div class="results-tag results-tag--brand" tabindex="0" title="' + (METHOD_NAME[methodKey] || methodKey) + '">' +
+            (svg ? '<span class="results-tag__diagram">' + svg + '</span>' : '') +
+            '<span class="results-tag__name">' + (METHOD_NAME[methodKey] || methodKey) + '</span></div>';
+        const task = col ? '<div class="results-tag results-tag--task">' + (COL_ABBR[col] || col) + '</div>' : '';
+        return brand + task;
+    }
+    function mediaHTML(methodKey, col, v) {
+        const video = v.src
+            ? '<video autoplay muted loop playsinline preload="metadata"><source src="' + v.src + '" type="video/mp4"></video>'
+            : '<video autoplay muted loop playsinline preload="metadata" data-prefix="' + v.prefix + '" data-max="' + v.max + '"><source src="' + v.prefix + iterFor(START_PCT, v.max) + '.mp4" type="video/mp4"></video>';
+        const badges = (v.badges || []).map(b => '<div class="video-badge video-badge--disabled"><span class="video-badge__cross">No</span>' + b + '</div>').join('');
+        return '<div class="video-display">' + video + overlays(methodKey, col) +
+            (badges ? '<div class="video-badge-row">' + badges + '</div>' : '') + '</div>';
+    }
+    const tileHTML = (methodKey, col, v) => '<div class="results-tile">' + mediaHTML(methodKey, col, v) + '</div>';
+    const emptyTile = '<div class="results-tile results-tile--empty"></div>';
+
+    var stageGroup = 'method';                            // 'none' | 'method' | 'task' (set by the toggle)
+    var lastCells = [], lastNote = '';                   // remembered so the toggle can re-render
+
+    // render the stage from a list of [method, col] cells (+ optional note), grouped per stageGroup
     function renderStage(cellList, note) {
         if (!mediaPanel) return;
-        const items = (cellList || []).map(c => ({ m: c[0], col: c[1], v: cellVideo(c[0], c[1]) })).filter(x => x.v);
+        lastCells = cellList || []; lastNote = note || '';
+        const items = lastCells.map(c => ({ m: c[0], col: c[1], v: cellVideo(c[0], c[1]) })).filter(x => x.v);
         if (!items.length) {
             mediaPanel.innerHTML = '<p class="results-stage-empty">Pick a research question or finding above — or hover the table and click cells, row, or column headers — to stage training videos here.</p>';
             return;
         }
         const hasScrub = items.some(x => x.v.prefix);
-        const tiles = items.map(x => {
-            const v = x.v;
-            let media;
-            if (v.src) {
-                const badges = (v.badges || []).map(b => '<div class="video-badge video-badge--disabled"><span class="video-badge__cross">No</span>' + b + '</div>').join('');
-                media = '<div class="video-display"><video autoplay muted loop playsinline preload="metadata"><source src="' + v.src + '" type="video/mp4"></video>' +
-                    (badges ? '<div class="video-badge-row">' + badges + '</div>' : '') + '</div>';
-            } else {
-                const it = iterFor(START_PCT, v.max);
-                media = '<div class="video-display"><video autoplay muted loop playsinline preload="metadata" data-prefix="' + v.prefix + '" data-max="' + v.max + '"><source src="' + v.prefix + it + '.mp4" type="video/mp4"></video></div>';
-            }
-            return '<div class="results-tile">' + tileLabel(x.m, v.task) + media + '</div>';
-        }).join('');
+        const colsPresent = COLS.filter(c => c !== 'method' && items.some(x => x.col === c));
+        const methodsPresent = METHOD_ORDER.filter(m => items.some(x => x.m === m));
+        const find = (m, col) => items.filter(x => x.m === m && x.col === col)[0];
+
+        let body;
+        if (stageGroup === 'method' && (methodsPresent.length > 1 || colsPresent.length > 1)) {
+            // one bordered group per method; columns are the tasks, aligned across groups
+            body = '<div class="results-groups">' + methodsPresent.map(m => {
+                const grid = colsPresent.map(col => { const it = find(m, col); return it ? tileHTML(m, col, it.v) : emptyTile; }).join('');
+                return '<div class="results-group"><div class="results-group__label">' + diagramWrap(m) +
+                    '<span>' + (METHOD_NAME[m] || m) + '</span></div>' +
+                    '<div class="results-group__grid" style="grid-template-columns:repeat(' + colsPresent.length + ',var(--stage-tile-w, 190px))">' + grid + '</div></div>';
+            }).join('') + '</div>';
+        } else if (stageGroup === 'task' && (methodsPresent.length > 1 || colsPresent.length > 1)) {
+            // one bordered group per task; columns are the methods, aligned across groups
+            body = '<div class="results-groups">' + colsPresent.map(col => {
+                const grid = methodsPresent.map(m => { const it = find(m, col); return it ? tileHTML(m, col, it.v) : emptyTile; }).join('');
+                return '<div class="results-group"><div class="results-group__label"><span>' + (COL_LABEL[col] || col) + '</span></div>' +
+                    '<div class="results-group__grid" style="grid-template-columns:repeat(' + methodsPresent.length + ',var(--stage-tile-w, 190px))">' + grid + '</div></div>';
+            }).join('') + '</div>';
+        } else {
+            // ungrouped: a flat responsive grid; each video carries its own in-frame tags
+            body = '<div class="results-stage-grid' + (items.length === 1 ? ' results-stage-grid--single' : '') + '">' +
+                items.map(x => tileHTML(x.m, x.col, x.v)).join('') + '</div>';
+        }
+
         const scrub = hasScrub ? '<div class="results-scrub">' +
             '<span class="results-scrub__label">Training <b class="results-scrub__val">' + START_PCT + '%</b></span>' +
             '<input type="range" class="results-scrub__slider" min="0" max="100" step="10" value="' + START_PCT + '" aria-label="Training progress">' +
             '<span class="results-scrub__hint">drag to scrub through training</span></div>' : '';
-        mediaPanel.innerHTML = scrub +
-            '<div class="results-stage-grid' + (items.length === 1 ? ' results-stage-grid--single' : '') + '">' + tiles + '</div>' +
-            (note ? '<p class="results-media__note">' + note + '</p>' : '');
+        mediaPanel.innerHTML = scrub + body + (note ? '<p class="results-media__note">' + note + '</p>' : '');
         const slider = mediaPanel.querySelector('.results-scrub__slider');
         const valEl = mediaPanel.querySelector('.results-scrub__val');
         if (slider) slider.addEventListener('input', function () {
@@ -802,6 +874,28 @@ function initResultsTunnel() {
     window.renderStage = renderStage;
     // claim media still routes through the claim cells (used by apply())
     window.renderClaimMedia = function (key) { renderStage(CLAIM_CELLS[key], CLAIM_NOTE[key]); };
+
+    // stage grouping toggle: None / Method / Task — re-render the current stage with the new grouping
+    document.querySelectorAll('#results-stage-opts .stage-group-btn').forEach(btn => btn.addEventListener('click', () => {
+        stageGroup = btn.dataset.group;
+        document.querySelectorAll('#results-stage-opts .stage-group-btn').forEach(b => b.classList.toggle('is-on', b === btn));
+        renderStage(lastCells, lastNote);
+    }));
+    // size slider: scale the staged videos by driving --stage-tile-w on the media panel
+    const sizeSlider = document.getElementById('stage-size');
+    if (sizeSlider && mediaPanel) {
+        const applySize = () => mediaPanel.style.setProperty('--stage-tile-w', sizeSlider.value + 'px');
+        sizeSlider.addEventListener('input', applySize);
+        applySize();
+    }
+    // full-width toggle: break the explorer + stage out to the viewport width
+    const fwBtn = document.getElementById('results-fullwidth');
+    if (fwBtn) fwBtn.addEventListener('click', () => {
+        const on = document.body.classList.toggle('results-fullwidth');
+        fwBtn.classList.toggle('is-on', on);
+        fwBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        if (typeof refreshCharts === 'function') refreshCharts();   // re-fit any visible plots to the new width
+    });
 
     // ---- table as a control surface: clicking selectable cells / row & column headers picks the videos ----
     const selected = new Set();                        // entries: "<method>|<col>"
@@ -822,12 +916,12 @@ function initResultsTunnel() {
             cells.forEach(c => c.classList.remove('tv-dim', 'tv-focus'));
             caption.classList.remove('is-on');
             claimBtns.forEach(b => b.classList.remove('is-on'));
-            if (typeof window.renderClaimPlot === 'function') window.renderClaimPlot('__none');   // hide plot
             const list = COLS.filter(c => c !== 'method').reduce((acc, col) => {   // stable order: by column, then table row order
                 bodyRows.forEach(tr => { if (selected.has(tr.dataset.method + '|' + col)) acc.push([tr.dataset.method, col]); });
                 return acc;
             }, []);
             renderStage(list, 'Custom selection — ' + list.length + (list.length === 1 ? ' video' : ' videos') + ' chosen from the table.');
+            if (typeof window.renderSelectionPlot === 'function') window.renderSelectionPlot(list);   // plot the picked cells
         } else if (active) {
             apply(active);                             // fall back to the active claim
         } else {
@@ -911,6 +1005,247 @@ function initResultsTunnel() {
     apply('world');                                    // default: Q1, world-modeling claim, Focus mode
 }
 
+// Method section — the architecture figure is an interactive selector that focuses the matching
+// step(s) of the training algorithm (Alg. 1) beside it, with a plain-language explanation.
+function initMethodExplorer() {
+    const root = document.getElementById('method-explorer');
+    if (!root || root.dataset.init === '1') return;
+    const svgHost = document.getElementById('method-figure-svg');
+    const hot = document.getElementById('method-figure-hot');
+    const algoEl = document.getElementById('method-algo');
+    const explainEl = document.getElementById('method-explain');
+    if (!svgHost || !hot || !algoEl || !explainEl) return;
+    if (!window.katex) { return void setTimeout(initMethodExplorer, 200); }   // wait for KaTeX (deferred)
+    root.dataset.init = '1';
+
+    const ktx = (tex) => { try { return katex.renderToString(tex, { throwOnError: false }); } catch (e) { return tex; } };
+    const renderInline = (s) => s.replace(/\\\((.+?)\\\)/g, (_, m) => ktx(m));
+
+    // component palette (matches the site branding)
+    const COL = { task: '#3F9E78', encoder: '#5BB1E8', dynamics: '#E0705A', reward: '#7FB069',
+                  value: '#E0A53B', policy: '#A99BF5', planner: '#E0A53B', replay: '#7C8597' };
+
+    // each component: figure region(s) (in the 1017×598 viewBox) for the hover hotspots + explanation.
+    // (the actual lifted cells are resolved per-shape by colour + position in computeCells.)
+    const COMP = {
+        task:     { label: 'Task Observations', regions: [[128, 2, 742, 64], [730, 172, 90, 86]],
+                    desc: 'Expert demonstrations &mdash; <strong>observation-only</strong>, with no rewards or action labels. MPAIL2 learns purely from <em>what</em> the demonstrator did.' },
+        encoder:  { label: 'Encoder', regions: [[244, 338, 206, 134]],
+                    desc: 'Maps a raw observation into a compact latent state \\(z = e(o)\\). All planning and learning happen in this latent space.' },
+        dynamics: { label: 'Dynamics', regions: [[468, 228, 78, 254]],
+                    desc: 'The learned world model \\(f(z,a)\\) predicts the next latent state, letting the agent imagine rollouts without touching the real world.' },
+        value:    { label: 'Value', regions: [[578, 222, 72, 300]],
+                    desc: 'The off-policy value \\(Q(z,a)\\) bootstraps long-horizon return beyond the planning horizon, learned from replayed experience.' },
+        reward:   { label: 'Inferred Reward', regions: [[512, 336, 100, 176]],
+                    desc: 'An adversarial (IRL) reward \\(r(z,z\')\\) scores transitions by how expert-like they look &mdash; inferred, never hand-designed.' },
+        policy:   { label: 'Policy', regions: [[348, 472, 128, 90]],
+                    desc: 'A multi-step policy \\(\\pi(a\\mid z)\\) proposes action sequences; it warm-starts the planner and is optimized against the value.' },
+        // planner = the initial observation / robot (panel ①), the imagined MPPI rollouts, the camera,
+        // and where the robot actually executes the plan (right scene)
+        planner:  { label: 'Planner (MPPI)', regions: [[360, 240, 130, 296], [490, 360, 160, 172], [700, 292, 290, 270]], video: true,
+                    desc: 'At act-time, MPPI rolls the policy’s proposals through the dynamics, scores them with reward + value, and executes a robust plan \\(\\widehat{\\Pi}\\) on the robot.' },
+        replay:   { label: 'Replay Buffer', regions: [[684, 158, 298, 142]],
+                    desc: 'Real interactions \\((o,a,o\')\\) are stored and replayed, so every component learns <strong>off-policy</strong> and sample-efficiently.' }
+    };
+
+    // ---- algorithm (Alg. 1, Training). Each line is tagged with the component(s) it touches. ----
+    const REQ = [
+        ['task',     'r', '\\mathcal{D}\\subset\\mathcal{O}\\times\\mathcal{O}', 'Task observations'],
+        ['encoder',  'r', 'e:\\mathcal{O}\\to\\mathcal{Z}', 'Encoder'],
+        ['dynamics', 'r', 'f:\\mathcal{Z}\\times\\mathcal{A}\\to\\mathcal{Z}', 'Dynamics'],
+        ['reward',   'r', 'r:\\mathcal{Z}\\times\\mathcal{Z}\\to\\mathbb{R}', 'Inferred reward'],
+        ['value',    'r', 'Q:\\mathcal{Z}\\times\\mathcal{A}\\to\\mathbb{R}', 'Value'],
+        ['policy',   'r', 'a\\sim\\pi(\\cdot\\mid z)', 'Policy'],
+        ['planner',  'r', 'a\\sim\\widehat{\\Pi}(\\cdot\\mid a,z\\,;f,r,Q,\\pi)', 'Planner'],
+        ['replay',   'r', '\\mathcal{B}\\coloneqq\\{\\}', 'Replay buffer']
+    ];
+    // [components, indent, text, optional equation tex]
+    const BODY = [
+        ['planner',         0, 'Interact using the <b>planner</b>', null],
+        ['replay',          0, 'Store experience', '\\mathcal{B}\\gets\\mathcal{B}\\cup\\{(o_t,a_t,o_{t+1})\\}_{t=1}^{T}'],
+        ['__for',           0, '<span class="algo-kw">for</span> updates per episode <span class="algo-kw">do</span>', null],
+        ['replay task',     1, 'Sample trajectories &amp; task observations', '\\{(o_t,a_t,o_{t+1})\\}\\sim\\mathcal{B}\\,,\\ (o,o\')\\in\\mathcal{D}'],
+        ['encoder dynamics',1, 'Update <b>Encoder</b> &amp; <b>Dynamics</b>', '\\mathcal{L}_{e,f}=\\mathbb{E}_{\\tau}\\!\\big[\\textstyle\\sum_{t\'}\\rho^{\\,t\'-t}\\lVert\\hat z_{t\'}-\\mathrm{sg}(z_{t\'})\\rVert_2^2\\big]'],
+        ['reward',          1, 'Update <b>Inferred Reward</b>', '\\mathcal{L}_{r}=\\mathbb{E}_{(z,z\')\\sim\\tau}[r]-\\mathbb{E}_{d}[r]+\\beta\\,\\mathrm{GP}(r,\\tau,d)'],
+        ['value',           1, 'Update <b>Value</b>', '\\mathcal{L}_{Q}=\\mathbb{E}\\big[(q_t-\\bar G^{\\lambda}_t)^2\\big]'],
+        ['policy',          1, 'Update <b>Policy</b>', '\\mathcal{L}_{\\pi}=-\\mathbb{E}_{\\hat\\tau}\\big[G^{\\lambda}_t\\big]']
+    ];
+
+    // ---- build the algorithm panel ----
+    let n = 0, h = '<div class="algo__title">Algorithm&nbsp;1 &mdash; <b>MPAIL2</b> (Training)</div><div class="algo__req">';
+    h += '<div class="algo-line algo-kwline"><span class="algo-kw">require</span></div>';
+    REQ.forEach(([comp, , tex, name]) => {
+        h += '<div class="algo-line algo-step algo-i1" data-comp="' + comp + '" tabindex="0"><span class="algo-eqi">' + ktx(tex) + '</span><span class="algo-cmt">' + name + '</span></div>';
+    });
+    h += '</div><div class="algo-line algo-kwline"><span class="algo-kw">while</span> learning <span class="algo-kw">do</span></div>';
+    BODY.forEach(([comp, indent, text, tex]) => {
+        if (comp === '__for') { h += '<div class="algo-line algo-kwline algo-i1">' + text + '</div>'; return; }
+        n += 1;
+        h += '<div class="algo-line algo-step algo-i' + indent + '" data-comp="' + comp + '" tabindex="0">' +
+            '<span class="algo-num">' + n + '</span><span class="algo-do">' + text + '</span>' +
+            (tex ? '<span class="algo-eq">' + ktx(tex) + '</span>' : '') + '</div>';
+    });
+    h += '<div class="algo-line algo-kwline algo-i1"><span class="algo-kw">end for</span></div>' +
+         '<div class="algo-line algo-kwline"><span class="algo-kw">end while</span></div>';
+    algoEl.innerHTML = h;
+
+    // ---- build the figure hotspots (one transparent rect per region, for hover/click) ----
+    let sh = '';
+    Object.keys(COMP).forEach(id => {
+        COMP[id].regions.forEach(([x, y, w, h2]) => {
+            sh += '<rect class="method-hot" data-comp="' + id + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h2 + '" rx="9"></rect>';
+        });
+    });
+    hot.innerHTML = sh;
+
+    // ---- selection state + visuals ----
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    const figureEl = document.getElementById('method-figure');
+    const methodVideo = document.querySelector('#method-explorer .method-video');
+    const algoLines = Array.prototype.slice.call(algoEl.querySelectorAll('.algo-line[data-comp]'));
+    const hotRects = Array.prototype.slice.call(hot.querySelectorAll('.method-hot'));
+    const defaultExplain = explainEl.innerHTML;
+    let pinned = null, figInner = null, veil = null, liftLayer = null;
+    const cellEls = {};                                  // per component: the actual drawio shape cells inside it
+
+    // Resolve which component a shape cell belongs to, by its colour + position. Models claim their own
+    // coloured trapezoid + connector(s) (+ z' for dynamics); the planner gets the plan curves, the
+    // initial-state robot, the camera and the acting scene — NOT the model connectors or z'.
+    function byRegion(cx, cy) {
+        if (cy < 72) return 'task';                                  // observation strip (images, border, label)
+        if (cx >= 728 && cx <= 818 && cy >= 150 && cy <= 258) return 'task';   // (o,o') cylinder + its connector
+        if (cx >= 578 && cx <= 652 && cy >= 222 && cy <= 312) return 'value';
+        if (cx >= 512 && cx <= 612 && cy >= 338 && cy <= 424) return 'reward';
+        if (cx >= 470 && cx <= 544 && cy >= 230 && cy <= 316) return 'dynamics';
+        if (cx >= 484 && cx <= 528 && cy >= 386 && cy <= 432) return 'dynamics';   // z' label
+        if (cx >= 348 && cx <= 416 && cy >= 472 && cy <= 558) return 'policy';
+        if (cx >= 300 && cx <= 446 && cy >= 338 && cy <= 472) return 'encoder';    // e(o), z_0, o labels
+        if (cx < 340 && cy >= 380 && cy <= 472) return 'encoder';                  // o circle (far left)
+        if (cx >= 684 && cy >= 150 && cy <= 300) return 'replay';
+        if (cx >= 700 && cy >= 290) return 'planner';                              // acting scene + camera (right)
+        if (cx >= 358 && cx <= 492 && cy >= 240 && cy <= 384) return 'planner';    // initial-state robot (panel ①)
+        if (cx >= 398 && cx <= 662 && cy >= 376 && cy <= 534) return 'planner';    // imagined plan curves
+        return null;
+    }
+    function ownerOf(x, y, w, h, color) {
+        const cx = x + w / 2, cy = y + h / 2;
+        switch (color) {
+            case '#6c8ebf': return 'encoder';                        // blue — only the encoder
+            case '#d79b00': return 'value';                          // gold — only the value
+            case '#82b366': return cx < 660 ? 'reward' : 'task';     // green — reward, or the (o,o') cylinder
+            case '#9673a6': return cy > 470 ? 'policy' : 'planner';  // purple — policy, or the rollout envelope
+            case '#b85450':                                          // red — dynamics cluster vs. rollout arrows
+                if (cy <= 318) return 'dynamics';                    //   f(z,a) trapezoid
+                if (h >= 90) return 'dynamics';                      //   long vertical connector to z'
+                if (w < 40 && h < 40 && cx > 480 && cx < 528 && cy > 384 && cy < 432) return 'dynamics';  // z'
+                return 'planner';                                    //   small red arrows = the rollouts
+        }
+        return byRegion(cx, cy);                                     // black/grey/colourless → by position
+    }
+    function computeCells() {
+        if (cellEls.__done || !figInner) return;
+        const svgRect = figInner.getBoundingClientRect();
+        if (!svgRect.width) return;                      // not laid out yet — retry on next focus
+        const sx = 1017 / svgRect.width, sy = 598 / svgRect.height;
+        Object.keys(COMP).forEach(id => { cellEls[id] = []; });
+        figInner.querySelectorAll('g[data-cell-id]').forEach(g => {
+            if (g.querySelector('g[data-cell-id]')) return;          // leaf cells only (individual shapes)
+            let bb; try { bb = g.getBoundingClientRect(); } catch (e) { return; }
+            const w = bb.width * sx, h = bb.height * sy;
+            if (!w || !h) return;
+            const x = (bb.left - svgRect.left) * sx, y = (bb.top - svgRect.top) * sy;
+            const inStrip = (y + h / 2) < 72;                        // the obs images/border are large — keep them
+            if ((w > 330 || h > 330) && !inStrip) return;            // otherwise skip oversized background cells
+            const sc = g.querySelector('[stroke]'); const color = sc ? (sc.getAttribute('stroke') || '') : '';
+            const owner = ownerOf(x, y, w, h, color.toLowerCase());
+            if (owner && cellEls[owner]) cellEls[owner].push(g);
+        });
+        cellEls.__done = true;
+    }
+    // clone the focused component's real cells onto a top layer (inside the same drawio layer, so their
+    // absolute coordinates still place them correctly) above a dim veil, then raise them
+    function lift(id) {
+        if (!liftLayer || !veil) return;
+        liftLayer.textContent = '';
+        const cells = cellEls[id] || [];
+        if (!cells.length) { veil.style.opacity = '0'; return; }
+        veil.style.opacity = '1';
+        cells.forEach(cell => {
+            const lifter = document.createElementNS(SVGNS, 'g');
+            lifter.setAttribute('class', 'method-liftcell');
+            lifter.appendChild(cell.cloneNode(true));
+            liftLayer.appendChild(lifter);
+        });
+        // trigger the raise transition on the next frame
+        requestAnimationFrame(() => liftLayer.querySelectorAll('.method-liftcell').forEach(l => l.classList.add('is-up')));
+    }
+    function show(id) {
+        const c = COMP[id];
+        if (!c) return clearShow();
+        const col = COL[id];
+        root.classList.add('is-active');
+        computeCells();
+        lift(id);                                        // highlight the real objects
+        hotRects.forEach(r => r.classList.toggle('is-on', r.dataset.comp === id));
+        if (methodVideo) methodVideo.classList.toggle('is-focus', !!c.video);   // the planner also lifts the rollout video
+        algoLines.forEach(l => {
+            const on = (' ' + l.dataset.comp + ' ').indexOf(' ' + id + ' ') >= 0;
+            l.classList.toggle('is-on', on);
+            if (on) l.style.setProperty('--c', col); else l.style.removeProperty('--c');
+        });
+        explainEl.innerHTML = '<p class="method-explain__title" style="color:' + col + '">' + c.label + '</p>' +
+            '<p class="method-explain__body">' + renderInline(c.desc) + '</p>';
+    }
+    function clearShow() {
+        root.classList.remove('is-active');
+        if (veil) veil.style.opacity = '0';
+        if (liftLayer) liftLayer.textContent = '';
+        hotRects.forEach(r => r.classList.remove('is-on'));
+        if (methodVideo) methodVideo.classList.remove('is-focus');
+        algoLines.forEach(l => { l.classList.remove('is-on'); l.style.removeProperty('--c'); });
+        explainEl.innerHTML = defaultExplain;
+    }
+    const preview = (id) => show(id);
+    const leave = () => { if (pinned) show(pinned); else clearShow(); };
+    function togglePin(id) { pinned = (pinned === id) ? null : id; if (pinned) show(pinned); else clearShow(); }
+
+    hotRects.forEach(r => {
+        r.addEventListener('mouseenter', () => preview(r.dataset.comp));
+        r.addEventListener('click', e => { e.stopPropagation(); togglePin(r.dataset.comp); });
+    });
+    algoLines.forEach(l => {
+        const id = l.dataset.comp.split(' ')[0];
+        l.addEventListener('mouseenter', () => preview(id));
+        l.addEventListener('mouseleave', leave);
+        l.addEventListener('click', () => togglePin(id));
+        l.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePin(id); } });
+    });
+    hot.addEventListener('mouseleave', leave);
+    hot.addEventListener('click', e => { if (e.target === hot) { pinned = null; clearShow(); } });
+
+    // ---- inject the architecture SVG (inline so its light-dark() follows the page theme), then append a
+    //      dim veil + a top layer (inside the same SVG) where focused cells are cloned and raised ----
+    fetch(root.dataset.svg).then(r => r.text()).then(txt => {
+        svgHost.innerHTML = txt;
+        const inner = svgHost.querySelector('svg');
+        if (!inner) return;
+        figInner = inner;
+        inner.removeAttribute('width'); inner.removeAttribute('height');
+        inner.style.width = '100%'; inner.style.height = 'auto'; inner.style.display = 'block';
+        // veil dims everything painted before it; the lift layer (after it) stays bright
+        veil = document.createElementNS(SVGNS, 'rect');
+        veil.setAttribute('class', 'method-veil');
+        veil.setAttribute('x', '0'); veil.setAttribute('y', '0'); veil.setAttribute('width', '1017'); veil.setAttribute('height', '598');
+        veil.style.opacity = '0';
+        liftLayer = document.createElementNS(SVGNS, 'g');
+        liftLayer.setAttribute('class', 'method-lift-layer');
+        // place the veil + lift layer INSIDE the drawio content layer so clones share the cells'
+        // coordinate space (their absolute path coords then render in place)
+        const layer = inner.querySelector('g[data-cell-id="1"]') || inner.querySelector('g[data-cell-id="0"]') || inner;
+        layer.appendChild(veil); layer.appendChild(liftLayer);
+    }).catch(() => {});
+}
+
 // Baseline Models — interactive component diagram
 function initBaselineDiagram() {
     const picker = document.getElementById('baseline-picker');
@@ -945,6 +1280,30 @@ function initBaselineDiagram() {
     const infoTitle = document.getElementById('bl-info-title');
     const infoBody = document.getElementById('bl-info-body');
     const pillars = document.getElementById('baseline-pillars');
+
+    // mini branding diagram from a baseline's component flags (gold Planner enclosure when it plans,
+    // wrapping Dynamics(red) Reward(green inferred / gold hand) Value(gold) Policy(purple))
+    function baselineDiagram(b) {
+        const parts = [];
+        if (b.dynamics) parts.push(['D', '#E0705A']);
+        if (b.reward) parts.push(['R', '#7FB069']); else if (b.handR) parts.push(['R', '#E0A53B']);
+        if (b.value) parts.push(['Q', '#E0A53B']);
+        parts.push(['P', '#A99BF5']);                  // every baseline has a policy
+        const bw = 14, bh = 15, gap = 3, pad = b.planner ? 4 : 0;
+        const W = parts.length * bw + (parts.length - 1) * gap + pad * 2, H = bh + pad * 2;
+        let s = '<svg class="mini-diagram" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+        if (b.planner) s += '<rect x="0.7" y="0.7" width="' + (W - 1.4).toFixed(1) + '" height="' + (H - 1.4).toFixed(1) + '" rx="5" fill="none" stroke="#E0A53B" stroke-width="1.3"/>';
+        parts.forEach((p, i) => {
+            const x = pad + i * (bw + gap);
+            s += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="' + p[1] + '26" stroke="' + p[1] + '" stroke-width="1.3"/>';
+            s += '<text x="' + (x + bw / 2) + '" y="' + (pad + bh / 2) + '" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="700" fill="' + p[1] + '">' + p[0] + '</text>';
+        });
+        return s + '</svg>';
+    }
+    picker.querySelectorAll('.baseline-btn[data-baseline]').forEach(btn => {
+        const b = BASELINES[btn.dataset.baseline];
+        if (b) btn.insertAdjacentHTML('afterbegin', '<span class="baseline-btn__diagram">' + baselineDiagram(b) + '</span>');
+    });
 
     const setComp = (name, on) => {
         svg.querySelectorAll('.bl-comp[data-comp="' + name + '"]').forEach(el => {
@@ -1800,6 +2159,7 @@ function initializeInteractiveSections() {
     try { initBaselineDiagram(); } catch (e) { console.error('initBaselineDiagram failed:', e); }
     try { initStoryScrub(); } catch (e) { console.error('initStoryScrub failed:', e); }
     try { initResultsTunnel(); } catch (e) { console.error('initResultsTunnel failed:', e); }
+    try { initMethodExplorer(); } catch (e) { console.error('initMethodExplorer failed:', e); }
     const dotsContainer = document.getElementById('slider-dots');
     const iterationSlider = document.getElementById('iteration-slider');
     const sliderHint = document.querySelector('#time-lapses-block .slider-hint');

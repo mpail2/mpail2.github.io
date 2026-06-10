@@ -1,68 +1,39 @@
 <section class="project-info scroll-section" id="method-section">
     <div class="project-info-inner">
-        <h2 class="section-header">The Algorithm - MPAIL2
+        <h2 class="section-header">The Algorithm &mdash; MPAIL2
             <span class="section-subtitle">
                 We introduce Model Predictive Adversarial Imitation Learning 2 (MPAIL2), an
-                <span class="term term--bold" data-tooltip-html="Inverse Reinforcement Learning (IRL) learns a reward function in addition to a policy using demonstration data.
-                ">IRL</span> algorithm
-                that learns a
-                <span class="term term--bold" data-tooltip-html="A world model predicts the next state of the world based on the current state and action.
-                ">world model</span>
+                <span class="term term--bold" data-tooltip-html="Inverse Reinforcement Learning (IRL) learns a reward function in addition to a policy using demonstration data.">IRL</span>
+                algorithm that learns a
+                <span class="term term--bold" data-tooltip-html="A world model predicts the next state of the world based on the current state and action.">world model</span>
                 and performs
-                <span class="term term--bold" data-tooltip-html="Rather directly predicting the learner's observations (e.g. camera images), latent planning operates on reduced, low-dimensional representations of the world, enabling reactive planning and more efficient learning.
-                ">latent planning</span>.
+                <span class="term term--bold" data-tooltip-html="Rather than directly predicting the learner's observations (e.g. camera images), latent planning operates on reduced, low-dimensional representations of the world, enabling reactive planning and more efficient learning.">latent planning</span>.
+                <em class="method-cue">Hover or tap a component in the diagram to see what it does and where it lives in the training loop.</em>
             </span>
         </h2>
-        <div style="display: flex; gap: 20px; justify-content: center; align-items: center; margin: 20px auto 0 auto;">
-            <div class="summary-main-image" style="flex: 3; margin-bottom: 0;"><img src="Media/Image/mpail2.drawio.png" alt="Method Overview"></div>
-        </div>
-        <br>
-        <div class="card-grid" style="grid-template-columns: repeat(2, 1fr);">
-            <div class="card-outline">
-                <div class="summary-main-image" style="flex: 1; margin-bottom: 0;"><img src="Media/Video/Vis/overlay.gif" alt="Rollout Visualization"></div>
-                <i>
-                    <small>
-                        <B>RGB Video:</B> MPAIL2 on Block Push (state) task on sim.<br>
-                        <B>Plots:</B> Predicted plans in the YZ and XY planes (Green: End-effector, Orange: Block).
-                         <!-- End-effector plans in green; block plans in orange. -->
-                         Block trajectories are static until contact, illustrating causal world modeling.
-                         A separately trained decoder is used for visualization.
-                    </small>
-                </i>
+
+        <!-- interactive explorer: a fixed-height dynamic caption above; the architecture figure (left,
+             with its rollout video beneath) drives the training algorithm (right) -->
+        <div class="method-explorer" id="method-explorer" data-svg="Media/Image/mpail2.arch.svg">
+            <div class="method-explain" id="method-explain" aria-live="polite">
+                <p class="method-explain__title">MPAIL2 training loop</p>
+                <p class="method-explain__body">Each iteration the agent <strong>acts with the planner</strong>, stores experience, then updates the five learned components. <em>Pick a component &mdash; in the diagram or the algorithm &mdash; to focus it.</em></p>
             </div>
-            <div class="card-outline">
-                <div class="method-card-media">
-                    <div class="video-display">
-                        <video id="method-card-video-right" src="Media/Video/Push/rollout_vis/mppi_iters_1.mp4" autoplay muted loop playsinline preload="auto"></video>
+            <div class="method-cols">
+                <div class="method-figcol">
+                    <div class="method-figure" id="method-figure">
+                        <div class="method-figure__svg" id="method-figure-svg" aria-hidden="true"></div>
+                        <svg class="method-figure__hot" id="method-figure-hot" viewBox="0 0 1017 598" preserveAspectRatio="xMidYMid meet" aria-label="Interactive architecture diagram"></svg>
+                    </div>
+                    <div class="method-video">
+                        <div class="video-display">
+                            <video id="method-card-video-right" src="Media/Video/Push/rollout_vis/mppi_iters_1.mp4" autoplay muted loop playsinline preload="auto"></video>
+                        </div>
+                        <p class="method-video__cap"><i><small><b>MPPI rollout visualization</b> for the Block Push task under disturbance. Planning occurs in latent space; this visualization is made possible by training a separate decoder.</small></i></p>
                     </div>
                 </div>
-                <i>
-                    <small>
-                        <b>MPPI rollout visualization</b> for Block Push task under disturbance.
-                    </small>
-                </i>
+                <div class="method-algo" id="method-algo" role="group" aria-label="MPAIL2 training algorithm"></div>
             </div>
-        </div>
-        <div class="method-mppi-video">
-            <div class="video-display">
-                <video
-                    id="method-mppi-video"
-                    src="Media/Video/MoP/rollout_vis/mppi_iter_mug-on-plate_under_disturbance.mp4"
-                    autoplay
-                    muted
-                    loop
-                    playsinline
-                    preload="auto"
-                ></video>
-            </div>
-            <p style="text-align: center; margin-top: 12px;">
-                <i>
-                    <small>
-                        <b>MPPI rollout visualization</b> for Mug-on-Plate task under disturbance.<br>
-                        Note that planning occurs in latent space. This visualization is made possible by training a separate decoder.
-                    </small>
-                </i>
-            </p>
         </div>
     </div>
 </section>
