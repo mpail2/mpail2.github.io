@@ -3559,17 +3559,23 @@ video:-webkit-full-screen {
     border-radius:12px; overflow:hidden; background:#000; box-shadow:0 14px 44px rgba(0,0,0,0.55);
     display:none;
 }
-body.story-pip-on .story__pip{display:block; animation:story-pip-in .25s ease;}
-@keyframes story-pip-in{from{opacity:0; transform:translateY(14px) scale(.96);} to{opacity:1; transform:none;}}
+body.story-pip-on .story__pip{display:block;}   /* the fly-in/out is FLIP-animated in JS */
 .story__pip .story__video{
     display:block !important; width:100% !important; height:auto !important; aspect-ratio:16/9;
     max-height:none !important; margin:0 !important; border:none !important; border-radius:0 !important;
     box-shadow:none !important; background:#000 !important;
 }
 .story__pip-label{
-    position:absolute; top:9px; left:11px; z-index:3; color:#fff; font:600 .72rem/1 'Inter',sans-serif;
+    position:absolute; top:9px; left:26px; z-index:3; color:#fff; font:600 .72rem/1 'Inter',sans-serif;
     letter-spacing:.02em; text-shadow:0 1px 4px rgba(0,0,0,0.7); pointer-events:none;
 }
+/* top-left resize grip (the box is anchored bottom-right, so dragging it left/up enlarges) */
+.story__pip-grip{
+    position:absolute; top:6px; left:6px; z-index:4; width:15px; height:15px; cursor:nwse-resize;
+    border-top:2px solid rgba(255,255,255,0.75); border-left:2px solid rgba(255,255,255,0.75);
+    border-top-left-radius:4px; opacity:0; transition:opacity .2s; touch-action:none;
+}
+.story__pip:hover .story__pip-grip{opacity:1;}
 .story__pip-close{
     position:absolute; top:7px; right:7px; z-index:3; width:26px; height:26px; border-radius:50%;
     border:none; cursor:pointer; background:rgba(0,0,0,0.62); color:#fff; font-size:17px; line-height:1;

@@ -1395,27 +1395,55 @@ function initStoryScrub() {
 
     // ----- narrated mini-player: while the narration plays, float it into a corner as the overview
     // scrolls out of view (the video element is *moved*, not recreated, so playback never stops). -----
-    let pipBox = null;
+    let pipBox = null, pipW = 360;                                  // remembered mini-player width
     function ensurePipBox() {
         if (pipBox) return pipBox;
         pipBox = document.createElement('div');
         pipBox.className = 'story__pip';
-        pipBox.innerHTML = '<span class="story__pip-label">Narrated overview</span>' +
+        pipBox.innerHTML = '<span class="story__pip-grip" aria-hidden="true" title="Drag to resize"></span>' +
+            '<span class="story__pip-label">Narrated overview</span>' +
             '<button type="button" class="story__pip-close" aria-label="Close mini player" title="Close">&times;</button>';
         pipBox.querySelector('.story__pip-close').addEventListener('click', closePip);
+        // top-left grip resizes the (bottom-right-anchored) box
+        const grip = pipBox.querySelector('.story__pip-grip');
+        let sx = 0, sw = 0, dragging = false;
+        const mv = (e) => { if (!dragging) return; const x = (e.touches ? e.touches[0].clientX : e.clientX); pipW = Math.max(220, Math.min(620, sw + (sx - x))); pipBox.style.width = pipW + 'px'; e.preventDefault(); };
+        const up = () => { dragging = false; document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); };
+        grip.addEventListener('pointerdown', (e) => { dragging = true; sx = e.clientX; sw = pipBox.getBoundingClientRect().width; document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); e.preventDefault(); });
         document.body.appendChild(pipBox);
         return pipBox;
     }
+    // FLIP: animate `el` from a previously-measured rect `first` to its current position
+    function flip(el, first) {
+        const last = el.getBoundingClientRect();
+        if (!last.width) return;
+        const dx = first.left - last.left, dy = first.top - last.top;
+        const sx = first.width / last.width, sy = first.height / last.height;
+        el.style.transition = 'none';
+        el.style.transformOrigin = 'top left';
+        el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`;
+        void el.offsetWidth;                                        // commit the inverted start
+        el.style.transition = 'transform .42s cubic-bezier(.4,0,.2,1)';
+        el.style.transform = 'none';
+        const done = () => { el.style.transition = ''; el.style.transformOrigin = ''; el.style.transform = ''; el.removeEventListener('transitionend', done); };
+        el.addEventListener('transitionend', done);
+    }
     function enterPip() {
         if (!videoEl || document.body.classList.contains('story-pip-on')) return;
-        ensurePipBox().insertBefore(videoEl, pipBox.firstChild);   // move the playing video into the corner
+        const first = videoEl.getBoundingClientRect();             // the video's spot in the stage
+        ensurePipBox();
+        pipBox.style.width = pipW + 'px';
+        pipBox.insertBefore(videoEl, pipBox.firstChild);
         document.body.classList.add('story-pip-on');
+        flip(pipBox, first);                                       // fly the corner box out from the stage spot
     }
     function exitPip() {
         if (!videoEl || !document.body.classList.contains('story-pip-on')) return;
+        const first = pipBox ? pipBox.getBoundingClientRect() : null;   // the corner box
         const stage = story.querySelector('.story__stage'), diagram = document.getElementById('story-diagram');
         if (stage) stage.insertBefore(videoEl, diagram || null);   // put it back before the diagram
         document.body.classList.remove('story-pip-on');
+        if (first) flip(videoEl, first);                           // fly the stage video back from the corner
     }
     function closePip() { try { videoEl.pause(); } catch (e) {} exitPip(); }
     story._exitPip = exitPip;                                       // let the mode toggle dock it on exit
