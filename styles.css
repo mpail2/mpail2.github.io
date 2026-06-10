@@ -2845,6 +2845,43 @@ body.dark-mode .results-html-table.tv-active tbody td.tv-focus.col-result {
 /* keep the highlight-row tint from competing with the dim while a claim is active */
 .results-html-table.tv-active tbody tr.table-highlight-row td.tv-dim { background: transparent; }
 
+/* ===== Results control rail: RQ + claim selector pinned under the global nav ===== */
+.results-rail {
+    position: fixed;
+    top: 52px; left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    z-index: 998;                                  /* under timeline-nav (1000) and task rail (999) */
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: center;
+    max-width: 94vw; padding: 6px 9px;
+    background: rgba(14, 17, 23, 0.66);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.4,0,.2,1);
+}
+.results-rail.visible { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+.results-rail__rqs { display: flex; gap: 3px; }
+.results-rq {
+    font: 600 0.74rem/1 'Space Grotesk', 'Inter', sans-serif; letter-spacing: .03em;
+    color: #8a93a8; background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 999px;
+    padding: 6px 12px; cursor: pointer;
+    transition: color .2s, background .2s, border-color .2s;
+}
+.results-rq:hover { color: #fff; border-color: rgba(169, 155, 245, 0.5); }
+.results-rq.is-on { color: #fff; background: linear-gradient(135deg, #6E59C7, #9a8af0); border-color: transparent; }
+.results-rail__sep { width: 1px; align-self: stretch; min-height: 22px; background: rgba(255, 255, 255, 0.13); }
+.results-rail__claims { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+/* only the active RQ's claim chips are shown */
+.results-rail__claims .tv-chip { display: none; }
+.results-rail__claims .tv-chip.rq-on { display: inline-flex; }
+
+@media (max-width: 760px) {
+    .results-rail { gap: 6px; padding: 5px 7px; }
+    .results-rq { font-size: 0.68rem; padding: 5px 9px; }
+}
+
 body.dark-mode .table-footnote {
     color: #94a3b8;
 }

@@ -444,6 +444,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+        // Show/hide the Results RQ+claim rail while the results section is in view
+        const resultsRail = document.getElementById('results-rail');
+        if (resultsRail) {
+            const r = resultsOverviewRect;
+            const showRail = r.top < windowHeight * 0.5 && r.bottom > 120;
+            resultsRail.classList.toggle('visible', showRail);
+        }
+
         if (themeToggle) {
             if (scrollY > windowHeight * 0.9) {
                 themeToggle.classList.remove('hidden-on-hero');
@@ -531,7 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Results table — "tunnel vision" onto the rows/columns that evidence a selected finding
 function initResultsTunnel() {
     const table = document.getElementById('tv-table');
-    const chipsWrap = document.getElementById('tv-claims');
+    const chipsWrap = document.getElementById('results-claims');
     const caption = document.getElementById('tv-caption');
     if (!table || !chipsWrap) return;
 
@@ -569,14 +577,25 @@ function initResultsTunnel() {
         }
     };
 
+    const rail = document.getElementById('results-rail');
+    const rqTabs = rail ? Array.prototype.slice.call(rail.querySelectorAll('.results-rq')) : [];
+    const chips = Array.prototype.slice.call(chipsWrap.querySelectorAll('.tv-chip'));
+    const RQ_FIRST = { q1: 'world', q2: 'supervision', q3: 'transfer' };   // first claim shown per RQ
     let active = null;
+
     const cells = Array.prototype.slice.call(table.querySelectorAll('tbody td, thead th'));
 
-    function clear() {
+    // show only the given RQ's claim chips and mark its tab active
+    function showRQ(rq) {
+        rqTabs.forEach(t => t.classList.toggle('is-on', t.dataset.rq === rq));
+        chips.forEach(c => c.classList.toggle('rq-on', c.dataset.rq === rq));
+    }
+
+    function clear() {                                  // un-focus the table (used by the Undirected view)
         table.classList.remove('tv-active');
         cells.forEach(c => c.classList.remove('tv-dim', 'tv-focus'));
         caption.classList.remove('is-on');
-        chipsWrap.querySelectorAll('.tv-chip').forEach(b => b.classList.remove('is-on'));
+        chips.forEach(b => b.classList.remove('is-on'));
         active = null;
     }
 
@@ -585,7 +604,9 @@ function initResultsTunnel() {
         if (!claim) return;
         active = key;
         table.classList.add('tv-active');
-        chipsWrap.querySelectorAll('.tv-chip').forEach(b => b.classList.toggle('is-on', b.dataset.claim === key));
+        chips.forEach(b => b.classList.toggle('is-on', b.dataset.claim === key));
+        const chip = chips.filter(c => c.dataset.claim === key)[0];
+        if (chip) showRQ(chip.dataset.rq);             // keep the rail's RQ + visible chips in sync
         const colSet = new Set(claim.cols), rowSet = new Set(claim.rows);
         bodyRows.forEach(tr => {
             const rowOn = rowSet.has(tr.dataset.method);
@@ -608,13 +629,15 @@ function initResultsTunnel() {
         });
         caption.textContent = claim.text;
         caption.classList.add('is-on');
+        if (typeof window.renderClaimMedia === 'function') window.renderClaimMedia(key);   // phase 2 hook
     }
 
-    chipsWrap.querySelectorAll('.tv-chip').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (active === btn.dataset.claim) clear(); else apply(btn.dataset.claim);
-        });
-    });
+    // RQ tab -> reveal its claims and focus the first; claim chip -> focus that claim (always one active)
+    rqTabs.forEach(tab => tab.addEventListener('click', () => { const f = RQ_FIRST[tab.dataset.rq]; if (f) apply(f); }));
+    chips.forEach(btn => btn.addEventListener('click', () => apply(btn.dataset.claim)));
+
+    window.resultsTunnelClear = clear;                 // let the Undirected toggle (phase 3) un-focus the table
+    apply('world');                                    // default: Q1, world-modeling claim
 }
 
 // Baseline Models — interactive component diagram

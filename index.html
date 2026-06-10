@@ -102,6 +102,25 @@
     </div>
 
     
+
+    <!-- Results claim-driven control rail: pinned under the global nav while Results is in view.
+         Lives at body level (not inside the section) so position:fixed resolves to the viewport. -->
+    <div class="results-rail" id="results-rail" aria-label="Research questions and claims">
+        <div class="results-rail__rqs" role="tablist">
+            <button type="button" class="results-rq is-on" data-rq="q1" title="How does MPAIL2's design enable real-world IRLfO?">Q1</button>
+            <button type="button" class="results-rq" data-rq="q2" title="Does less supervision mean less performance?">Q2</button>
+            <button type="button" class="results-rq" data-rq="q3" title="How does MPAIL2 scale beyond single-task imitation?">Q3</button>
+        </div>
+        <span class="results-rail__sep"></span>
+        <div class="results-rail__claims" id="results-claims">
+            <button type="button" class="tv-chip" data-claim="world" data-rq="q1">World modeling is critical</button>
+            <button type="button" class="tv-chip" data-claim="planning" data-rq="q1">Planning enables robustness</button>
+            <button type="button" class="tv-chip" data-claim="supervision" data-rq="q2">Less supervision &ne; less performance</button>
+            <button type="button" class="tv-chip" data-claim="transfer" data-rq="q3">Positive online transfer</button>
+            <button type="button" class="tv-chip" data-claim="video" data-rq="q3">Video-only demonstration</button>
+        </div>
+    </div>
+
     <div class="container">
         
         <div id="summary-section-container"></div>
