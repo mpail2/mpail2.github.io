@@ -931,11 +931,11 @@ function initStoryScrub() {
     const retP = document.getElementById('st-return');
     const counterEl = document.getElementById('story-counter');
     let LS = { encOn: false, plannerOn: false, policyOn: false };
-    const KEYS = ['rvpDx', 'dynDx', 'plx', 'plw', 'obsTx', 'obsTy', 'obsS', 'intTx', 'intTy', 'intS', 'imgDx'];
+    const KEYS = ['rvpDx', 'dynDx', 'plx', 'plw', 'ply', 'plh', 'plrx', 'obsTx', 'obsTy', 'obsS', 'intTx', 'intTy', 'intS', 'imgDx'];
 
     function planeFor(beat, onSet) {
         const phase = beat.imgPhase || 'column';
-        const S = { rvpDx: 0, dynDx: 0, plx: 295, plw: 480, obsTx: 0, obsTy: 0, obsS: 1, intTx: 0, intTy: 0, intS: 1, imgDx: 0 };
+        const S = { rvpDx: 0, dynDx: 0, plx: 295, plw: 480, ply: 120, plh: 110, plrx: 15, obsTx: 0, obsTy: 0, obsS: 1, intTx: 0, intTy: 0, intS: 1, imgDx: 0 };
         if (phase === 'center') {                          // single obs image, centered + enlarged
             S.obsTx = 286; S.obsTy = 121; S.obsS = 1.55; S.intTx = 286; S.intTy = 121;
         } else if (phase === 'side') {                     // obs + interaction side-by-side, centered
@@ -952,7 +952,15 @@ function initStoryScrub() {
                 for (const c of ['reward', 'value', 'policy']) if (c in left) { S.rvpDx = left[c] - HOME[c]; break; }
                 if ('dynamics' in left) S.dynDx = left.dynamics - DYN_HOME;
                 const last = present[present.length - 1];
-                S.plx = firstLeft - 25; S.plw = (left[last] + CW[last] + 25) - (firstLeft - 25);
+                // planner enclosure wraps every present core box. Before the planner exists it sits
+                // exactly on the policy box (same geom + color) so MPAIL's planner can MORPH out of it:
+                // the box grows outward and recolors purple->gold instead of cross-fading.
+                if (onSet.has('planner')) {
+                    S.plx = firstLeft - 25; S.plw = (left[last] + CW[last] + 25) - (firstLeft - 25);
+                    S.ply = 120; S.plh = 110; S.plrx = 15;
+                } else if (onSet.has('policy')) {
+                    S.plx = 662 + S.rvpDx; S.plw = CW.policy; S.ply = 143; S.plh = 64; S.plrx = 12;
+                }
             }
         }
         return S;
@@ -976,8 +984,12 @@ function initStoryScrub() {
         if (wInt) wInt.setAttribute('d', roundOrtho('M' + sx + ',271 H' + ex + ' V209', 8));
         if (wIntDynP) wIntDynP.setAttribute('d', roundOrtho('M' + (274 + S.imgDx).toFixed(1) + ',271 H' + (364 + S.dynDx).toFixed(1) + ' V207', 8));
         if (replayP) replayP.setAttribute('d', 'M' + (408 + S.dynDx).toFixed(1) + ',165 H' + (636 + S.rvpDx).toFixed(1));
-        if (plRect) { plRect.setAttribute('x', S.plx.toFixed(1)); plRect.setAttribute('width', S.plw.toFixed(1)); }
-        if (plLabel) plLabel.setAttribute('x', (S.plx + S.plw / 2).toFixed(1));
+        if (plRect) {
+            plRect.setAttribute('x', S.plx.toFixed(1)); plRect.setAttribute('width', S.plw.toFixed(1));
+            plRect.setAttribute('y', S.ply.toFixed(1)); plRect.setAttribute('height', S.plh.toFixed(1));
+            plRect.setAttribute('rx', S.plrx.toFixed(1));
+        }
+        if (plLabel) { plLabel.setAttribute('x', (S.plx + S.plw / 2).toFixed(1)); plLabel.setAttribute('y', (S.ply - 7).toFixed(1)); }
         // act-in-environment return origin: planner > policy > value/RL box; endpoint tracks the interaction
         let ox, oy;
         if (LS.plannerOn) { ox = S.plx + S.plw / 2; oy = 230; }
@@ -1048,6 +1060,13 @@ function initStoryScrub() {
             dynBox.classList.toggle('st-prior-show', b.prior === 'show');
             dynBox.classList.toggle('st-dyn-online', b.prior === 'gone');
         }
+        // policy -> planner morph: the planner rect carries the policy's purple while planning is absent,
+        // then drops st-as-policy when the planner appears so it recolors to gold as it grows out of the
+        // policy box. The policy box fades in place (st-morph-out) instead of dropping away beneath it.
+        const morphIntoPlanner = onSet.has('planner') && !onSet.has('policy');
+        if (plRect) plRect.classList.toggle('st-as-policy', !onSet.has('planner'));
+        const policyG = svg.querySelector('[data-comp="policy"]');
+        if (policyG) policyG.classList.toggle('st-morph-out', morphIntoPlanner);
         // once the reward (and the architecture) is introduced, fade the input photos into the background
         svg.classList.toggle('st-dim-imgs', onSet.has('reward'));
         // obs/interaction stacks: fan OUT when newly appearing, fan IN (collapse) on exit; sim-style at the MPAIL con
