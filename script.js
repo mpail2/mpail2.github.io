@@ -1160,6 +1160,26 @@ function initStoryScrub() {
         startLoop(curBeat);
     }, 200);
 
+    // dev: ?loopdebug shows a live HUD of the loop state so we can see why it does/doesn't fire.
+    if (new URLSearchParams(location.search).has('loopdebug')) {
+        const hud = document.createElement('div');
+        hud.style.cssText = 'position:fixed;top:8px;left:8px;z-index:2147483647;background:rgba(0,0,0,.88);' +
+            'color:#9effa0;font:12px/1.5 monospace;padding:8px 10px;border-radius:6px;white-space:pre;pointer-events:none;';
+        document.body.appendChild(hud);
+        setInterval(() => {
+            const r = story.getBoundingClientRect();
+            const gate = !(r.bottom < window.innerHeight * 0.5 || r.top > window.innerHeight * 0.5);
+            const rep = curBeat > 0 ? getReplay(curBeat) : null;
+            hud.textContent =
+                'frame      ' + (curBeat + 1) + '  (beat ' + curBeat + ')\n' +
+                'loops?     ' + (rep ? 'YES' : 'no (block intro / frame<=1)') + '\n' +
+                'looping    ' + (loopRAF ? 'RUNNING' : 'stopped') + '\n' +
+                'idle ms    ' + Math.round(performance.now() - lastScrollAt) + '  (need >240)\n' +
+                'in view    ' + (gate ? 'yes' : 'NO  rect.top=' + Math.round(r.top)) + '\n' +
+                'forceP     ' + (story.dataset.forceP || '-') + '   narrated ' + story.classList.contains('story--narrated');
+        }, 120);
+    }
+
     // dev verification hook: ?storyp=0.42 forces a fixed progress and pins the
     // sticky stage into view so a headless screenshot captures that beat.
     const sp = new URLSearchParams(location.search).get('storyp');
