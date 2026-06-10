@@ -1091,7 +1091,7 @@ function initStoryScrub() {
     const animBar = document.getElementById('story-animbar');
     const animBarFill = animBar ? animBar.querySelector('span') : null;
     const ANIM_MS = 680, LOOP_MS = ANIM_MS + 750;   // animation, then a short hold before replaying
-    let loopRAF = null, loopT0 = 0, lastScrollP = -1, lastScrollAt = 0;
+    let loopRAF = null, loopT0 = 0, loopGen = 0, lastScrollP = -1, lastScrollAt = 0;
     // Loop ONLY a beat's specific "style change" animation, in isolation (reset just that property to its
     // "before" instantly, then play it to its "after") — NOT block introductions, relabels, collapses,
     // or layout/phase intros. Returns {reset, apply} or null if the beat shouldn't loop.
@@ -1120,7 +1120,9 @@ function initStoryScrub() {
         return { reset: () => R.forEach(f => f()), apply: () => A.forEach(f => f()) };
     }
     function stopLoop() {
+        loopGen++;                                          // invalidate any in-flight cycle frames
         if (loopRAF) { cancelAnimationFrame(loopRAF); loopRAF = null; }
+        svg.classList.remove('st-no-anim');                 // never leave transitions globally disabled
         if (animBar) animBar.classList.remove('is-on');
     }
     function startLoop(beatIdx) {
@@ -1128,13 +1130,25 @@ function initStoryScrub() {
         if ((story.dataset.forceP && !story.dataset.testLoop) || beatIdx <= 0) return;
         const rep = getReplay(beatIdx);
         if (!rep) return;
+        const gen = ++loopGen;
+        // One pass: jump to the start with transitions OFF, let that state PAINT (so it becomes the
+        // transition baseline), then re-enable transitions and play to the end. A single synchronous
+        // reflow is NOT enough — the start must actually paint, or the browser sees no change and the
+        // transition never fires (the bug where the loop "ran" but nothing visibly animated).
         const cycle = () => {
-            svg.classList.add('st-no-anim'); rep.reset(); void svg.offsetWidth;   // jump to the start instantly
-            svg.classList.remove('st-no-anim'); rep.apply();                       // play it to the end
+            svg.classList.add('st-no-anim'); rep.reset();               // instant jump to the start
+            requestAnimationFrame(() => {                               // frame A: paints the start (still no-anim)
+                if (gen !== loopGen) return;
+                requestAnimationFrame(() => {                           // frame B: enable transitions + play to end
+                    if (gen !== loopGen) return;
+                    svg.classList.remove('st-no-anim'); rep.apply();
+                });
+            });
         };
         if (animBar) animBar.classList.add('is-on');
         loopT0 = performance.now(); cycle();
         const step = (now) => {
+            if (gen !== loopGen) return;
             if (animBarFill) animBarFill.style.width = (Math.min(1, (now - loopT0) / ANIM_MS) * 100) + '%';
             if (now - loopT0 >= LOOP_MS) { loopT0 = now; cycle(); }
             loopRAF = requestAnimationFrame(step);
