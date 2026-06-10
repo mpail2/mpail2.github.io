@@ -2904,6 +2904,24 @@ body.dark-mode .results-html-table.tv-active tbody td.tv-focus.col-result {
 /* keep the highlight-row tint from competing with the dim while a claim is active */
 .results-html-table.tv-active tbody tr.table-highlight-row td.tv-dim { background: transparent; }
 
+/* table-as-control-surface: cells that map to a stageable clip read as clickable; the cue strengthens
+   while the table panel is hovered/focused. Row & column headers bulk-select. */
+.results-html-table .tv-pick { cursor: pointer; position: relative; }
+.results-html-table tbody td[data-col="method"] { cursor: pointer; }
+.results-panel--table:hover .results-html-table .tv-pick { box-shadow: inset 0 0 0 1px rgba(102, 126, 234, 0.28); }
+.results-html-table .tv-pick:hover { background: rgba(102, 126, 234, 0.14) !important; }
+.results-html-table thead th[data-col]:hover,
+.results-html-table tbody td[data-col="method"]:hover { background: rgba(102, 126, 234, 0.12); cursor: pointer; }
+/* a chosen cell: solid accent ring + tint, overriding dim */
+.results-html-table td.tv-selected,
+.results-html-table.tv-active td.tv-selected {
+    opacity: 1 !important;
+    background: rgba(102, 126, 234, 0.22) !important;
+    box-shadow: inset 0 0 0 2px #667eea;
+}
+body.dark-mode .results-html-table td.tv-selected,
+body.dark-mode .results-html-table.tv-active td.tv-selected { background: rgba(165, 180, 252, 0.26) !important; box-shadow: inset 0 0 0 2px #a5b4fc; }
+
 /* ===== Results: readable questions/claims text (primary) + compact pill bars ===== */
 /* The questions are presented as text at the top of the results section. The compact claim bar
    (.results-selector, fixed under the nav) only appears once that text scrolls above the top.
@@ -3063,44 +3081,35 @@ body.dark-mode .results-scrub__slider { accent-color: #a5b4fc; }
 .results-plot { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin: 26px auto 0; max-width: 1000px; }
 .results-plot__one { flex: 1 1 400px; min-width: 280px; max-width: 520px; display: flex; flex-direction: column; }
 body.results-undirected #results-plot { display: none !important; }
-.results-compare {
-    display: flex; align-items: stretch; justify-content: center; gap: 14px; flex-wrap: nowrap;
+/* results stage: a responsive grid of method×task tiles, each a labelled clip */
+.results-stage-grid {
+    display: grid; gap: 18px 16px; margin: 4px auto 0;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
-.results-compare__vs {
-    align-self: center; font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 700;
-    font-size: 0.85rem; color: #8a93a8; flex: 0 0 auto;
-}
-.results-vid { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
-.results-vid .video-display { width: 100%; }
-.results-vid .video-display video { width: 100%; display: block; border-radius: 12px; }
+.results-stage-grid--single { grid-template-columns: minmax(0, 540px); justify-content: center; }
+.results-tile { min-width: 0; display: flex; flex-direction: column; }
+.results-tile .video-display { width: 100%; position: relative; }
+.results-tile .video-display video { width: 100%; display: block; border-radius: 12px; }
 .results-vid__label {
     text-align: center; margin: 0 0 8px; font-weight: 600; font-size: 0.9rem; color: #1f2937;
 }
 body.dark-mode .results-vid__label { color: #e8eaed; }
+.results-vid__label span.results-vid__name { display: block; }
 .results-vid__label span {
     display: block; font-weight: 500; font-size: 0.75rem; color: #6b7280; margin-top: 1px;
 }
 body.dark-mode .results-vid__label span { color: #8a93a8; }
-/* one comparison row per task; the task name heads each row */
-.results-taskrow { margin: 0 auto 22px; }
-.results-taskrow:last-of-type { margin-bottom: 4px; }
-.results-taskrow__label {
-    text-align: center; margin: 0 0 9px; font-family: 'Space Grotesk', 'Inter', sans-serif;
-    font-weight: 700; font-size: 0.82rem; letter-spacing: .04em; text-transform: uppercase; color: #667eea;
+.results-stage-empty {
+    text-align: center; margin: 8px auto; max-width: 56ch; padding: 28px 20px;
+    font-size: 0.92rem; line-height: 1.55; color: #6b7280;
+    border: 1px dashed rgba(102, 126, 234, 0.35); border-radius: 14px;
 }
-body.dark-mode .results-taskrow__label { color: #a5b4fc; }
-.results-single { display: flex; justify-content: center; }
-.results-single .video-display { max-width: 560px; width: 100%; position: relative; }
-.results-single .video-display video { width: 100%; display: block; border-radius: 12px; }
+body.dark-mode .results-stage-empty { color: #9aa3b5; border-color: rgba(165, 180, 252, 0.3); }
 .results-media__note {
-    text-align: center; margin: 14px auto 0; max-width: 64ch;
+    text-align: center; margin: 16px auto 0; max-width: 64ch;
     font-size: 0.9rem; line-height: 1.5; color: #c7cdda;
 }
 body:not(.dark-mode) .results-media__note { color: #4b5563; }
-@media (max-width: 680px) {
-    .results-compare { flex-direction: column; gap: 10px; }
-    .results-compare__vs { transform: rotate(90deg); }
-}
 
 body.dark-mode .table-footnote {
     color: #94a3b8;

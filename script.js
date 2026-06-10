@@ -568,13 +568,6 @@ function initResultsTunnel() {
         });
         return s + '</svg>';
     }
-    function sideMethodKey(side) {   // map a stage side (MEDIA config) -> table method key
-        if (side.mpail2 || side.dir) return 'mpail2';
-        if (side.folder === 'mpail2_p') return 'mairl';
-        if (side.folder === 'mpail2_pm') return 'dac';
-        if (side.folder === 'rlpd') return 'rlpd';
-        return null;
-    }
     // drop the diagram into each table method cell (below the name)
     bodyRows.forEach(tr => {
         const cell = tr.children[0], svg = miniDiagram(tr.dataset.method);
@@ -630,16 +623,9 @@ function initResultsTunnel() {
         active = null;
     }
 
-    function apply(key) {
-        const claim = CLAIMS[key];
-        if (!claim) return;
-        active = key;
-        window.resultsActiveClaim = key;               // so selectTask can refresh the focus media
+    // focus a given set of rows+cols on the table (shared by single-claim and RQ-union views)
+    function focusTable(rowSet, colSet) {
         table.classList.add('tv-active');
-        claimBtns.forEach(b => b.classList.toggle('is-on', b.dataset.claim === key));
-        const chip = claimBtns.filter(c => c.dataset.claim === key)[0];
-        if (chip) showRQ(chip.dataset.rq);             // keep the compact bar's RQ + visible chips in sync
-        const colSet = new Set(claim.cols), rowSet = new Set(claim.rows);
         bodyRows.forEach(tr => {
             const rowOn = rowSet.has(tr.dataset.method);
             Array.prototype.forEach.call(tr.children, td => {
@@ -659,93 +645,249 @@ function initResultsTunnel() {
             if (th.classList.contains('col-model')) { th.classList.remove('tv-dim'); th.classList.add('tv-focus'); }
             else { th.classList.add('tv-dim'); th.classList.remove('tv-focus'); }
         });
+    }
+
+    function apply(key) {
+        const claim = CLAIMS[key];
+        if (!claim) return;
+        selected.clear();                              // an explicit claim resets any manual selection
+        bodyRows.forEach(tr => Array.prototype.forEach.call(tr.children, td => td.classList.remove('tv-selected')));
+        active = key;
+        window.resultsActiveClaim = key;               // so selectTask can refresh the focus media
+        claimBtns.forEach(b => b.classList.toggle('is-on', b.dataset.claim === key));
+        const chip = claimBtns.filter(c => c.dataset.claim === key)[0];
+        if (chip) showRQ(chip.dataset.rq);             // keep the compact bar's RQ + visible chips in sync
+        focusTable(new Set(claim.rows), new Set(claim.cols));
         caption.textContent = claim.text;
         caption.classList.add('is-on');
         if (typeof window.renderClaimMedia === 'function') window.renderClaimMedia(key);   // videos
         if (typeof window.renderClaimPlot === 'function') window.renderClaimPlot(key);     // efficiency plots
     }
 
-    // RQ tab -> reveal its claims and focus the first; any claim (text or chip) -> focus it (clicking a
-    // claim while in Undirected switches back to Focus so the focusing is visible)
-    rqTabs.forEach(tab => tab.addEventListener('click', () => { const f = RQ_FIRST[tab.dataset.rq]; if (f) apply(f); }));
+    // RQ tab / question header -> stage all the RQ's evidence; any claim (text or chip) -> narrow to it
+    // (clicking either while in Undirected switches back to Focus so the focusing is visible)
+    rqTabs.forEach(tab => tab.addEventListener('click', () => {
+        if (document.body.classList.contains('results-undirected')) setResultsMode('focus');
+        applyRQ(tab.dataset.rq);
+    }));
     claimBtns.forEach(btn => btn.addEventListener('click', () => {
         if (document.body.classList.contains('results-undirected')) setResultsMode('focus');
         apply(btn.dataset.claim);
     }));
-    // accordion: clicking a question expands/collapses its claims (collapsed by default)
+    // accordion: clicking a question expands/collapses its claims and stages all its evidence
     document.querySelectorAll('.rq-group__q').forEach(q => q.addEventListener('click', () => {
-        const open = q.closest('.rq-group').classList.toggle('is-open');
+        const group = q.closest('.rq-group');
+        const open = group.classList.toggle('is-open');
         q.setAttribute('aria-expanded', open ? 'true' : 'false');
-    }));
-
-    // ---- focus-mode media: per-claim evidence (side-by-side training clips or a single video) ----
-    const mediaPanel = document.getElementById('results-media');
-    const MEDIA = {
-        world:       { kind: 'compare', left: { label: 'MPAIL2', sub: 'world model', mpail2: true }, right: { label: 'Model-Free [−PM]', sub: 'no dynamics model', folder: 'mpail2_pm' },
-                       note: 'Only the model-based learner gains traction in the real world; dropping the world model (DAC) collapses to 0%.' },
-        planning:    { kind: 'compare', left: { label: 'MPAIL2', sub: 'with MPPI planner', mpail2: true }, right: { label: 'Without Planning [−P]', sub: 'policy only', folder: 'mpail2_p' },
-                       note: 'The planner stabilizes the adversarial objective, yielding markedly more robust behavior than the policy alone.' },
-        supervision: { kind: 'compare', left: { label: 'MPAIL2', sub: 'no reward, no actions', mpail2: true }, right: { label: 'RLPD', sub: 'dense reward + action labels', folder: 'rlpd' },
-                       note: 'With strictly less supervision, MPAIL2 still matches or beats RLPD.' },
-        transfer:    { kind: 'compare', left: { label: 'From scratch', sub: 'no prior task', dir: 'From Scratch' }, right: { label: 'Transferred', sub: 'initialized from a related task', dir: 'Transfer' },
-                       note: 'Transfer reaches higher success in roughly half the real-world training time.' },
-        video:       { kind: 'single', src: 'Media/Video/Push/Video_only/push_vid_only_h264.mp4', badges: ['Wrist Camera', 'Proprioception'],
-                       note: 'Learned from a single fixed, table-mounted camera — no wrist camera and no proprioception.' }
-    };
-    // all tasks are shown at once (the viewer doesn't pick a task in Focus mode)
-    const TASKS = [['Push', 'Block Push'], ['Pick', 'Pick-and-Place']];
-    const START_IT = 100;                              // default to the trained (final) iteration
-    function sidePrefix(side, T) {                      // path up to "iter_" so the iteration is swappable
-        if (side.mpail2) return 'Media/Video/' + T + '/iter_';
-        if (side.folder) return 'Media/Video/Comparison/' + side.folder + '/' + T + '/iter_';
-        if (side.dir) return 'Media/Video/' + encodeURIComponent(side.dir) + '/' + T + '/iter_';
-        return '';
-    }
-    const vidHTML = (prefix) => '<div class="video-display"><video autoplay muted loop playsinline preload="metadata" data-prefix="' + prefix + '"><source src="' + prefix + START_IT + '.mp4" type="video/mp4"></video></div>';
-    const lblHTML = (s) => {
-        const svg = miniDiagram(sideMethodKey(s));
-        return '<p class="results-vid__label">' + (svg ? '<span class="mini-diagram-wrap mini-diagram-wrap--label">' + svg + '</span>' : '') +
-            '<span class="results-vid__name">' + s.label + '</span>' + (s.sub ? '<span>' + s.sub + '</span>' : '') + '</p>';
-    };
-    window.renderClaimMedia = function (key) {
-        if (!mediaPanel) return;
-        const m = MEDIA[key];
-        if (!m) { mediaPanel.innerHTML = ''; return; }
-        if (m.kind === 'single') {
-            const badges = (m.badges || []).map(b => '<div class="video-badge video-badge--disabled"><span class="video-badge__cross">No</span>' + b + '</div>').join('');
-            mediaPanel.innerHTML = '<div class="results-single"><div class="video-display">' +
-                '<video autoplay muted loop playsinline preload="metadata"><source src="' + m.src + '" type="video/mp4"></video>' +
-                (badges ? '<div class="video-badge-row">' + badges + '</div>' : '') + '</div></div>' +
-                '<p class="results-media__note">' + m.note + '</p>';
-        } else {
-            // one comparison row per task; a shared iteration slider scrubs every clip through training
-            const rows = TASKS.map(function (t) {
-                return '<div class="results-taskrow"><div class="results-taskrow__label">' + t[1] + '</div>' +
-                    '<div class="results-compare">' +
-                    '<div class="results-vid">' + lblHTML(m.left) + vidHTML(sidePrefix(m.left, t[0])) + '</div>' +
-                    '<div class="results-compare__vs">vs</div>' +
-                    '<div class="results-vid">' + lblHTML(m.right) + vidHTML(sidePrefix(m.right, t[0])) + '</div>' +
-                    '</div></div>';
-            }).join('');
-            const scrub = '<div class="results-scrub">' +
-                '<span class="results-scrub__label">Training iteration <b class="results-scrub__val">' + START_IT + '</b><span class="results-scrub__max"> / 100</span></span>' +
-                '<input type="range" class="results-scrub__slider" min="0" max="100" step="10" value="' + START_IT + '" aria-label="Training iteration">' +
-                '<span class="results-scrub__hint">drag to scrub through training</span></div>';
-            mediaPanel.innerHTML = scrub + rows + '<p class="results-media__note">' + m.note + '</p>';
-            const slider = mediaPanel.querySelector('.results-scrub__slider');
-            const valEl = mediaPanel.querySelector('.results-scrub__val');
-            if (slider) slider.addEventListener('input', function () {
-                const it = this.value;
-                if (valEl) valEl.textContent = it;
-                mediaPanel.querySelectorAll('video[data-prefix]').forEach(function (v) {
-                    const src = v.dataset.prefix + it + '.mp4', s = v.querySelector('source');
-                    if (s && s.getAttribute('src') !== src) { s.setAttribute('src', src); v.load(); v.play().catch(function () {}); }
-                    try { v.playbackRate = 3; } catch (e) {}
-                });
-            });
+        if (open && group.dataset.rq) {
+            if (document.body.classList.contains('results-undirected')) setResultsMode('focus');
+            applyRQ(group.dataset.rq);
         }
-        mediaPanel.querySelectorAll('video').forEach(v => { try { v.playbackRate = 3; v.play().catch(function () {}); } catch (e) {} });
+    }));
+    // reset: clear claims, selections, and the stage back to a neutral state
+    const resetBtn = document.getElementById('results-reset');
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+        selected.clear();
+        clear();                                       // un-focus table + active=null + caption off
+        bodyRows.forEach(tr => Array.prototype.forEach.call(tr.children, td => td.classList.remove('tv-selected')));
+        document.querySelectorAll('.rq-group.is-open').forEach(g => {
+            g.classList.remove('is-open');
+            const q = g.querySelector('.rq-group__q'); if (q) q.setAttribute('aria-expanded', 'false');
+        });
+        rqTabs.forEach(t => t.classList.remove('is-on'));
+        renderStage([], '');
+        if (typeof window.renderClaimPlot === 'function') window.renderClaimPlot('__none');
+    });
+
+    // ---- results stage: a grid of method×task training clips, fed by a claim, a research question
+    //      (union of its claims), or a hand-picked set of table cells. A shared slider scrubs every
+    //      swappable clip through training (as a % of its own schedule, since tasks differ in length). ----
+    const mediaPanel = document.getElementById('results-media');
+    const METHOD_NAME = { mpail2: 'MPAIL2', mairl: '[−P] (MAIRL)', dac: '[−PM] (DAC)', rlpd: 'RLPD', bc: 'BC (Diffusion)' };
+    const FOLDER = { mairl: 'mpail2_p', dac: 'mpail2_pm', rlpd: 'rlpd' };   // baseline comparison clip folders
+    const START_PCT = 100;                             // default to the trained (final) iteration
+
+    // (method, result-column) -> a stageable clip, or null if none exists for that pairing.
+    //   { prefix, max, task } = iteration-swappable training clip (prefix + "<iter>.mp4", iters 0..max step 10)
+    //   { src, task, badges } = a single fixed clip
+    function cellVideo(methodKey, col) {
+        if (col === 'res-bp' || col === 'res-pnp') {
+            const t = col === 'res-bp' ? { dir: 'Push', task: 'Block Push', max: 100 }
+                                       : { dir: 'Pick', task: 'Pick-and-Place', max: 150 };
+            if (methodKey === 'mpail2') return { prefix: 'Media/Video/' + t.dir + '/iter_', max: t.max, task: t.task };
+            const f = FOLDER[methodKey];
+            if (!f) return null;                       // BC has no training clip
+            return { prefix: 'Media/Video/Comparison/' + f + '/' + t.dir + '/iter_', max: t.max, task: t.task };
+        }
+        if (methodKey !== 'mpail2') return null;       // the remaining columns are MPAIL2-only
+        switch (col) {
+            case 'res-mop': return { prefix: 'Media/Video/MoP/iter_', max: 200, task: 'Mug-on-Plate' };
+            case 'tr-bp':  return { prefix: 'Media/Video/Transfer/Push/iter_', max: 100, task: 'Block Push · transferred' };
+            case 'tr-pnp': return { prefix: 'Media/Video/Transfer/Pick/iter_', max: 150, task: 'Pick-and-Place · transferred' };
+            case 'sc-bp':  return { prefix: 'Media/Video/From%20Scratch/Push/iter_', max: 100, task: 'Block Push · from scratch' };
+            case 'sc-pnp': return { prefix: 'Media/Video/From%20Scratch/Pick/iter_', max: 150, task: 'Pick-and-Place · from scratch' };
+            case 'vid-bp': return { src: 'Media/Video/Push/Video_only/push_vid_only_h264.mp4', task: 'Block Push · video-only', badges: ['Wrist Camera', 'Proprioception'] };
+        }
+        return null;
+    }
+
+    // each claim stages a small set of (method, column) cells, plus an explanatory note
+    const CLAIM_CELLS = {
+        world:       [['mpail2', 'res-bp'], ['dac', 'res-bp'], ['mpail2', 'res-pnp'], ['dac', 'res-pnp']],
+        planning:    [['mpail2', 'res-bp'], ['mairl', 'res-bp'], ['mpail2', 'res-pnp'], ['mairl', 'res-pnp']],
+        supervision: [['mpail2', 'res-bp'], ['rlpd', 'res-bp'], ['mpail2', 'res-pnp'], ['rlpd', 'res-pnp']],
+        transfer:    [['mpail2', 'sc-bp'], ['mpail2', 'tr-bp'], ['mpail2', 'sc-pnp'], ['mpail2', 'tr-pnp']],
+        video:       [['mpail2', 'vid-bp']]
     };
+    const CLAIM_NOTE = {
+        world:       'Only the model-based learner gains traction in the real world; dropping the world model (DAC) collapses to 0%.',
+        planning:    'The planner stabilizes the adversarial objective, yielding markedly more robust behavior than the policy alone.',
+        supervision: 'With strictly less supervision, MPAIL2 still matches or beats RLPD.',
+        transfer:    'Transfer reaches higher success in roughly half the real-world training time.',
+        video:       'Learned from a single fixed, table-mounted camera — no wrist camera and no proprioception.'
+    };
+    const RQ_CLAIMS = { q1: ['world', 'planning'], q2: ['supervision'], q3: ['transfer', 'video'] };
+
+    const tileLabel = (methodKey, task) => {
+        const svg = miniDiagram(methodKey);
+        return '<p class="results-vid__label">' + (svg ? '<span class="mini-diagram-wrap mini-diagram-wrap--label">' + svg + '</span>' : '') +
+            '<span class="results-vid__name">' + (METHOD_NAME[methodKey] || methodKey) + '</span>' +
+            (task ? '<span>' + task + '</span>' : '') + '</p>';
+    };
+    const iterFor = (pct, max) => Math.round(pct / 100 * max / 10) * 10;   // % of schedule -> nearest available iter
+
+    // render the stage from a list of [method, col] cells (+ optional note)
+    function renderStage(cellList, note) {
+        if (!mediaPanel) return;
+        const items = (cellList || []).map(c => ({ m: c[0], col: c[1], v: cellVideo(c[0], c[1]) })).filter(x => x.v);
+        if (!items.length) {
+            mediaPanel.innerHTML = '<p class="results-stage-empty">Pick a research question or finding above — or hover the table and click cells, row, or column headers — to stage training videos here.</p>';
+            return;
+        }
+        const hasScrub = items.some(x => x.v.prefix);
+        const tiles = items.map(x => {
+            const v = x.v;
+            let media;
+            if (v.src) {
+                const badges = (v.badges || []).map(b => '<div class="video-badge video-badge--disabled"><span class="video-badge__cross">No</span>' + b + '</div>').join('');
+                media = '<div class="video-display"><video autoplay muted loop playsinline preload="metadata"><source src="' + v.src + '" type="video/mp4"></video>' +
+                    (badges ? '<div class="video-badge-row">' + badges + '</div>' : '') + '</div>';
+            } else {
+                const it = iterFor(START_PCT, v.max);
+                media = '<div class="video-display"><video autoplay muted loop playsinline preload="metadata" data-prefix="' + v.prefix + '" data-max="' + v.max + '"><source src="' + v.prefix + it + '.mp4" type="video/mp4"></video></div>';
+            }
+            return '<div class="results-tile">' + tileLabel(x.m, v.task) + media + '</div>';
+        }).join('');
+        const scrub = hasScrub ? '<div class="results-scrub">' +
+            '<span class="results-scrub__label">Training <b class="results-scrub__val">' + START_PCT + '%</b></span>' +
+            '<input type="range" class="results-scrub__slider" min="0" max="100" step="10" value="' + START_PCT + '" aria-label="Training progress">' +
+            '<span class="results-scrub__hint">drag to scrub through training</span></div>' : '';
+        mediaPanel.innerHTML = scrub +
+            '<div class="results-stage-grid' + (items.length === 1 ? ' results-stage-grid--single' : '') + '">' + tiles + '</div>' +
+            (note ? '<p class="results-media__note">' + note + '</p>' : '');
+        const slider = mediaPanel.querySelector('.results-scrub__slider');
+        const valEl = mediaPanel.querySelector('.results-scrub__val');
+        if (slider) slider.addEventListener('input', function () {
+            const pct = +this.value;
+            if (valEl) valEl.textContent = pct + '%';
+            mediaPanel.querySelectorAll('video[data-prefix]').forEach(function (vd) {
+                const it = iterFor(pct, +vd.dataset.max || 100);
+                const src = vd.dataset.prefix + it + '.mp4', s = vd.querySelector('source');
+                if (s && s.getAttribute('src') !== src) { s.setAttribute('src', src); vd.load(); vd.play().catch(function () {}); }
+                try { vd.playbackRate = 3; } catch (e) {}
+            });
+        });
+        mediaPanel.querySelectorAll('video').forEach(v => { try { v.playbackRate = 3; v.play().catch(function () {}); } catch (e) {} });
+    }
+    window.renderStage = renderStage;
+    // claim media still routes through the claim cells (used by apply())
+    window.renderClaimMedia = function (key) { renderStage(CLAIM_CELLS[key], CLAIM_NOTE[key]); };
+
+    // ---- table as a control surface: clicking selectable cells / row & column headers picks the videos ----
+    const selected = new Set();                        // entries: "<method>|<col>"
+    // mark every cell that maps to a clip, so it reads as clickable
+    bodyRows.forEach(tr => Array.prototype.forEach.call(tr.children, td => {
+        if (td.dataset.col && td.dataset.col !== 'method' && cellVideo(tr.dataset.method, td.dataset.col)) td.classList.add('tv-pick');
+    }));
+    function selectableCols(methodKey) {
+        return COLS.filter(c => c !== 'method' && cellVideo(methodKey, c));
+    }
+    function syncSelection() {
+        bodyRows.forEach(tr => Array.prototype.forEach.call(tr.children, td => {
+            if (!td.dataset.col || td.dataset.col === 'method') return;
+            td.classList.toggle('tv-selected', selected.has(tr.dataset.method + '|' + td.dataset.col));
+        }));
+        if (selected.size) {                           // a manual selection overrides any active claim
+            table.classList.remove('tv-active');
+            cells.forEach(c => c.classList.remove('tv-dim', 'tv-focus'));
+            caption.classList.remove('is-on');
+            claimBtns.forEach(b => b.classList.remove('is-on'));
+            if (typeof window.renderClaimPlot === 'function') window.renderClaimPlot('__none');   // hide plot
+            const list = COLS.filter(c => c !== 'method').reduce((acc, col) => {   // stable order: by column, then table row order
+                bodyRows.forEach(tr => { if (selected.has(tr.dataset.method + '|' + col)) acc.push([tr.dataset.method, col]); });
+                return acc;
+            }, []);
+            renderStage(list, 'Custom selection — ' + list.length + (list.length === 1 ? ' video' : ' videos') + ' chosen from the table.');
+        } else if (active) {
+            apply(active);                             // fall back to the active claim
+        } else {
+            renderStage([], '');                       // neutral
+            if (typeof window.renderClaimPlot === 'function') window.renderClaimPlot('__none');
+        }
+    }
+    function toggleCell(methodKey, col) {
+        const k = methodKey + '|' + col;
+        if (selected.has(k)) selected.delete(k); else selected.add(k);
+        syncSelection();
+    }
+    function toggleBulk(keys) {                         // select all if any missing, else clear them
+        const allOn = keys.every(k => selected.has(k));
+        keys.forEach(k => { if (allOn) selected.delete(k); else selected.add(k); });
+        syncSelection();
+    }
+    table.addEventListener('click', e => {
+        const td = e.target.closest('td, th');
+        if (!td || !table.contains(td)) return;
+        const inBody = td.closest('tbody');
+        if (inBody) {
+            const tr = td.closest('tr[data-method]');
+            if (!tr) return;
+            const method = tr.dataset.method, col = td.dataset.col;
+            if (col === 'method') {                     // row header -> all that method's selectable cells
+                const keys = selectableCols(method).map(c => method + '|' + c);
+                if (keys.length) toggleBulk(keys);
+            } else if (cellVideo(method, col)) {
+                toggleCell(method, col);
+            }
+        } else if (td.dataset.col) {                    // column (sub-)header -> all selectable cells in it
+            const col = td.dataset.col;
+            const keys = bodyRows.filter(tr => cellVideo(tr.dataset.method, col)).map(tr => tr.dataset.method + '|' + col);
+            if (keys.length) toggleBulk(keys);
+        }
+    });
+
+    // research question -> stage the union of its claims' cells, focus their union on the table (plot
+    // stays a hint, since RQ-level shows everything; click a claim to narrow + plot)
+    function applyRQ(rq) {
+        const claims = RQ_CLAIMS[rq];
+        if (!claims) return;
+        selected.clear();
+        active = null; window.resultsActiveClaim = null;
+        const seen = new Set(), unionCells = [], rowSet = new Set(), colSet = new Set();
+        claims.forEach(k => {
+            (CLAIM_CELLS[k] || []).forEach(c => { const id = c[0] + '|' + c[1]; if (!seen.has(id)) { seen.add(id); unionCells.push(c); } });
+            (CLAIMS[k].rows || []).forEach(r => rowSet.add(r));
+            (CLAIMS[k].cols || []).forEach(c => colSet.add(c));
+        });
+        showRQ(rq);
+        focusTable(rowSet, colSet);
+        caption.textContent = 'Research question — all supporting evidence. Click a finding to narrow the view.';
+        caption.classList.add('is-on');
+        bodyRows.forEach(tr => Array.prototype.forEach.call(tr.children, td => td.classList.remove('tv-selected')));
+        renderStage(unionCells, '');
+        if (typeof window.renderClaimPlot === 'function') window.renderClaimPlot('__none');
+    }
+    window.applyResultsRQ = applyRQ;
 
     // ---- Focus / Undirected mode: Undirected reveals the full Training section as "all the evidence".
     //      There are two mode toggles (the selector + the training bar), so wire them by class. ----
