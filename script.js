@@ -213,6 +213,27 @@ document.addEventListener('DOMContentLoaded', function() {
             el.classList.toggle('is-active', Math.abs((ty + k * h + h / 2) - center) < eps);
         });
     }
+    // same epsilon focus, but read from live layout so it works during the CSS-driven cycle slide
+    // (each word lights up as it passes NO, instead of defocusing then snapping on at the center).
+    var hlRAF = null;
+    function highlightLive() {
+        var cr = claim.getBoundingClientRect(), center = cr.top + cr.height / 2;
+        var eps = (claim.clientHeight / N) * 0.42;
+        all.forEach(function(el) {
+            var r = el.getBoundingClientRect();
+            el.classList.toggle('is-active', Math.abs((r.top + r.height / 2) - center) < eps);
+        });
+    }
+    function runHighlightDuring(ms) {
+        if (hlRAF) cancelAnimationFrame(hlRAF);
+        var t0 = performance.now();
+        var tick = function(now) {
+            if (dragging) { hlRAF = null; return; }     // drag takes over the highlighting
+            highlightLive();
+            hlRAF = (now - t0 < ms) ? requestAnimationFrame(tick) : null;
+        };
+        hlRAF = requestAnimationFrame(tick);
+    }
 
     position(false); focusCenter();
     if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function() { position(false); }); }
@@ -228,13 +249,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (reduce || N < 2 || cycleTimer) return;
         cycleTimer = setInterval(function() {
             if (dragging) return;
-            all.forEach(function(el) { el.classList.remove('is-active'); }); // defocus while it travels
             i += 1;
             position(true);
+            runHighlightDuring(640);                   // light each word live as it passes NO (epsilon focus)
             if (i >= N) {                              // wrapped onto the clone — snap back invisibly
-                setTimeout(function() { i -= N; position(false); focusCenter(); }, 560);
-            } else {
-                setTimeout(focusCenter, 560);          // focus only once it's in-line with NO
+                setTimeout(function() { i -= N; position(false); highlightLive(); }, 560);
             }
         }, 1900);
     }
@@ -271,10 +290,11 @@ document.addEventListener('DOMContentLoaded', function() {
             i -= Math.round((getY(e) - startY) / wordH());   // drag down -> earlier words
             list.style.transition = '';
             position(true);
+            runHighlightDuring(640);                          // light words live as the strip settles
             setTimeout(function() {                            // normalize into [0,N) invisibly, then resume
                 var ni = ((i % N) + N) % N;
                 if (ni !== i) { i = ni; position(false); }
-                focusCenter(); startCycle();
+                highlightLive(); startCycle();
             }, 560);
         };
         claim.addEventListener('mousedown', onDown);
