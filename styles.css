@@ -2759,7 +2759,7 @@ body.dark-mode .results-html-table .col-divider {
 
 /* Supervision & Components sub-columns: compact checkmark columns */
 /* component / supervision presence mark */
-.transfer-results-table .tbl-check { color: #2e9e5b; font-weight: 700; }
+.transfer-results-table .tbl-check { color: #2e9e5b; font-weight: 700; font-size: 1.35em; line-height: 1; display: inline-block; }
 body.dark-mode .transfer-results-table .tbl-check { color: #4ade80; }
 .transfer-results-table .col-sup,
 .transfer-results-table .col-comp {
