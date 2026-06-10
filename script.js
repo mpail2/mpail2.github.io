@@ -1195,6 +1195,10 @@ function initStoryScrub() {
         const deck = (g) => { R.push(() => { if (g._deckRAF) { cancelAnimationFrame(g._deckRAF); g._deckRAF = 0; } g.classList.add('st-collapse'); }); A.push(() => g.classList.remove('st-collapse')); };
         if (has(b, 'obsDeck') && !has(p, 'obsDeck')) deck(obsDeckG);         // data-stack expansion (fan out)
         if (has(b, 'intDeck') && !has(p, 'intDeck')) deck(intDeckG);         // interaction-stack expansion
+        if (b.intDeckCollapse && !p.intDeckCollapse) {                        // interaction-stack collapse (fan in)
+            R.push(() => { if (intDeckG._deckRAF) { cancelAnimationFrame(intDeckG._deckRAF); intDeckG._deckRAF = 0; } intDeckG.classList.remove('st-collapse'); });
+            A.push(() => intDeckG.classList.add('st-collapse'));
+        }
         if (!!b.sim && !p.sim) { R.push(() => intDeckG.classList.remove('is-sim')); A.push(() => intDeckG.classList.add('is-sim')); } // sim/terminal-style
         if (b.prior === 'show' && p.prior !== 'show') { R.push(() => dynBox.classList.remove('st-prior-show')); A.push(() => dynBox.classList.add('st-prior-show')); } // "(prior)" appears
         if (b.prior === 'gone' && p.prior !== 'gone') {                      // "(prior)" crossout
@@ -1205,7 +1209,7 @@ function initStoryScrub() {
             R.push(() => svg.querySelectorAll('.st-return').forEach(e => e.classList.remove('st-sketchy')));
             A.push(() => svg.querySelectorAll('.st-return').forEach(e => e.classList.add('st-sketchy')));
         }
-        appear('recycleX'); appear('obsEnc'); appear('intEnc'); appear('wIntDyn');
+        appear('obsEnc'); appear('intEnc'); appear('wIntDyn');
         if (!R.length) return null;                                          // block intro / no style change
         return { reset: () => R.forEach(f => f()), apply: () => A.forEach(f => f()) };
     }
