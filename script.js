@@ -507,6 +507,95 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Results table — "tunnel vision" onto the rows/columns that evidence a selected finding
+function initResultsTunnel() {
+    const table = document.getElementById('tv-table');
+    const chipsWrap = document.getElementById('tv-claims');
+    const caption = document.getElementById('tv-caption');
+    if (!table || !chipsWrap) return;
+
+    // body column order (cellIndex 0 is the method label); header row 2 is the same minus the method col
+    const COLS = ['method', 'sup-reward', 'sup-actions', 'comp-plan', 'comp-model', 'comp-offpolicy',
+        'res-bp', 'res-pnp', 'res-mop', 'tr-bp', 'tr-pnp', 'sc-bp', 'sc-pnp', 'vid-bp'];
+    const bodyRows = Array.prototype.slice.call(table.querySelectorAll('tbody tr[data-method]'));
+    bodyRows.forEach(tr => Array.prototype.forEach.call(tr.children, (td, i) => { if (COLS[i]) td.dataset.col = COLS[i]; }));
+    const headRows = table.querySelectorAll('thead tr');
+    const subHead = headRows[1];
+    if (subHead) Array.prototype.forEach.call(subHead.children, (th, i) => { th.dataset.col = COLS[i + 1]; });
+
+    // each claim = the methods (rows) and metrics (columns) that constitute its evidence, dimming the rest
+    const SCRATCH = ['res-bp', 'res-pnp', 'res-mop'];
+    const CLAIMS = {
+        world: {
+            rows: ['mpail2', 'mairl', 'dac'], cols: ['comp-model'].concat(SCRATCH),
+            text: 'World modeling is critical. The only IRL methods with a learned dynamics model, MPAIL2 and [−P] (MAIRL), are the only ones with any real-world success. [−PM] (DAC), which drops the model, scores 0% everywhere.'
+        },
+        planning: {
+            rows: ['mpail2', 'mairl'], cols: ['comp-plan'].concat(SCRATCH),
+            text: 'Planning mitigates IRL instability. With the MPPI planner, MPAIL2 consistently improves over training, far outperforming the otherwise-identical [−P] (MAIRL) that learns from the policy alone (e.g. 82% vs 16% on Pick-and-Place).'
+        },
+        supervision: {
+            rows: ['mpail2', 'mairl', 'dac', 'bc', 'rlpd'], cols: ['sup-reward', 'sup-actions'].concat(SCRATCH),
+            text: 'Less supervision does not mean less performance. MPAIL2 and its IRL ablations use no hand-designed reward and no action supervision, yet match or beat BC and RLPD, which are given both.'
+        },
+        transfer: {
+            rows: ['mpail2', 'mairl', 'bc'], cols: ['tr-bp', 'tr-pnp'],
+            text: 'Positive online transfer. Initialized from a first task and continued on a related one, MPAIL2 retains high success (90% / 94%) where BC degrades — the first real-world demonstration of positive online transfer in IRLfO.'
+        },
+        video: {
+            rows: ['mpail2', 'mairl', 'dac', 'bc', 'rlpd'], cols: ['vid-bp'],
+            text: 'Video-only demonstration. Given only a single fixed, table-mounted camera (no wrist camera, no proprioception), MPAIL2 still learns the push at 63% success.'
+        }
+    };
+
+    let active = null;
+    const cells = Array.prototype.slice.call(table.querySelectorAll('tbody td, thead th'));
+
+    function clear() {
+        table.classList.remove('tv-active');
+        cells.forEach(c => c.classList.remove('tv-dim', 'tv-focus'));
+        caption.classList.remove('is-on');
+        chipsWrap.querySelectorAll('.tv-chip').forEach(b => b.classList.remove('is-on'));
+        active = null;
+    }
+
+    function apply(key) {
+        const claim = CLAIMS[key];
+        if (!claim) return;
+        active = key;
+        table.classList.add('tv-active');
+        chipsWrap.querySelectorAll('.tv-chip').forEach(b => b.classList.toggle('is-on', b.dataset.claim === key));
+        const colSet = new Set(claim.cols), rowSet = new Set(claim.rows);
+        bodyRows.forEach(tr => {
+            const rowOn = rowSet.has(tr.dataset.method);
+            Array.prototype.forEach.call(tr.children, td => {
+                const isMethod = td.dataset.col === 'method';
+                const focus = isMethod ? rowOn : (rowOn && colSet.has(td.dataset.col));
+                td.classList.toggle('tv-focus', focus);
+                td.classList.toggle('tv-dim', !focus);
+            });
+        });
+        // sub-header: highlight the relevant metric columns, dim the rest (the method header has no data-col)
+        if (subHead) Array.prototype.forEach.call(subHead.children, th => {
+            const on = colSet.has(th.dataset.col);
+            th.classList.toggle('tv-focus', on); th.classList.toggle('tv-dim', !on);
+        });
+        // group-header row: dim it as a whole (its colspans don't map cleanly to single columns)
+        if (headRows[0]) Array.prototype.forEach.call(headRows[0].children, th => {
+            if (th.classList.contains('col-model')) { th.classList.remove('tv-dim'); th.classList.add('tv-focus'); }
+            else { th.classList.add('tv-dim'); th.classList.remove('tv-focus'); }
+        });
+        caption.textContent = claim.text;
+        caption.classList.add('is-on');
+    }
+
+    chipsWrap.querySelectorAll('.tv-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (active === btn.dataset.claim) clear(); else apply(btn.dataset.claim);
+        });
+    });
+}
+
 // Baseline Models — interactive component diagram
 function initBaselineDiagram() {
     const picker = document.getElementById('baseline-picker');
@@ -1321,6 +1410,7 @@ function initStoryScrub() {
 function initializeInteractiveSections() {
     try { initBaselineDiagram(); } catch (e) { console.error('initBaselineDiagram failed:', e); }
     try { initStoryScrub(); } catch (e) { console.error('initStoryScrub failed:', e); }
+    try { initResultsTunnel(); } catch (e) { console.error('initResultsTunnel failed:', e); }
     const dotsContainer = document.getElementById('slider-dots');
     const iterationSlider = document.getElementById('iteration-slider');
     const sliderHint = document.querySelector('#time-lapses-block .slider-hint');
