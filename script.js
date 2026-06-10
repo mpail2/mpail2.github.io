@@ -1179,7 +1179,8 @@ function initStoryScrub() {
     // (jump to the start instantly, then play to the end), with a progress bar above the caption. -----
     const animBar = document.getElementById('story-animbar');
     const animBarFill = animBar ? animBar.querySelector('span') : null;
-    const ANIM_MS = 680, LOOP_MS = ANIM_MS + 750;   // animation, then a short hold before replaying
+    // a short hold at the start, the animation, then a short hold at the end, before replaying
+    const ANIM_MS = 680, START_PAUSE = 340, END_PAUSE = 750, LOOP_MS = START_PAUSE + ANIM_MS + END_PAUSE;
     let loopRAF = null, loopT0 = 0, loopGen = 0, lastScrollP = -1, lastScrollAt = 0;
     // Loop ONLY a beat's specific "style change" animation, in isolation (reset just that property to its
     // "before" instantly, then play it to its "after") — NOT block introductions, relabels, collapses,
@@ -1220,26 +1221,23 @@ function initStoryScrub() {
         const rep = getReplay(beatIdx);
         if (!rep) return;
         const gen = ++loopGen;
-        // One pass: jump to the start with transitions OFF, let that state PAINT (so it becomes the
-        // transition baseline), then re-enable transitions and play to the end. A single synchronous
-        // reflow is NOT enough — the start must actually paint, or the browser sees no change and the
-        // transition never fires (the bug where the loop "ran" but nothing visibly animated).
-        const cycle = () => {
-            svg.classList.add('st-no-anim'); rep.reset();               // instant jump to the start
-            requestAnimationFrame(() => {                               // frame A: paints the start (still no-anim)
-                if (gen !== loopGen) return;
-                requestAnimationFrame(() => {                           // frame B: enable transitions + play to end
-                    if (gen !== loopGen) return;
-                    svg.classList.remove('st-no-anim'); rep.apply();
-                });
-            });
-        };
+        // Each pass: jump to the start with transitions OFF and HOLD there briefly (START_PAUSE). The
+        // hold also lets the start state PAINT so it becomes the transition baseline (a single
+        // synchronous reflow is NOT enough — the start must actually paint or the transition never
+        // fires). Then re-enable transitions and play to the end, then hold again (END_PAUSE). The two
+        // holds bookend the motion so it reads as a deliberate loop rather than a restless flicker.
+        let applied = false;
+        const reset = () => { svg.classList.add('st-no-anim'); rep.reset(); applied = false; };
         if (animBar) animBar.classList.add('is-on');
-        loopT0 = performance.now(); cycle();
+        loopT0 = performance.now(); reset();
         const step = (now) => {
             if (gen !== loopGen) return;
-            if (animBarFill) animBarFill.style.width = (Math.min(1, (now - loopT0) / ANIM_MS) * 100) + '%';
-            if (now - loopT0 >= LOOP_MS) { loopT0 = now; cycle(); }
+            const t = now - loopT0;
+            if (!applied && t >= START_PAUSE) {            // start hold over: enable transitions + play to end
+                svg.classList.remove('st-no-anim'); rep.apply(); applied = true;
+            }
+            if (animBarFill) animBarFill.style.width = (Math.max(0, Math.min(1, (t - START_PAUSE) / ANIM_MS)) * 100) + '%';
+            if (t >= LOOP_MS) { loopT0 = now; reset(); }
             loopRAF = requestAnimationFrame(step);
         };
         loopRAF = requestAnimationFrame(step);
