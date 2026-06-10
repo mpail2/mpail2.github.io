@@ -2975,8 +2975,8 @@ body.dark-mode .results-undirected-bar .task-btn.active { color: #0e1117; backgr
 /* mode-driven show/hide: Focus shows the claim media + Training stays hidden; Undirected reveals the
    full Training section and drops the focus media + claim controls (force-visible overrides the
    legacy .hidden-below / .fade-out classes that otherwise keep it hidden at this scroll position) */
-#efficiency-section { display: none; }
-body.results-undirected #efficiency-section {
+#efficiency-section, #transfer-section { display: none; }
+body.results-undirected #efficiency-section, body.results-undirected #transfer-section {
     display: block !important; opacity: 1 !important; transform: none !important;
     filter: none !important; pointer-events: auto !important;
 }

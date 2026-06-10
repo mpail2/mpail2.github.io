@@ -461,10 +461,9 @@ document.addEventListener('DOMContentLoaded', function() {
             activeSection = 'your-turn';
         } else if (generalizationRect.top < windowHeight * 0.5) {
             activeSection = 'generalization';
-        } else if (transferRect.top < windowHeight * 0.5) {
-            activeSection = 'results-overview';   // Transfer: a results subsection (no own nav item)
-        } else if (document.body.classList.contains('results-undirected') && efficiencyRect.top < windowHeight * 0.5) {
-            activeSection = 'results-overview';   // Training: the Undirected view of Results (skip when hidden)
+        } else if (document.body.classList.contains('results-undirected') &&
+                   (transferRect.top < windowHeight * 0.5 || efficiencyRect.top < windowHeight * 0.5)) {
+            activeSection = 'results-overview';   // Training + Transfer = the Undirected view of Results
         } else if (resultsOverviewRect.top < windowHeight * 0.5) {
             activeSection = 'results-overview';
         } else if (baselinesRect.top < windowHeight * 0.5) {
@@ -493,10 +492,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Section visibility management
         const showGeneralization = generalizationRect.top < windowHeight * 0.75;
-        const showTransfer = transferRect.top < windowHeight * 0.75;
-        // efficiency (Training) only exists in Undirected mode; when hidden its rect collapses to 0,
-        // so gate on the mode to avoid wrongly hiding Transfer/Generalization in Focus mode
-        const showEfficiency = document.body.classList.contains('results-undirected') && efficiencyRect.top < windowHeight * 0.75;
+        // efficiency (Training) + transfer exist only in Undirected mode; when hidden their rects
+        // collapse to 0, so gate on the mode to avoid wrongly hiding Generalization in Focus mode
+        const undirectedMode = document.body.classList.contains('results-undirected');
+        const showTransfer = undirectedMode && transferRect.top < windowHeight * 0.75;
+        const showEfficiency = undirectedMode && efficiencyRect.top < windowHeight * 0.75;
 
         // Reset section states (null-safe)
         summarySection?.classList.remove('fade-out');
