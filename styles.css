@@ -2733,7 +2733,7 @@ body.dark-mode .transfer-demo-btn {
 
 /* ===== Results explorer: Research Questions | Table | Plots, side by side with hover-focus ===== */
 .results-controls {
-    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    display: flex; align-items: center; justify-content: flex-end; gap: 14px; flex-wrap: wrap;
     max-width: 1180px; margin: 40px auto 14px;
 }
 .results-reset {
@@ -3192,16 +3192,30 @@ body.dark-mode .rq-claim.is-on { background: rgba(165, 180, 252, 0.14); border-l
 
 /* compact claim bar: fixed under the global nav, shown only when scrolled past the text */
 .results-selector {
-    position: fixed; top: 52px; left: 50%; transform: translateX(-50%) translateY(-8px);
+    position: fixed; bottom: 18px; top: auto; left: 50%; transform: translateX(-50%) translateY(14px);
     z-index: 998; opacity: 0; pointer-events: none;
     transition: opacity .3s ease, transform .3s cubic-bezier(.4,0,.2,1);
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
     max-width: 94vw; padding: 6px 9px; border-radius: 999px;
     background: rgba(245, 247, 255, 0.96);
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    border: 1px solid rgba(102, 126, 234, 0.2); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+    border: 1px solid rgba(102, 126, 234, 0.2); box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
 }
 .results-selector.visible { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+/* the training scrubber tucked into the bottom bar — shown only when the stage's own scrubber is off-screen */
+.results-rail__sep--scrub, .results-rail__scrub { display: none; }
+.results-selector.has-scrub .results-rail__sep--scrub { display: block; }
+.results-selector.has-scrub .results-rail__scrub { display: inline-flex; }
+.results-rail__scrub { align-items: center; gap: 8px; }
+.results-rail__scrub .results-scrub__slider { flex: 0 1 190px; min-width: 120px; }
+/* arrow-key indicator (shown wherever the scrubber lives) */
+.results-keyhint { display: inline-flex; gap: 3px; align-items: center; flex: 0 0 auto; }
+.results-keyhint kbd {
+    font: 600 0.72rem/1 'JetBrains Mono', ui-monospace, 'Courier New', monospace; color: #4b5563;
+    background: #fff; border: 1px solid rgba(102, 126, 234, 0.32); border-bottom-width: 2px;
+    border-radius: 5px; padding: 2px 5px; min-width: 15px; text-align: center;
+}
+body.dark-mode .results-keyhint kbd { color: #c7cdda; background: #0b1020; border-color: rgba(165, 180, 252, 0.32); }
 .results-undirected-bar {
     position: sticky; top: 52px; z-index: 30;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;

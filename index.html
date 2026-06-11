@@ -82,7 +82,7 @@
     <!-- Compact claim bar: a condensed form of the text questions above; appears (fixed under the nav)
          only once the readable questions block has scrolled above the top. Body-level so fixed
          positioning resolves to the viewport. -->
-    <div class="results-selector" id="results-selector" aria-label="Research questions and claims">
+    <div class="results-selector" id="results-selector" aria-label="Research questions, claims, and training scrubber">
         <div class="results-rail__focusctl">
             <div class="results-rail__rqs" role="tablist">
                 <button type="button" class="results-rq is-on" data-rq="q1" title="How does MPAIL2's design enable real-world IRLfO?">Q1</button>
@@ -98,10 +98,12 @@
                 <button type="button" class="tv-chip" data-claim="video" data-rq="q3">Video-only demonstration</button>
             </div>
         </div>
-        <span class="results-rail__sep"></span>
-        <div class="results-mode" aria-label="View">
-            <button type="button" class="results-mode-btn is-on" data-mode="focus">Focus</button>
-            <button type="button" class="results-mode-btn" data-mode="undirected" title="Show all the evidence at once">Undirected</button>
+        <!-- training scrubber, surfaced here only when the stage's own scrubber has scrolled out of frame -->
+        <span class="results-rail__sep results-rail__sep--scrub"></span>
+        <div class="results-rail__scrub" id="results-railscrub">
+            <span class="results-scrub__label">Training <b class="results-scrub__val" id="results-railscrub-val">100%</b></span>
+            <input type="range" class="results-scrub__slider" id="results-railscrub-slider" min="0" max="100" step="10" value="100" aria-label="Training progress">
+            <span class="results-keyhint" title="Use the left/right arrow keys to scrub"><kbd>&larr;</kbd><kbd>&rarr;</kbd></span>
         </div>
     </div>
 

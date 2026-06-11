@@ -447,16 +447,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 taskButtonsLeft.classList.remove('visible');
             }
         }
-        // Compact claim bar (Focus mode): show it only once the readable questions text has scrolled
-        // above the top and there is still evidence below to scroll through.
+        // Bottom bar (research questions + claims + training scrubber): show while the results section is
+        // meaningfully in view; surface the scrubber here only when the stage's own scrubber is off-screen.
         const resultsSelector = document.getElementById('results-selector');
-        const questionsEl = document.getElementById('results-questions');
-        if (resultsSelector && questionsEl) {
-            const undirected = document.body.classList.contains('results-undirected');
-            const show = !undirected &&
-                questionsEl.getBoundingClientRect().bottom < 58 &&   // text scrolled above the nav
-                resultsOverviewRect.bottom > 140;                    // evidence still in/around view
+        if (resultsSelector) {
+            const show = resultsOverviewRect.top < windowHeight * 0.55 && resultsOverviewRect.bottom > 130;
             resultsSelector.classList.toggle('visible', show);
+            const sc = document.querySelector('#results-media .results-scrub');
+            let scOff = false;
+            if (sc) { const r = sc.getBoundingClientRect(); scOff = r.bottom < 72 || r.top > windowHeight - 40; }
+            resultsSelector.classList.toggle('has-scrub', show && !!sc && scOff);
         }
 
         if (themeToggle) {
@@ -789,6 +789,24 @@ function initResultsTunnel() {
     };
     const iterFor = (pct, max) => Math.round(pct / 100 * max / 10) * 10;   // % of schedule -> nearest available iter
 
+    // shared training-scrubber state, driven by the stage slider, the bottom-bar slider, and arrow keys.
+    // Retargets every staged scrub video to the matching iteration and keeps all scrubber UIs in sync.
+    let trainingPct = START_PCT;
+    function applyTrainingPct(pct, fromEl) {
+        pct = Math.max(0, Math.min(100, Math.round(pct / 10) * 10));
+        trainingPct = pct;
+        const media = document.getElementById('results-media');
+        if (media) media.querySelectorAll('video[data-prefix]').forEach(function (vd) {
+            const it = iterFor(pct, +vd.dataset.max || 100);
+            const src = vd.dataset.prefix + it + '.mp4', s = vd.querySelector('source');
+            if (s && s.getAttribute('src') !== src) { s.setAttribute('src', src); vd.load(); vd.play().catch(function () {}); }
+            try { vd.playbackRate = 3; } catch (e) {}
+        });
+        document.querySelectorAll('.results-scrub__slider, #results-railscrub-slider').forEach(function (s) { if (s !== fromEl && +s.value !== pct) s.value = pct; });
+        document.querySelectorAll('.results-scrub__val, #results-railscrub-val').forEach(function (v) { v.textContent = pct + '%'; });
+    }
+    window.applyTrainingPct = applyTrainingPct;
+
     const diagramWrap = (methodKey) => {                 // mini branding diagram, centered above a group label
         const svg = miniDiagram(methodKey);
         return svg ? '<span class="mini-diagram-wrap mini-diagram-wrap--label">' + svg + '</span>' : '';
@@ -853,23 +871,15 @@ function initResultsTunnel() {
         }
 
         const scrub = hasScrub ? '<div class="results-scrub">' +
-            '<span class="results-scrub__label">Training <b class="results-scrub__val">' + START_PCT + '%</b></span>' +
-            '<input type="range" class="results-scrub__slider" min="0" max="100" step="10" value="' + START_PCT + '" aria-label="Training progress">' +
-            '<span class="results-scrub__hint">drag to scrub through training</span></div>' : '';
+            '<span class="results-scrub__label">Training <b class="results-scrub__val">' + trainingPct + '%</b></span>' +
+            '<input type="range" class="results-scrub__slider" min="0" max="100" step="10" value="' + trainingPct + '" aria-label="Training progress">' +
+            '<span class="results-keyhint" title="Use the left/right arrow keys to scrub"><kbd>&larr;</kbd><kbd>&rarr;</kbd></span>' +
+            '<span class="results-scrub__hint">drag or use arrow keys</span></div>' : '';
         mediaPanel.innerHTML = scrub + body + (note ? '<p class="results-media__note">' + note + '</p>' : '');
         const slider = mediaPanel.querySelector('.results-scrub__slider');
-        const valEl = mediaPanel.querySelector('.results-scrub__val');
-        if (slider) slider.addEventListener('input', function () {
-            const pct = +this.value;
-            if (valEl) valEl.textContent = pct + '%';
-            mediaPanel.querySelectorAll('video[data-prefix]').forEach(function (vd) {
-                const it = iterFor(pct, +vd.dataset.max || 100);
-                const src = vd.dataset.prefix + it + '.mp4', s = vd.querySelector('source');
-                if (s && s.getAttribute('src') !== src) { s.setAttribute('src', src); vd.load(); vd.play().catch(function () {}); }
-                try { vd.playbackRate = 3; } catch (e) {}
-            });
-        });
+        if (slider) slider.addEventListener('input', function () { applyTrainingPct(+this.value, this); });
         mediaPanel.querySelectorAll('video').forEach(v => { try { v.playbackRate = 3; v.play().catch(function () {}); } catch (e) {} });
+        if (hasScrub) applyTrainingPct(trainingPct);          // sync freshly-rendered videos + every scrubber UI
     }
     window.renderStage = renderStage;
     // claim media still routes through the claim cells (used by apply())
@@ -1000,6 +1010,25 @@ function initResultsTunnel() {
         }
     }
     document.querySelectorAll('.results-mode-btn').forEach(btn => btn.addEventListener('click', () => setResultsMode(btn.dataset.mode)));
+
+    // bottom-bar training scrubber (mirrors the stage scrubber; surfaced when that one is off-screen)
+    const railSlider = document.getElementById('results-railscrub-slider');
+    if (railSlider) railSlider.addEventListener('input', function () { applyTrainingPct(+this.value, this); });
+
+    // arrow-key control of the training scrubber while the results section is in view
+    const resultsSec = document.getElementById('results-overview-section');
+    window.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const tag = (e.target && e.target.tagName || '').toLowerCase();
+        if ((tag === 'input' && !e.target.classList.contains('results-scrub__slider')) || tag === 'textarea' || tag === 'select') return;
+        if (!resultsSec) return;
+        const r = resultsSec.getBoundingClientRect();
+        if (!(r.top < window.innerHeight * 0.6 && r.bottom > 130)) return;        // only while in the section
+        if (!document.querySelector('#results-media .results-scrub')) return;     // nothing to scrub
+        e.preventDefault();
+        applyTrainingPct(trainingPct + (e.key === 'ArrowRight' ? 10 : -10));
+    });
 
     window.resultsTunnelClear = clear;
     apply('world');                                    // default: Q1, world-modeling claim, Focus mode
