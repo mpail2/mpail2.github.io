@@ -1800,7 +1800,7 @@ body.dark-mode .left-sidebar-hint::before {
    (the components); the version "2" sits outside, like the planner box wraps just its components */
 .timeline-brand__box {
     display: inline-flex; align-items: center; line-height: 1;
-    padding: 0 4px; border: 1.4px solid #E0A53B; border-radius: 5px;
+    padding: 0 2px; border: 1.4px solid #E0A53B; border-radius: 5px;
 }
 .timeline-brand__num { color: #e8eaed; }
 .timeline-brand:hover { filter: brightness(1.18); }
