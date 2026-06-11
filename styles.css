@@ -487,8 +487,10 @@ body.dark-mode .method-liftcell { filter: drop-shadow(0 7px 12px rgba(0, 0, 0, .
 .method-figtabs__lead span { font-weight: 500; color: #9ca3af; }
 body.dark-mode .method-figtabs__lead { color: #9aa3b5; }
 body.dark-mode .method-figtabs__lead span { color: #7f8aa0; }
-.method-figtabs__row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; position: relative; z-index: 2; }
+/* keep the tabs on a single row at all widths (scroll horizontally on very narrow screens) */
+.method-figtabs__row { display: flex; flex-wrap: nowrap; gap: 6px; justify-content: safe center; position: relative; z-index: 2; overflow-x: auto; padding-bottom: 1px; scrollbar-width: thin; }
 .figtab {
+    flex: 0 0 auto;
     display: inline-flex; align-items: center; gap: 7px; position: relative; top: 1px;
     font: 600 0.8rem 'JetBrains Mono', ui-monospace, 'Courier New', monospace; color: #4b5563;
     background: #eef1fb; border: 1px solid rgba(102, 126, 234, 0.22);
@@ -3564,16 +3566,26 @@ a:hover {
     align-self:stretch; overflow:hidden; text-align:left;
     cursor:grab; user-select:none; -webkit-user-select:none; touch-action:pan-x;
     font-size:clamp(1.05em,2.15vw,1.58em);
-    /* peak at the center (NO's line) and fall off gently with distance, so words decay the further away */
-    -webkit-mask-image:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.5) 22%,rgba(0,0,0,0.85) 38%,#000 50%,rgba(0,0,0,0.85) 62%,rgba(0,0,0,0.5) 78%,transparent 100%);
-    mask-image:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.5) 22%,rgba(0,0,0,0.85) 38%,#000 50%,rgba(0,0,0,0.85) 62%,rgba(0,0,0,0.5) 78%,transparent 100%);
 }
 .hero-claim.is-dragging{cursor:grabbing;}
 .hero-claim.is-dragging .hero-list{transition:none !important;}
+/* small lead-in above the NO, top-justified */
+.hero-claim__lead{
+    position:absolute; left:0; top:0.05em; z-index:2;
+    font-family:'Inter','Segoe UI',sans-serif; font-weight:500; font-style:italic;
+    font-size:0.6em; line-height:1; letter-spacing:0.04em; color:#7c8498;
+}
 .hero-claim__no{
-    position:absolute; left:0; top:50%; transform:translateY(-50%); z-index:2;
+    position:absolute; left:0; top:1.35em; z-index:2;
     font-family:'Space Grotesk','Inter','Segoe UI',sans-serif; font-weight:700;
     font-size:1.18em; line-height:1; color:#E0705A; letter-spacing:0.04em;
+}
+/* fixed (non-scrolling) viewport over the word strip: the fade is anchored here so words fade as they
+   cross it, while NO + "which means" (siblings) stay crisp. Peak at NO's line (~18%), fading down. */
+.hero-list-mask{
+    position:absolute; inset:0; z-index:1;
+    -webkit-mask-image:linear-gradient(180deg,transparent 0%,transparent 8%,#000 15%,#000 26%,rgba(0,0,0,0.72) 48%,rgba(0,0,0,0.3) 72%,transparent 100%);
+    mask-image:linear-gradient(180deg,transparent 0%,transparent 8%,#000 15%,#000 26%,rgba(0,0,0,0.72) 48%,rgba(0,0,0,0.3) 72%,transparent 100%);
 }
 .hero-list{
     list-style:none; margin:0; padding:0 0 0 2.35em;

@@ -194,17 +194,18 @@ document.addEventListener('DOMContentLoaded', function() {
     var all = Array.prototype.slice.call(list.children);                    // 3N, middle copy is the original
 
     var contC = 0;                                     // continuous offset of the strip, in word units
+    var focusY = function() { return no.offsetTop + no.offsetHeight / 2; };   // NO's center: the carousel's focal line
     // set the words' heights + the strip position; the transform is driven by the continuous offset
     function setStrip(animate) {
         var h = claim.clientHeight / N;                // N words exactly fill the video height
         all.forEach(function(el) { el.style.height = h + 'px'; });
         list.style.transition = animate ? '' : 'none';
-        list.style.transform = 'translateY(' + (claim.clientHeight / 2 - ((N + contC) * h + h / 2)) + 'px)';
+        list.style.transform = 'translateY(' + (focusY() - ((N + contC) * h + h / 2)) + 'px)';
         if (!animate) { void list.offsetHeight; list.style.transition = ''; }
     }
     // light up whichever word's center is within an epsilon of NO's center (used live while dragging)
     function highlightAtCenter(ty) {
-        var h = claim.clientHeight / N, center = claim.clientHeight / 2, eps = h * 0.42;
+        var h = claim.clientHeight / N, center = focusY(), eps = h * 0.42;
         all.forEach(function(el, k) {
             el.classList.toggle('is-active', Math.abs((ty + k * h + h / 2) - center) < eps);
         });
@@ -213,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // (each word lights up as it passes NO, instead of defocusing then snapping on at the center).
     var hlRAF = null;
     function highlightLive() {
-        var cr = claim.getBoundingClientRect(), center = cr.top + cr.height / 2;
+        var cr = claim.getBoundingClientRect(), center = cr.top + focusY();
         var eps = (claim.clientHeight / N) * 0.42;
         all.forEach(function(el) {
             var r = el.getBoundingClientRect();
@@ -248,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 contC += dt * curSpeed;
                 wrapC();
                 var h = claim.clientHeight / N;
-                var ty = claim.clientHeight / 2 - ((N + contC) * h + h / 2);
+                var ty = focusY() - ((N + contC) * h + h / 2);
                 list.style.transition = 'none';
                 list.style.transform = 'translateY(' + ty + 'px)';
                 highlightAtCenter(ty);                 // analytic — avoids a per-frame layout read
@@ -274,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
             dragging = true; stopCycle();
             startY = getY(e);
             lastY = startY; lastT = performance.now(); dragVel = 0;
-            baseTy = claim.clientHeight / 2 - ((N + contC) * wordH() + wordH() / 2);
+            baseTy = focusY() - ((N + contC) * wordH() + wordH() / 2);
             list.style.transition = 'none';
             claim.classList.add('is-dragging');
             e.preventDefault();
@@ -1072,7 +1073,7 @@ function initMethodExplorer() {
         // planner = the initial observation / robot (panel ①), the imagined MPPI rollouts, the camera,
         // and where the robot actually executes the plan (right scene)
         planner:  { label: 'Planner (MPPI)', regions: [[360, 240, 130, 296], [490, 360, 160, 172], [700, 292, 290, 270]], video: true,
-                    desc: 'At act-time, MPPI rolls the policy’s proposals through the dynamics, scores them with reward + value, and executes a robust plan \\(\\widehat{\\Pi}\\) on the robot.' },
+                    desc: 'At act-time, MPPI rolls randomly sampled- and policy-proposal plans through the dynamics, scores them with reward + value, and executes a robust plan \\(\\widehat{\\Pi}\\) on the robot.' },
         replay:   { label: 'Replay Buffer', regions: [[684, 158, 298, 142]],
                     desc: 'Real interactions \\((o,a,o\')\\) are stored and replayed, so every component learns <strong>off-policy</strong> and sample-efficiently.' }
     };
