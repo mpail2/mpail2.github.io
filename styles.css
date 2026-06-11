@@ -3622,26 +3622,34 @@ a:hover {
 /* ============================================================
    Baseline Models — interactive component diagram
    ============================================================ */
-/* single row of baseline buttons: break out a little wider than the text column so all seven fit;
-   scroll horizontally on narrower screens rather than wrapping */
+/* floating baseline chips: no cards — just the branding diagram with the name beneath; the active one
+   gets an accent name + a soft glow behind its diagram. Per-chip descriptions live in the side panel.
+   A single row that scrolls horizontally on very narrow screens. */
 .baseline-picker{
-    display:flex; flex-wrap:nowrap; gap:10px; justify-content:safe center;
-    position:relative; left:50%; transform:translateX(-50%); width:min(1320px,96vw);
-    margin:26px auto 4px; overflow-x:auto; padding-bottom:3px;
+    display:flex; flex-wrap:nowrap; gap:14px; justify-content:safe center;
+    margin:18px auto 6px; max-width:100%; overflow-x:auto; padding:6px 4px 12px;
 }
 .baseline-btn{
     flex:0 0 auto;
-    display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0;
-    padding:13px 15px; border:2px solid #d8dde8; border-radius:14px; background:#f7f8fb; color:#3a4151;
-    cursor:pointer; font-family:'Inter','Segoe UI',sans-serif; white-space:nowrap;
-    transition:border-color .2s, background .2s, color .2s, box-shadow .2s, transform .12s;
+    display:flex; flex-direction:column; align-items:center; gap:9px;
+    padding:6px 8px; border:none; background:none; box-shadow:none; border-radius:12px;
+    cursor:pointer; font-family:'Inter','Segoe UI',sans-serif; white-space:nowrap; color:#7b8294;
+    transition:color .2s, transform .15s;
 }
-.baseline-btn:hover{transform:translateY(-2px); border-color:#b9c0d0;}
-.baseline-btn__diagram{display:flex; justify-content:center; align-items:center; line-height:0; margin-bottom:4px; min-height:23px;}
-.baseline-btn__name{font-weight:700; font-size:1.12em;}
-.baseline-btn__sub{font-size:.8em; color:#8a93a3;}
-.baseline-btn.active{border-color:#6E59C7; background:#efeaff; color:#4a3fb0; box-shadow:0 5px 16px rgba(110,89,199,.2);}
-.baseline-btn.active .baseline-btn__sub{color:#7d6fd0;}
+.baseline-btn:hover{transform:translateY(-2px); color:#3a4151;}
+.baseline-btn__diagram{
+    display:flex; justify-content:center; align-items:center; line-height:0; min-height:23px;
+    padding:8px 10px; border-radius:11px; transition:background .2s, box-shadow .2s, transform .15s;
+}
+.baseline-btn:hover .baseline-btn__diagram{background:rgba(110,89,199,.06);}
+.baseline-btn__name{position:relative; font-weight:700; font-size:1.0em; color:inherit;}
+.baseline-btn__sub{display:none;}                          /* description shows in the side info panel */
+.baseline-btn.active{color:#4a3fb0;}
+.baseline-btn.active .baseline-btn__diagram{background:rgba(110,89,199,.12); box-shadow:0 7px 20px rgba(110,89,199,.24);}
+.baseline-btn.active .baseline-btn__name::after{
+    content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-5px;
+    width:72%; height:2px; border-radius:2px; background:#6E59C7;
+}
 
 /* break the stage out a little wider so the (taller) diagram + side panel both fit */
 .baseline-stage{position:relative; left:50%; transform:translateX(-50%); width:min(1180px,95vw); margin:20px 0 0;}
@@ -3805,10 +3813,12 @@ a:hover {
 .baseline-caption strong{color:#2b3140;}
 
 /* dark-mode (page chrome around the always-dark diagram) */
-body.dark-mode .baseline-btn{background:#1b1e2e; border-color:#353a52; color:#c7ccda;}
-body.dark-mode .baseline-btn:hover{border-color:#4a5176;}
-body.dark-mode .baseline-btn__sub{color:#7f879c;}
-body.dark-mode .baseline-btn.active{background:#2a2350; border-color:#a5b4fc; color:#cdc6ff;}
+body.dark-mode .baseline-btn{background:none; border:none; color:#8a93a8;}
+body.dark-mode .baseline-btn:hover{color:#e8eaed;}
+body.dark-mode .baseline-btn:hover .baseline-btn__diagram{background:rgba(165,180,252,.08);}
+body.dark-mode .baseline-btn.active{color:#cdc6ff;}
+body.dark-mode .baseline-btn.active .baseline-btn__diagram{background:rgba(165,180,252,.15); box-shadow:0 7px 20px rgba(165,180,252,.2);}
+body.dark-mode .baseline-btn.active .baseline-btn__name::after{background:#a5b4fc;}
 body.dark-mode .pillar-chip.on{color:#d6dae6;}
 body.dark-mode .baseline-caption{color:#b4bbcb;}
 body.dark-mode .baseline-caption strong{color:#e8eaed;}
