@@ -1077,20 +1077,20 @@ function initMethodExplorer() {
     // (the actual lifted cells are resolved per-shape by colour + position in computeCells.)
     const COMP = {
         task:     { label: 'Task Observations', regions: [[2, 2, 996, 141], [730, 172, 90, 86]],
-                    desc: 'Expert demonstrations &mdash; <strong>observation-only</strong>, with no rewards or action labels. MPAIL2 learns purely from <em>what</em> the demonstrator did.' },
-        encoder:  { label: 'Encoder', regions: [[244, 338, 206, 134]],
+                    desc: 'Expert demonstrations &mdash; <strong>observation-only</strong>, with no rewards or action labels.' },
+        encoder:  { label: 'Encoder', regions: [[244, 338, 206, 134]], ref: ['4a', 'Fig 4a'],
                     desc: 'Maps a raw observation into a compact latent state \\(z = e(o)\\). All planning and learning happen in this latent space.' },
-        dynamics: { label: 'Dynamics', regions: [[468, 228, 78, 254]],
+        dynamics: { label: 'Dynamics', regions: [[468, 228, 78, 254]], ref: ['4a', 'Fig 4a'],
                     desc: 'The learned world model \\(f(z,a)\\) predicts the next latent state, letting the agent imagine rollouts without touching the real world.' },
-        value:    { label: 'Value', regions: [[578, 222, 72, 300]],
+        value:    { label: 'Value', regions: [[578, 222, 72, 300]], ref: ['5', 'Fig 5'],
                     desc: 'The off-policy value \\(Q(z,a)\\) bootstraps long-horizon return beyond the planning horizon, learned from replayed experience.' },
-        reward:   { label: 'Inferred Reward', regions: [[512, 336, 100, 176]],
+        reward:   { label: 'Inferred Reward', regions: [[512, 336, 100, 176]], ref: ['4b', 'Fig 4b'],
                     desc: 'An adversarial (IRL) reward \\(r(z,z\')\\) scores transitions by how expert-like they look &mdash; inferred, never hand-designed.' },
-        policy:   { label: 'Policy', regions: [[348, 472, 128, 90]],
+        policy:   { label: 'Policy', regions: [[348, 472, 128, 90]], ref: ['5', 'Fig 5'],
                     desc: 'A multi-step policy \\(\\pi(a\\mid z)\\) proposes action sequences; it warm-starts the planner and is optimized against the value.' },
         // planner = the initial observation / robot (panel ①), the imagined MPPI rollouts, the camera,
         // and where the robot actually executes the plan (right scene)
-        planner:  { label: 'Planner (MPPI)', regions: [[360, 240, 130, 296], [490, 360, 160, 172], [700, 292, 290, 270]], video: true,
+        planner:  { label: 'Planner (MPPI)', regions: [[360, 240, 130, 296], [490, 360, 160, 172], [700, 292, 290, 270]], video: true, ref: ['mppi', 'Alg 2'],
                     desc: 'At act-time, MPPI rolls randomly sampled- and policy-proposal plans through the dynamics, scores them with reward + value, and executes a robust plan \\(\\widehat{\\Pi}\\) on the robot.' },
         replay:   { label: 'Replay Buffer', regions: [[684, 158, 298, 142]],
                     desc: 'Real interactions \\((o,a,o\')\\) are stored and replayed, so every component learns <strong>off-policy</strong> and sample-efficiently.' }
@@ -1246,7 +1246,7 @@ function initMethodExplorer() {
     // Encoder & Dynamics are trained jointly (Alg. step 4) — focusing either lifts both as one.
     const MERGE = { encoder: 'encdyn', dynamics: 'encdyn' };
     const GROUP = { encdyn: ['encoder', 'dynamics'] };
-    const GROUP_INFO = { encdyn: { label: 'Encoder &amp; Dynamics', col: COL.encoder,
+    const GROUP_INFO = { encdyn: { label: 'Encoder &amp; Dynamics', col: COL.encoder, ref: ['4a', 'Fig 4a'],
         desc: 'Trained jointly: the encoder \\(e\\) maps an observation to a latent state and the dynamics \\(f\\) predicts the next latent (loss \\(\\mathcal{L}_{e,f}\\)).' } };
     const expand = (ids) => { const out = []; ids.forEach(id => (MERGE[id] ? GROUP[MERGE[id]] : [id]).forEach(g => { if (out.indexOf(g) < 0) out.push(g); })); return out; };
 
@@ -1304,8 +1304,10 @@ function initMethodExplorer() {
                 else { l.style.removeProperty('--c2'); l.classList.remove('is-split'); }
             } else { l.style.removeProperty('--c'); l.style.removeProperty('--c2'); l.classList.remove('is-split'); }
         });
-        explainEl.innerHTML = '<p class="method-explain__title" style="color:' + col + '">' + (grp ? grp.label : COMP[primary].label) + '</p>' +
-            '<p class="method-explain__body">' + renderInline(grp ? grp.desc : COMP[primary].desc) + '</p>';
+        const info = grp || COMP[primary];
+        const refHtml = info.ref ? ' <button type="button" class="method-figref" data-fig="' + info.ref[0] + '" title="Open the training-objective figure">' + info.ref[1] + '&nbsp;&rsaquo;</button>' : '';
+        explainEl.innerHTML = '<p class="method-explain__title" style="color:' + col + '">' + info.label + '</p>' +
+            '<p class="method-explain__body">' + renderInline(info.desc) + refHtml + '</p>';
     }
     const show = (id) => showIds([id], id);
     function clearShow() {
@@ -1343,6 +1345,14 @@ function initMethodExplorer() {
     });
     hot.addEventListener('mouseleave', leave);
     hot.addEventListener('click', e => { if (e.target === hot) { pinnedIds = pinnedPrimary = null; clearShow(); } });
+
+    // a focus description's figure reference opens the matching appendix file tab
+    explainEl.addEventListener('click', e => {
+        const ref = e.target.closest('.method-figref');
+        if (!ref) return;
+        const tab = document.querySelector('.figtab[data-fig="' + ref.dataset.fig + '"]');
+        if (tab) { tab.click(); tab.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    });
 
     // ---- inject the architecture SVG (inline so its light-dark() follows the page theme), then append a
     //      dim veil + a top layer (inside the same SVG) where focused cells are cloned and raised ----

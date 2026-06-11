@@ -546,6 +546,17 @@ body.dark-mode .method-explain { background: #0b1020; border-color: rgba(165, 18
 body.dark-mode .method-explain__title { color: #e8eaed; }
 .method-explain__body { margin: 0; font-size: 0.9rem; line-height: 1.5; color: #4b5563; }
 body.dark-mode .method-explain__body { color: #c7cdda; }
+/* clickable reference to the matching appendix file tab, shown inline at the end of a focus description */
+.method-figref {
+    display: inline-flex; align-items: center; vertical-align: baseline; white-space: nowrap;
+    font: 600 0.74rem 'JetBrains Mono', ui-monospace, 'Courier New', monospace; line-height: 1;
+    color: #4f46e5; background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.28);
+    border-radius: 6px; padding: 2px 6px; margin-left: 4px; cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.method-figref:hover { background: rgba(102, 126, 234, 0.18); border-color: rgba(102, 126, 234, 0.5); }
+body.dark-mode .method-figref { color: #c7d0ff; background: rgba(165, 180, 252, 0.13); border-color: rgba(165, 180, 252, 0.3); }
+body.dark-mode .method-figref:hover { background: rgba(165, 180, 252, 0.22); }
 
 .method-algo { flex: 0 1 472px; max-width: 472px; min-width: 0; align-self: stretch; background: #fbfbfe; border: 1px solid rgba(102, 126, 234, 0.16); border-radius: 12px; padding: 15px 16px; text-align: left; font-family: 'Inter', system-ui, sans-serif; }
 body.dark-mode .method-algo { background: #0b1020; border-color: rgba(165, 180, 252, 0.18); }
