@@ -1275,6 +1275,11 @@ function initMethodExplorer() {
         if (pinnedPrimary === primary) { pinnedIds = pinnedPrimary = null; clearShow(); }
         else { pinnedIds = ids; pinnedPrimary = primary; showIds(ids, primary); }
     }
+    // explicit setter so the appendix "file tabs" can pin/clear a focus (e.g. the MPPI tab → step 1, planner)
+    window.methodSetFocus = (ids, primary) => {
+        if (ids && ids.length) { pinnedIds = ids; pinnedPrimary = primary || ids[0]; showIds(pinnedIds, pinnedPrimary); }
+        else { pinnedIds = pinnedPrimary = null; clearShow(); }
+    };
 
     hotRects.forEach(r => {
         r.addEventListener('mouseenter', () => showIds([r.dataset.comp], r.dataset.comp));
@@ -2233,12 +2238,29 @@ function initMethodFigTabs() {
     const tabs = Array.prototype.slice.call(root.querySelectorAll('.figtab'));
     const panels = Array.prototype.slice.call(root.querySelectorAll('.figpanel'));
     if (!stage || !tabs.length) return;
+    // typeset the MPPI algorithm's inline \( ... \) math (once KaTeX is ready)
+    (function renderAlgoMath() {
+        if (!window.katex) return void setTimeout(renderAlgoMath, 200);
+        const algo = root.querySelector('#figpanel-mppi');
+        if (algo && !algo.dataset.tex) {
+            algo.dataset.tex = '1';
+            algo.innerHTML = algo.innerHTML.replace(/\\\((.+?)\\\)/g, (_, m) => {
+                try { return katex.renderToString(m, { throwOnError: false }); } catch (e) { return m; }
+            });
+        }
+    })();
     let openFig = null;
     function setOpen(fig) {
+        const prev = openFig;
         openFig = fig;
         tabs.forEach(t => { const on = t.dataset.fig === fig; t.classList.toggle('is-open', on); t.setAttribute('aria-expanded', on ? 'true' : 'false'); });
         panels.forEach(p => p.classList.toggle('is-active', p.dataset.fig === fig));
         stage.classList.toggle('is-open', !!fig);
+        // the MPPI tab is the planner used in step 1 of the training loop — focus it in the figure/algorithm
+        if (typeof window.methodSetFocus === 'function') {
+            if (fig === 'mppi') window.methodSetFocus(['planner'], 'planner');
+            else if (prev === 'mppi') window.methodSetFocus(null);
+        }
     }
     tabs.forEach(t => t.addEventListener('click', () => setOpen(openFig === t.dataset.fig ? null : t.dataset.fig)));
 }

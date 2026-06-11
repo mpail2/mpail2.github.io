@@ -56,6 +56,11 @@
                     <span class="figtab__name">Fig&nbsp;5 &mdash; &lambda;-Return</span>
                     <span class="figtab__chev" aria-hidden="true">&rsaquo;</span>
                 </button>
+                <button type="button" class="figtab figtab--algo" data-fig="mppi" role="tab" aria-expanded="false" aria-controls="figpanel-mppi" title="The MPPI planner used in step 1 of the training loop">
+                    <svg class="figtab__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7.5L18 7v14.5H6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 2.5V7H18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.5 12.5h7M8.5 15.5h4.5M8.5 18h6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    <span class="figtab__name">Alg&nbsp;2 &mdash; MPPI Planning <span class="figtab__step">step&nbsp;1</span></span>
+                    <span class="figtab__chev" aria-hidden="true">&rsaquo;</span>
+                </button>
             </div>
             <div class="method-figtabs__stage" id="method-figstage">
                 <div class="method-figtabs__inner">
@@ -70,6 +75,28 @@
                     <figure class="figpanel" id="figpanel-5" data-fig="5" role="tabpanel">
                         <img src="Media/Image/method/fig5-lambda-return.png" loading="lazy" alt="MPAIL2 lambda-return diagram: encoder, policy, dynamics, reward and value unrolled over the horizon to compute the lambda-return for actor-critic updates.">
                         <figcaption><b>MPAIL2 &lambda;-return.</b> Components unroll over horizon <i>H</i>: the encoder produces <i>z<sub>t</sub></i>, the policy proposes action sequences <i>&acirc;<sub>t</sub>,&hellip;,&acirc;<sub>t+H</sub></i>, dynamics predicts next latents, reward scores transitions, and the value <i>Q</i> estimates returns &mdash; together computing the &lambda;-return <i>G<sub>t</sub><sup>&lambda;</sup></i> for actor-critic updates.</figcaption>
+                    </figure>
+                    <figure class="figpanel figpanel--algo" id="figpanel-mppi" data-fig="mppi" role="tabpanel">
+                        <div class="figalgo">
+                            <div class="algo__title">Algorithm&nbsp;2 &mdash; <b>MPAIL2</b> (Planning &middot; MPPI)</div>
+                            <div class="algo__req">
+                                <div class="algo-line algo-kwline"><span class="algo-kw">require</span></div>
+                                <div class="algo-line algo-i1">\(N\) sampled plans, \(M\) drawn from the policy, \(K\) elites; horizon \(H\), \(J\) refinement iterations, temperature \(\eta\), std&nbsp;clip \((\sigma_{\min},\sigma_{\max})\)</div>
+                                <div class="algo-line algo-i1">learned components <span class="figalgo-hl">\(e\)</span>, <span class="figalgo-hl">\(f\)</span>, <span class="figalgo-hl">\(r\)</span>, <span class="figalgo-hl">\(Q\)</span>, <span class="figalgo-hl">\(\pi\)</span> from Algorithm&nbsp;1</div>
+                            </div>
+                            <div class="algo-line algo-kwline"><span class="algo-kw">procedure</span>&nbsp;Plan\((o_t,\mathbf{a}_{t-1})\)</div>
+                            <div class="algo-line algo-i1"><span class="algo-num">1</span><span class="algo-do">\(z_t \gets\) <span class="figalgo-hl">\(e(o_t)\)</span></span><span class="algo-cmt">encode the observation</span></div>
+                            <div class="algo-line algo-i1"><span class="algo-num">2</span><span class="algo-do">\(\boldsymbol{\mu}^0 \gets\) roll \(\mathbf{a}_{t-1}\) back one step, \(\ \Sigma^0 \gets \sigma_{\max}\)</span><span class="algo-cmt">warm-start the sampler</span></div>
+                            <div class="algo-line algo-kwline algo-i1"><span class="algo-kw">for</span> \(j=0\) to \(J-1\) <span class="algo-kw">do</span></div>
+                            <div class="algo-line algo-i2"><span class="algo-num">3</span><span class="algo-do">sample \(N\) plans \(\mathbf{a}^k \sim \mathcal{N}(\boldsymbol{\mu}^j,\Sigma^j)\); last \(M\) from <span class="figalgo-hl">\(\pi(\cdot\mid z_t)\)</span></span><span class="algo-cmt">parallel</span></div>
+                            <div class="algo-line algo-i2"><span class="algo-num">4</span><span class="algo-do">roll out <span class="figalgo-hl">\(\hat{z}_{t'+1} \gets f(\hat{z}_{t'},a_{t'})\)</span>, score <span class="figalgo-hl">\(\hat{r}_{t'} \gets r(\hat{z}_{t'},\hat{z}_{t'+1})\)</span></span></div>
+                            <div class="algo-line algo-i2"><span class="algo-num">5</span><span class="algo-do">return \(\mathcal{R}(\tau_k) \gets \gamma^{H}\)<span class="figalgo-hl">\(Q(\hat{z}_{t+H},a_{t+H})\)</span>\(+\textstyle\sum_{t'}\gamma^{t'}\hat{r}_{t'}\)</span></div>
+                            <div class="algo-line algo-i2"><span class="algo-num">6</span><span class="algo-do">keep the top-\(K\) elites; \(\ w(\tau_k)\propto\exp(\mathcal{R}(\tau_k)/\eta)\)</span></div>
+                            <div class="algo-line algo-i2"><span class="algo-num">7</span><span class="algo-do">\(\boldsymbol{\mu}^j,\boldsymbol{\sigma}^j \gets\) weighted mean/std of plans; clip \(\sigma\)</span><span class="algo-cmt">refine distribution</span></div>
+                            <div class="algo-line algo-kwline algo-i1"><span class="algo-kw">end for</span></div>
+                            <div class="algo-line algo-i1"><span class="algo-num">8</span><span class="algo-do"><span class="algo-kw">return</span> \(\mathbf{a}_t \sim \mathcal{N}(\boldsymbol{\mu}^J,\Sigma^J)\)</span><span class="algo-cmt">execute the optimized plan</span></div>
+                        </div>
+                        <figcaption><b>MPPI planning.</b> At act-time the planner samples action plans, rolls them through the learned <span class="figalgo-hl">dynamics</span>, scores them with the inferred <span class="figalgo-hl">reward</span> and <span class="figalgo-hl">value</span>, and over <i>J</i> iterations refines its sampling distribution toward the top-<i>K</i> elite (high&#8209;return) plans. The same components trained in Algorithm&nbsp;1 (highlighted) are dropped in &mdash; this is step&nbsp;<b>1</b>, &ldquo;Interact using the planner.&rdquo;</figcaption>
                     </figure>
                 </div>
             </div>
