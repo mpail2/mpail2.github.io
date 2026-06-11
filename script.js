@@ -1391,9 +1391,9 @@ function initBaselineDiagram() {
         if (b.reward) parts.push(['R', '#7FB069']); else if (b.handR) parts.push(['R', '#E0A53B']);
         if (b.value) parts.push(b.offpolicy ? ['Q', '#E0A53B'] : ['V', '#5BB1E8']);   // off-policy Q (gold) vs on-policy V (blue)
         parts.push(['P', '#A99BF5']);                  // every baseline has a policy
-        const bw = 14, bh = 15, gap = 3, pad = b.planner ? 4 : 0;
+        const bw = 14, bh = 15, gap = 3, pad = b.planner ? 4 : 0, SC = 1.5;   // render scale (boxes stay uniform)
         const W = parts.length * bw + (parts.length - 1) * gap + pad * 2, H = bh + pad * 2;
-        let s = '<svg class="mini-diagram" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+        let s = '<svg class="mini-diagram" width="' + (W * SC).toFixed(1) + '" height="' + (H * SC).toFixed(1) + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
         if (b.planner) s += '<rect x="0.7" y="0.7" width="' + (W - 1.4).toFixed(1) + '" height="' + (H - 1.4).toFixed(1) + '" rx="5" fill="none" stroke="#E0A53B" stroke-width="1.3"/>';
         parts.forEach((p, i) => {
             const x = pad + i * (bw + gap);

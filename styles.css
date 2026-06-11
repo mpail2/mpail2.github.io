@@ -3102,6 +3102,8 @@ body.dark-mode .tv-chip.is-on { color: #0e1117; background: #a5b4fc; border-colo
     text-align: left; font-size: 0.9em; line-height: 1.5; color: #374151;
     max-width: 70ch; margin: 0; max-height: 0; overflow: hidden; opacity: 0;
     transition: max-height .35s ease, opacity .35s ease, margin .35s ease;
+    /* stay put when the (wide) table block scrolls horizontally with the page in full-width */
+    position: sticky; left: 0;
 }
 .tv-caption.is-on { max-height: 120px; opacity: 1; margin: 12px 0 4px; }
 body.dark-mode .tv-caption { color: #c7cdda; }
@@ -3642,7 +3644,7 @@ a:hover {
     padding:8px 10px; border-radius:11px; transition:background .2s, box-shadow .2s, transform .15s;
 }
 .baseline-btn:hover .baseline-btn__diagram{background:rgba(110,89,199,.06);}
-.baseline-btn__name{position:relative; font-weight:700; font-size:1.0em; color:inherit;}
+.baseline-btn__name{position:relative; font-weight:700; font-size:1.12em; color:inherit;}
 .baseline-btn__sub{display:none;}                          /* description shows in the side info panel */
 .baseline-btn.active{color:#4a3fb0;}
 .baseline-btn.active .baseline-btn__diagram{background:rgba(110,89,199,.12); box-shadow:0 7px 20px rgba(110,89,199,.24);}
