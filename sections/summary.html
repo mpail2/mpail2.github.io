@@ -45,11 +45,11 @@
                          endpoints are repositioned by the layout engine as the cluster centers. ===== -->
                 <g class="bl-comp bl-comp--fade is-off" data-comp="wObsReward">
                     <path class="bl-wire st-wire-grow" pathLength="1" d="M200,80 H456 V141"/>
-                    <path class="st-arrowhead" d="M452.5,135.5 L459.5,135.5 L456,141 Z"/>
+                    <path class="st-arrowhead" d="M450.4,132 L461.6,132 L456,143.2 Z"/>
                 </g>
                 <g class="bl-comp bl-comp--fade is-off" data-comp="wIntReward">
                     <path class="bl-wire st-wire-grow" pathLength="1" d="M200,271 H456 V209"/>
-                    <path class="st-arrowhead" d="M452.5,214.5 L459.5,214.5 L456,209 Z"/>
+                    <path class="st-arrowhead" d="M450.4,218 L461.6,218 L456,206.8 Z"/>
                 </g>
                 <!-- interaction -> dynamics (only present once dynamics is learned online) -->
                 <g class="bl-comp bl-comp--fade is-off" data-comp="wIntDyn">
@@ -217,11 +217,11 @@
                 <p class="story__cap" data-t="32">Then <b>RL</b> optimizes that reward into a policy, whose new interactions refine the reward again.</p>
                 <p class="story__cap story__cap--con" data-t="38">But running RL to convergence, over and over, for many different rewards is <b>impractically expensive</b>.</p>
                 <p class="story__cap" data-t="49"><b>Adversarial Imitation Learning</b> updates the value and policy just once or twice per reward step.</p>
-                <p class="story__cap story__cap--con" data-t="58">But its policies turn out <b>brittle</b>, generalizing poorly on real robots.</p>
+                <p class="story__cap story__cap--con" data-t="58">But its policies are often <b>brittle</b>, generalizing poorly on real robots.</p>
                 <!-- <p class="story__cap" data-t="66"><b>MPAIL</b> adds a dynamics model, swapping the policy for a robust <b>planner</b> when acting.</p> -->
                 <p class="story__cap" data-t="66"><b>MPAIL</b> interacts using a more robust <b>planner</b>, instead of a policy, by introducing a dynamics model.</p>
                 <p class="story__cap story__cap--con" data-t="72">But it still needs a <b>prior dynamics model</b> and <b>simulation</b>, since interaction is too inefficient.</p>
-                <p class="story__cap story__cap--hero" data-t="81">We introduce <b>MPAIL2</b> for real-world learning from observation that minimizes manual supervision.</p>
+                <p class="story__cap story__cap--hero" data-t="81">We introduce <b>MPAIL2</b> for real-world learning from observation while minimizing manual supervision (e.g. rewards, actions, and simulation).</p>
                 <p class="story__cap" data-t="90">It <b>learns its dynamics online</b>, in a shared <b>latent space</b> self-supervised by the encoder and dynamics models only.</p>
                 <p class="story__cap" data-t="98">Reward and value are learned <b>off-policy</b>, adding a policy network for value optimization.</p>
                 <p class="story__cap" data-t="105">A <b>multi-step policy</b> with a TD&#8209;&lambda; objective blends model-based and model-free returns.</p>

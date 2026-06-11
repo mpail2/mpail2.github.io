@@ -1883,9 +1883,9 @@ function initStoryScrub() {
         const exn = +ex;
         if (wObs) wObs.setAttribute('d', roundOrtho('M' + sx + ',80 H' + ex + ' V141', 8));
         if (wInt) wInt.setAttribute('d', roundOrtho('M' + sx + ',271 H' + ex + ' V209', 8));
-        // equal-size filled-triangle arrowheads, tip sitting at the reward-box edge (not clipped inside it)
-        if (wObsHead) wObsHead.setAttribute('d', 'M' + (exn - 3.5).toFixed(1) + ',135.5 L' + (exn + 3.5).toFixed(1) + ',135.5 L' + ex + ',141 Z');
-        if (wIntHead) wIntHead.setAttribute('d', 'M' + (exn - 3.5).toFixed(1) + ',214.5 L' + (exn + 3.5).toFixed(1) + ',214.5 L' + ex + ',209 Z');
+        // filled-triangle arrowheads sized to match the shared st-arr marker (markerWidth 7 x strokeWidth 1.6)
+        if (wObsHead) wObsHead.setAttribute('d', 'M' + (exn - 5.6).toFixed(1) + ',132 L' + (exn + 5.6).toFixed(1) + ',132 L' + ex + ',143.2 Z');
+        if (wIntHead) wIntHead.setAttribute('d', 'M' + (exn - 5.6).toFixed(1) + ',218 L' + (exn + 5.6).toFixed(1) + ',218 L' + ex + ',206.8 Z');
         if (wIntDynP) wIntDynP.setAttribute('d', roundOrtho('M' + (274 + S.imgDx).toFixed(1) + ',271 H' + (364 + S.dynDx).toFixed(1) + ' V207', 8));
         if (replayP) replayP.setAttribute('d', 'M' + (408 + S.dynDx).toFixed(1) + ',165 H' + (636 + S.rvpDx).toFixed(1));
         if (plRect) {
