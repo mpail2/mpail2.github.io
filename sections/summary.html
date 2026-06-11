@@ -44,10 +44,10 @@
                 <!-- ===== feeder wires into the core (drawn under the boxes). The reward-side
                          endpoints are repositioned by the layout engine as the cluster centers. ===== -->
                 <g class="bl-comp bl-comp--fade is-off" data-comp="wObsReward">
-                    <path class="bl-wire" d="M200,80 H456 V141" marker-end="url(#st-arr)"/>
+                    <path class="bl-wire st-wire-grow" pathLength="1" d="M200,80 H456 V141" marker-end="url(#st-arr)"/>
                 </g>
                 <g class="bl-comp bl-comp--fade is-off" data-comp="wIntReward">
-                    <path class="bl-wire" d="M200,271 H456 V209" marker-end="url(#st-arr)"/>
+                    <path class="bl-wire st-wire-grow" pathLength="1" d="M200,271 H456 V209" marker-end="url(#st-arr)"/>
                 </g>
                 <!-- interaction -> dynamics (only present once dynamics is learned online) -->
                 <g class="bl-comp bl-comp--fade is-off" data-comp="wIntDyn">
@@ -211,9 +211,9 @@
                 <p class="story__cap" data-t="5">Without privileged supervision like rewards and actions, you are necessarily <b>Learning from Observation</b> (LfO).</p>
                 <p class="story__cap story__cap--con" data-t="12">LfO is ideal for robot learning too, since observations are passively abundant. But, today's LfO methods still depend on <b>large amounts of manual data and supervision</b>.</p>
                 <p class="story__cap" data-t="19"><b>Inverse RL</b> drastically reduces manual supervision by learning instead from interaction and self-supervision, like <i>practicing</i>.</p>
-                <p class="story__cap" data-t="25">In IRL, the learner infers the <b>reward</b>, the demonstrator's intent, by comparing their observations to its own.</p>
-                <p class="story__cap" data-t="32">Then <b>RL</b> turns that reward into a policy, whose new interactions refine the reward again.</p>
-                <p class="story__cap story__cap--con" data-t="38">But running RL to convergence, over and over, gets <b>enormously expensive</b>.</p>
+                <p class="story__cap" data-t="25">In IRL, the learner must infer the demonstrator's intent via the <b>reward</b> by comparing observations of them to their own.</p>
+                <p class="story__cap" data-t="32">Then <b>RL</b> optimizes that reward into a policy, whose new interactions refine the reward again.</p>
+                <p class="story__cap story__cap--con" data-t="38">But running RL to convergence, over and over, for many different rewards is <b>impractically expensive</b>.</p>
                 <p class="story__cap" data-t="49"><b>Adversarial Imitation Learning</b> updates the value and policy just once or twice per reward step.</p>
                 <p class="story__cap story__cap--con" data-t="58">But its policies turn out <b>brittle</b>, generalizing poorly on real robots.</p>
                 <p class="story__cap" data-t="66"><b>MPAIL</b> adds a dynamics model, swapping the policy for a robust <b>planner</b> when acting.</p>

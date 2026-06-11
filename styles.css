@@ -3871,6 +3871,12 @@ video:-webkit-full-screen {
 .story__diagram.st-dim-imgs .bl-input image{opacity:0.42;}
 /* story-only wire flavors */
 .story__diagram .bl-wire--red{stroke:#E0705A;}
+/* frame 5: the reward feeder wires draw (grow) out of the baseball images. pathLength="1" normalizes
+   the dash so it stays correct even as the layout engine repositions the far endpoints. */
+.story__diagram .st-wire-grow{stroke-dasharray:1; stroke-dashoffset:1;}
+.story__diagram .bl-comp--fade:not(.is-off) .st-wire-grow{animation:st-wire-draw .6s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes st-wire-draw{from{stroke-dashoffset:1;} to{stroke-dashoffset:0;}}
+@media (prefers-reduced-motion: reduce){.story__diagram .st-wire-grow{stroke-dashoffset:0; animation:none;}}
 /* solid base dasharray (60 0) so toggling to the brittle (3 7) actually animates the line breaking up */
 .story__diagram .st-return{stroke-dasharray:60 0; transition:stroke .5s ease, stroke-width .5s ease, stroke-dasharray .5s ease;}
 .story__diagram .st-return.st-sketchy{stroke:#E0705A; stroke-width:2.4; stroke-dasharray:3 7;}

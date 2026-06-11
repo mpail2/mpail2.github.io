@@ -2017,6 +2017,7 @@ function initStoryScrub() {
             A.push(() => svg.querySelectorAll('.st-return').forEach(e => e.classList.add('st-sketchy')));
         }
         appear('obsEnc'); appear('intEnc'); appear('wIntDyn');
+        appear('wObsReward'); appear('wIntReward');                         // frame 5: replay the wires growing from the images
         if (!R.length) return null;                                          // block intro / no style change
         return { reset: () => R.forEach(f => f()), apply: () => A.forEach(f => f()) };
     }
