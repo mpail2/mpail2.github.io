@@ -1875,8 +1875,10 @@ function initStoryScrub() {
         if (dynGroup) dynGroup.setAttribute('transform', 'translate(' + S.dynDx.toFixed(2) + ',0)');
         const sx = (200 + S.imgDx).toFixed(1);   // feeder runs the full width; the opaque-backed encoder occludes its middle
         const ex = (456 + S.rvpDx).toFixed(1);
-        if (wObs) wObs.setAttribute('d', roundOrtho('M' + sx + ',80 H' + ex + ' V141', 8));
-        if (wInt) wInt.setAttribute('d', roundOrtho('M' + sx + ',271 H' + ex + ' V209', 8));
+        // chevron arrowhead baked into the path tail so it draws (grows) with the connector
+        const exn = +ex;
+        if (wObs) wObs.setAttribute('d', roundOrtho('M' + sx + ',80 H' + ex + ' V141', 8) + ' M' + (exn - 3.5).toFixed(1) + ',137.5 L' + ex + ',142 L' + (exn + 3.5).toFixed(1) + ',137.5');
+        if (wInt) wInt.setAttribute('d', roundOrtho('M' + sx + ',271 H' + ex + ' V209', 8) + ' M' + (exn - 3.5).toFixed(1) + ',212.5 L' + ex + ',208 L' + (exn + 3.5).toFixed(1) + ',212.5');
         if (wIntDynP) wIntDynP.setAttribute('d', roundOrtho('M' + (274 + S.imgDx).toFixed(1) + ',271 H' + (364 + S.dynDx).toFixed(1) + ' V207', 8));
         if (replayP) replayP.setAttribute('d', 'M' + (408 + S.dynDx).toFixed(1) + ',165 H' + (636 + S.rvpDx).toFixed(1));
         if (plRect) {
@@ -2017,7 +2019,6 @@ function initStoryScrub() {
             A.push(() => svg.querySelectorAll('.st-return').forEach(e => e.classList.add('st-sketchy')));
         }
         appear('obsEnc'); appear('intEnc'); appear('wIntDyn');
-        appear('wObsReward'); appear('wIntReward');                         // frame 5: replay the wires growing from the images
         if (!R.length) return null;                                          // block intro / no style change
         return { reset: () => R.forEach(f => f()), apply: () => A.forEach(f => f()) };
     }
