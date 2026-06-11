@@ -197,6 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var focusY = function() { return no.offsetTop + no.offsetHeight / 2; };   // NO's center: the carousel's focal line
     // set the words' heights + the strip position; the transform is driven by the continuous offset
     function setStrip(animate) {
+        if (claim.clientHeight < 1) return;            // not laid out yet (e.g. video unsized) — wait for the observer
         var h = claim.clientHeight / N;                // N words exactly fill the video height
         all.forEach(function(el) { el.style.height = h + 'px'; });
         list.style.transition = animate ? '' : 'none';
@@ -226,6 +227,12 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', function() { setStrip(false); });
     setTimeout(function() { setStrip(false); }, 300);  // re-layout once the video sets the height
     setTimeout(function() { setStrip(false); }, 1200);
+    // the claim's height is driven by the video (align-self: stretch); recompute the strip whenever it
+    // actually changes size so the words never stay compressed when the video sizes late (load race)
+    var resync = function() { setStrip(false); highlightLive(); };
+    if (window.ResizeObserver) { new ResizeObserver(resync).observe(claim); }
+    var heroVid = document.querySelector('.hero-rollout video');
+    if (heroVid) { heroVid.addEventListener('loadeddata', resync); heroVid.addEventListener('loadedmetadata', resync); }
 
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
