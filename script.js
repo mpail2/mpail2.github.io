@@ -591,12 +591,12 @@ function initResultsTunnel() {
             body += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="' + p[1] + '26" stroke="' + p[1] + '" stroke-width="1.3"/>';
             if (p[2]) {                                // diagonal "hazard" stripes behind the letter
                 const pid = 'mhaz' + (mHaz++);
-                defs += '<pattern id="' + pid + '" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" stroke="' + p[1] + '" stroke-width="1.1"/></pattern>';
+                defs += '<pattern id="' + pid + '" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" stroke="' + p[1] + '" stroke-width="1.4"/></pattern>';
                 body += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="url(#' + pid + ')" opacity="0.6"/>';
             }
             body += '<text x="' + (x + bw / 2) + '" y="' + (pad + bh / 2) + '" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="700" fill="' + p[1] + '">' + p[0] + '</text>';
         });
-        let s = '<svg class="mini-diagram" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+        let s = '<svg class="mini-diagram" width="' + (W + 2) + '" height="' + (H + 2) + '" viewBox="-1 -1 ' + (W + 2) + ' ' + (H + 2) + '" aria-hidden="true">';   // 1-unit margin so box strokes aren't clipped
         if (defs) s += '<defs>' + defs + '</defs>';
         if (m.planner) s += '<rect x="0.7" y="0.7" width="' + (W - 1.4).toFixed(1) + '" height="' + (H - 1.4).toFixed(1) + '" rx="5" fill="none" stroke="#E0A53B" stroke-width="1.3"/>';
         return s + body + '</svg>';
@@ -1168,7 +1168,7 @@ function initMethodExplorer() {
     function byRegion(cx, cy) {
         if (cx >= 402 && cx <= 452 && cy >= 380 && cy <= 452) return null;     // the small triangle under z_0 — don't lift
         if (cy < 150) return 'task';                                 // observation strip (both photo rows, border, label)
-        if (cx >= 728 && cx <= 818 && cy >= 150 && cy <= 258) return 'task';   // (o,o') cylinder + its connector
+        if (cx >= 728 && cx <= 818 && cy >= 150 && cy <= 224) return 'task';   // (o,o') cylinder only (not the black connector below it)
         if (cx >= 578 && cx <= 652 && cy >= 222 && cy <= 312) return 'value';
         if (cx >= 512 && cx <= 612 && cy >= 338 && cy <= 424) return 'reward';
         if (cx >= 470 && cx <= 544 && cy >= 230 && cy <= 316) return 'dynamics';
@@ -1212,7 +1212,8 @@ function initMethodExplorer() {
             case '#d79b00': return 'value';                          // gold — value
             case '#82b366':                                          // green — the Task strip border + (o,o') cylinder, else the reward
                 return (cy < 150 || (cx >= 660 && cy < 255)) ? 'task' : 'reward';
-            case '#9673a6': return 'policy';                         // purple — policy (+ its dotted rollout line)
+            case '#9673a6':                                          // purple — policy box / connector / mini-box stay policy-only;
+                return (cx >= 440 && cx <= 520 && cy >= 430 && cy <= 490) ? ['policy', 'planner'] : 'policy';  // only the rollout proposal dots also lift for the planner
             case '#b85450': return 'dynamics';                       // red — dynamics (trapezoid, z', rollout arrows, mini-box)
         }
         return byRegion(cx, cy);                                     // black/grey/colourless → by position
@@ -1419,12 +1420,12 @@ function initBaselineDiagram() {
             body += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="' + p[1] + '26" stroke="' + p[1] + '" stroke-width="1.3"/>';
             if (p[2]) {                                // diagonal "hazard" stripes behind the letter
                 const pid = 'bhaz' + (blHaz++);
-                defs += '<pattern id="' + pid + '" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" stroke="' + p[1] + '" stroke-width="1.1"/></pattern>';
+                defs += '<pattern id="' + pid + '" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" stroke="' + p[1] + '" stroke-width="1.4"/></pattern>';
                 body += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="url(#' + pid + ')" opacity="0.6"/>';
             }
             body += '<text x="' + (x + bw / 2) + '" y="' + (pad + bh / 2) + '" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="700" fill="' + p[1] + '">' + p[0] + '</text>';
         });
-        let s = '<svg class="mini-diagram" width="' + (W * SC).toFixed(1) + '" height="' + (H * SC).toFixed(1) + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+        let s = '<svg class="mini-diagram" width="' + ((W + 2) * SC).toFixed(1) + '" height="' + ((H + 2) * SC).toFixed(1) + '" viewBox="-1 -1 ' + (W + 2) + ' ' + (H + 2) + '" aria-hidden="true">';   // 1-unit margin so box strokes aren't clipped
         if (defs) s += '<defs>' + defs + '</defs>';
         if (b.planner) s += '<rect x="0.7" y="0.7" width="' + (W - 1.4).toFixed(1) + '" height="' + (H - 1.4).toFixed(1) + '" rx="5" fill="none" stroke="#E0A53B" stroke-width="1.3"/>';
         return s + body + '</svg>';
@@ -1746,7 +1747,7 @@ function initStoryScrub() {
         { label: 'LfO',    cite: 'Torabi et al. 2019',  href: 'https://arxiv.org/abs/1905.13566' },
         { label: 'IRL',    cite: 'Abbeel &amp; Ng 2004', href: 'https://doi.org/10.1145/1015330.1015430' },
         { label: 'AIL',    cite: 'Ho &amp; Ermon 2016',  href: 'https://proceedings.neurips.cc/paper_files/paper/2016/hash/cc7e2b878868cbae992d1fb743995d8f-Abstract.html' },
-        { label: 'MPAIL',  cite: 'Han et al. 2025',     href: 'https://arxiv.org/abs/2507.21533' },
+        { label: 'MPAIL',  cite: 'Han et al. 2026',     href: 'https://arxiv.org/abs/2507.21533' },
         { label: 'MPAIL2', cite: 'This work',           href: '' }
     ];
     let curCite = -2;
@@ -1816,8 +1817,10 @@ function initStoryScrub() {
     const intDeckG = svg.querySelector('[data-comp="intDeck"]');
     const plRect = document.getElementById('st-planner-rect');
     const plLabel = document.getElementById('st-planner-label');
-    const wObs = svg.querySelector('[data-comp="wObsReward"] path');
-    const wInt = svg.querySelector('[data-comp="wIntReward"] path');
+    const wObs = svg.querySelector('[data-comp="wObsReward"] .bl-wire');
+    const wInt = svg.querySelector('[data-comp="wIntReward"] .bl-wire');
+    const wObsHead = svg.querySelector('[data-comp="wObsReward"] .st-arrowhead');
+    const wIntHead = svg.querySelector('[data-comp="wIntReward"] .st-arrowhead');
     const wIntDynP = svg.querySelector('[data-comp="wIntDyn"] path');
     const replayP = svg.querySelector('[data-comp="replay"] path');
     const retP = document.getElementById('st-return');
@@ -1877,8 +1880,11 @@ function initStoryScrub() {
         const ex = (456 + S.rvpDx).toFixed(1);
         // chevron arrowhead baked into the path tail so it draws (grows) with the connector
         const exn = +ex;
-        if (wObs) wObs.setAttribute('d', roundOrtho('M' + sx + ',80 H' + ex + ' V141', 8) + ' M' + (exn - 3.5).toFixed(1) + ',137.5 L' + ex + ',142 L' + (exn + 3.5).toFixed(1) + ',137.5');
-        if (wInt) wInt.setAttribute('d', roundOrtho('M' + sx + ',271 H' + ex + ' V209', 8) + ' M' + (exn - 3.5).toFixed(1) + ',212.5 L' + ex + ',208 L' + (exn + 3.5).toFixed(1) + ',212.5');
+        if (wObs) wObs.setAttribute('d', roundOrtho('M' + sx + ',80 H' + ex + ' V141', 8));
+        if (wInt) wInt.setAttribute('d', roundOrtho('M' + sx + ',271 H' + ex + ' V209', 8));
+        // filled-triangle arrowheads (separate elements) parked at the reward edge; they scale in as the line arrives
+        if (wObsHead) wObsHead.setAttribute('d', 'M' + (exn - 3.5).toFixed(1) + ',136 L' + (exn + 3.5).toFixed(1) + ',136 L' + ex + ',141.5 Z');
+        if (wIntHead) wIntHead.setAttribute('d', 'M' + (exn - 3.5).toFixed(1) + ',214 L' + (exn + 3.5).toFixed(1) + ',214 L' + ex + ',208.5 Z');
         if (wIntDynP) wIntDynP.setAttribute('d', roundOrtho('M' + (274 + S.imgDx).toFixed(1) + ',271 H' + (364 + S.dynDx).toFixed(1) + ' V207', 8));
         if (replayP) replayP.setAttribute('d', 'M' + (408 + S.dynDx).toFixed(1) + ',165 H' + (636 + S.rvpDx).toFixed(1));
         if (plRect) {

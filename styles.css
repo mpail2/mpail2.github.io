@@ -527,8 +527,9 @@ body.dark-mode .figpanel figcaption b { color: #e8eaed; }
 .figpanel--algo .algo-i2 { margin-left: 36px; }
 .figpanel--algo .algo-line { padding: 3px 8px; }
 .figpanel--algo .figalgo .katex { font-size: 1em; }
-.figalgo-hl { color: #2f72c4; font-weight: 600; }          /* the learned components dropped into MPPI */
-body.dark-mode .figalgo-hl { color: #79b8ff; }
+/* the learned MPAIL2 models dropped into MPPI — blue text on a soft highlight */
+.figalgo-hl { color: #2f72c4; font-weight: 600; background: rgba(47, 114, 196, 0.13); border-radius: 4px; padding: 0.5px 3px; }
+body.dark-mode .figalgo-hl { color: #79b8ff; background: rgba(121, 184, 255, 0.16); }
 .figtab__step {
     font: 700 0.62rem/1 'Inter', sans-serif; letter-spacing: .03em; text-transform: uppercase;
     color: #4f46e5; background: rgba(102, 126, 234, 0.14); border-radius: 5px; padding: 2px 5px; margin-left: 3px;
@@ -3876,7 +3877,12 @@ video:-webkit-full-screen {
 .story__diagram .st-wire-grow{stroke-dasharray:1; stroke-dashoffset:1;}
 .story__diagram .bl-comp--fade:not(.is-off) .st-wire-grow{animation:st-wire-draw .6s cubic-bezier(.4,0,.2,1) forwards;}
 @keyframes st-wire-draw{from{stroke-dashoffset:1;} to{stroke-dashoffset:0;}}
-@media (prefers-reduced-motion: reduce){.story__diagram .st-wire-grow{stroke-dashoffset:0; animation:none;}}
+/* the (filled-triangle) arrowhead scales in just as the line reaches the reward box, so it grows with
+   the connector instead of always sitting on the block */
+.story__diagram .st-arrowhead{fill:#8A93A3; opacity:0; transform:scale(0); transform-box:fill-box; transform-origin:center;}
+.story__diagram .bl-comp--fade:not(.is-off) .st-arrowhead{animation:st-arrow-pop .22s cubic-bezier(.34,1.45,.5,1) .46s forwards;}
+@keyframes st-arrow-pop{from{opacity:0; transform:scale(0);} to{opacity:1; transform:scale(1);}}
+@media (prefers-reduced-motion: reduce){.story__diagram .st-wire-grow{stroke-dashoffset:0; animation:none;} .story__diagram .st-arrowhead{opacity:1; transform:none; animation:none;}}
 /* solid base dasharray (60 0) so toggling to the brittle (3 7) actually animates the line breaking up */
 .story__diagram .st-return{stroke-dasharray:60 0; transition:stroke .5s ease, stroke-width .5s ease, stroke-dasharray .5s ease;}
 .story__diagram .st-return.st-sketchy{stroke:#E0705A; stroke-width:2.4; stroke-dasharray:3 7;}
