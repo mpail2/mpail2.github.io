@@ -1821,6 +1821,7 @@ function initStoryScrub() {
     const wInt = svg.querySelector('[data-comp="wIntReward"] .bl-wire');
     const wObsHead = svg.querySelector('[data-comp="wObsReward"] .st-arrowhead');
     const wIntHead = svg.querySelector('[data-comp="wIntReward"] .st-arrowhead');
+    const rewardWireGs = [svg.querySelector('[data-comp="wObsReward"]'), svg.querySelector('[data-comp="wIntReward"]')];
     const wIntDynP = svg.querySelector('[data-comp="wIntDyn"] path');
     const replayP = svg.querySelector('[data-comp="replay"] path');
     const retP = document.getElementById('st-return');
@@ -1882,9 +1883,9 @@ function initStoryScrub() {
         const exn = +ex;
         if (wObs) wObs.setAttribute('d', roundOrtho('M' + sx + ',80 H' + ex + ' V141', 8));
         if (wInt) wInt.setAttribute('d', roundOrtho('M' + sx + ',271 H' + ex + ' V209', 8));
-        // filled-triangle arrowheads (separate elements) parked at the reward edge; they scale in as the line arrives
-        if (wObsHead) wObsHead.setAttribute('d', 'M' + (exn - 3.5).toFixed(1) + ',136 L' + (exn + 3.5).toFixed(1) + ',136 L' + ex + ',141.5 Z');
-        if (wIntHead) wIntHead.setAttribute('d', 'M' + (exn - 3.5).toFixed(1) + ',214 L' + (exn + 3.5).toFixed(1) + ',214 L' + ex + ',208.5 Z');
+        // equal-size filled-triangle arrowheads, tip sitting at the reward-box edge (not clipped inside it)
+        if (wObsHead) wObsHead.setAttribute('d', 'M' + (exn - 3.5).toFixed(1) + ',135.5 L' + (exn + 3.5).toFixed(1) + ',135.5 L' + ex + ',141 Z');
+        if (wIntHead) wIntHead.setAttribute('d', 'M' + (exn - 3.5).toFixed(1) + ',214.5 L' + (exn + 3.5).toFixed(1) + ',214.5 L' + ex + ',209 Z');
         if (wIntDynP) wIntDynP.setAttribute('d', roundOrtho('M' + (274 + S.imgDx).toFixed(1) + ',271 H' + (364 + S.dynDx).toFixed(1) + ' V207', 8));
         if (replayP) replayP.setAttribute('d', 'M' + (408 + S.dynDx).toFixed(1) + ',165 H' + (636 + S.rvpDx).toFixed(1));
         if (plRect) {
@@ -1984,6 +1985,9 @@ function initStoryScrub() {
         // layout state for renderLayout, then reflow (instant on first paint / forced capture / loop reset)
         LS = { encOn: onSet.has('obsEnc'), plannerOn: onSet.has('planner'), policyOn: onSet.has('policy') };
         const doAnim = !first && !story.dataset.forceP && !instant;
+        // play the reward feeder-wire "grow" ONLY on a real arrival at frame 5 (index 4); base state
+        // (any other frame) is fully drawn. Toggling the class off elsewhere lets it restart on re-entry.
+        rewardWireGs.forEach(g => g && g.classList.toggle('st-grow-anim', i === 4 && doAnim));
         animateLayout(planeFor(b, onSet), doAnim);
         if (doAnim) enterDoneAt = performance.now() + ENTER_MS;   // when this arrival transition will finish
         if (counterEl && !instant) counterEl.textContent = 'frame ' + (i + 1) + ' / ' + BEATS.length;

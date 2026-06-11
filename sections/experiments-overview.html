@@ -265,10 +265,10 @@
                     <h3 class="results-panel__title">Efficiency</h3>
                     <div class="results-plot-views" id="results-plot-views" role="group" aria-label="Plot view">
                         <button type="button" class="plot-view-btn is-on" data-view="claim" title="The claim's aggregated curves — select a finding to enable">Claim</button>
-                        <button type="button" class="plot-view-btn" data-view="bytask" title="A separate curve per selected method × task">By task</button>
+                        <button type="button" class="plot-view-btn" data-view="bytask" title="A separate curve per selected method × task">Individual</button>
                     </div>
                 </div>
-                <p class="results-plot-tip">Watch <strong>where each curve lifts off the x-axis</strong> &mdash; that's when a method first starts succeeding.</p>
+                <p class="results-plot-tip">Also observe where <strong>curves first lift off the x-axis</strong>, indicating time-to-first-success.</p>
                 <!-- canvases are injected by renderClaimPlot (one combined, or two stacked for transfer) -->
                 <div class="results-plot" id="results-plot" style="display:none;"></div>
                 <p class="results-plot__hint" id="results-plot-hint">Pick a finding to see its efficiency curves.</p>

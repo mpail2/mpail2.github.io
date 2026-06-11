@@ -689,7 +689,7 @@ function interpAtFrac(series, p) {
 // listed methods × both tasks, labelled by the claim's framing (drawn on the line). Colour comes from
 // the first method in each group.
 const AGG_LABELS = {
-    world:       [['+ Dynamics', ['MPAIL2', '[−P] (MAIRL)']], ['− Dynamics', ['[−PM] (DAC)']]],
+    world:       [['+ Dynamics', ['MPAIL2', '[−P] (MAIRL)']], ['No Dynamics', ['[−PM] (DAC)']]],
     planning:    [['With Planning', ['MPAIL2']], ['Without Planning', ['[−P] (MAIRL)']]],
     supervision: [['Observation-only', ['MPAIL2', '[−P] (MAIRL)', '[−PM] (DAC)']], ['Obs. + Reward + Actions', ['RLPD']]],
 };
@@ -844,7 +844,7 @@ function renderClaimPlot(key) {
         if (!Object.keys(agg).length) { show(false); return; }
         show(true);
         claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend',
-            'Sample Efficiency — tasks aggregated', agg, true, 'Training Progress (%)', true));
+            'Sample Efficiency Combined', agg, true, 'Training Progress (%)', true));
         return;
     }
 
@@ -862,7 +862,7 @@ function renderClaimPlot(key) {
     });
     if (!Object.keys(merged).length) { show(false); return; }
     show(true);
-    claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend', 'Sample Efficiency — by task', merged, false));
+    claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend', 'Individual Sample Efficiency ', merged, false));
 }
 window.renderClaimPlot = renderClaimPlot;
 
@@ -900,7 +900,7 @@ function renderSelectionPlot(cells) {
         return;
     }
     wrap.style.display = ''; if (hint) hint.style.display = 'none';
-    claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend', 'Sample Efficiency — selection', merged, false));
+    claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend', 'Selected Sample Efficiency', merged, false));
 }
 window.renderSelectionPlot = renderSelectionPlot;
 
