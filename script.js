@@ -576,22 +576,30 @@ function initResultsTunnel() {
         mpail2: { planner: 1, parts: [['D', '#E0705A'], ['R', '#7FB069'], ['Q', '#E0A53B'], ['P', '#A99BF5']] },
         mairl:  { planner: 0, parts: [['D', '#E0705A'], ['R', '#7FB069'], ['Q', '#E0A53B'], ['P', '#A99BF5']] },
         dac:    { planner: 0, parts: [['R', '#7FB069'], ['Q', '#E0A53B'], ['P', '#A99BF5']] },
-        rlpd:   { planner: 0, parts: [['R', '#E0A53B'], ['Q', '#E0A53B'], ['P', '#A99BF5']] },   // hand reward = gold
-        bc:     { planner: 0, parts: [['P', '#A99BF5']] }
+        rlpd:   { planner: 0, parts: [['R', '#E0A53B', true], ['Q', '#E0A53B'], ['P', '#A99BF5']] },   // hand reward = gold + hazard
+        bc:     { planner: 0, parts: [['P', '#A99BF5', true]] }                                       // severed/offline policy = hazard
     };
+    let mHaz = 0;                                       // unique-id counter for hazard-stripe patterns
     function miniDiagram(methodKey) {
         const m = METHOD_PARTS[methodKey];
         if (!m) return '';
         const bw = 14, bh = 15, gap = 3, pad = m.planner ? 4 : 0;
         const W = m.parts.length * bw + (m.parts.length - 1) * gap + pad * 2, H = bh + pad * 2;
-        let s = '<svg class="mini-diagram" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
-        if (m.planner) s += '<rect x="0.7" y="0.7" width="' + (W - 1.4).toFixed(1) + '" height="' + (H - 1.4).toFixed(1) + '" rx="5" fill="none" stroke="#E0A53B" stroke-width="1.3"/>';
+        let defs = '', body = '';
         m.parts.forEach((p, i) => {
             const x = pad + i * (bw + gap);
-            s += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="' + p[1] + '26" stroke="' + p[1] + '" stroke-width="1.3"/>';
-            s += '<text x="' + (x + bw / 2) + '" y="' + (pad + bh / 2) + '" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="700" fill="' + p[1] + '">' + p[0] + '</text>';
+            body += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="' + p[1] + '26" stroke="' + p[1] + '" stroke-width="1.3"/>';
+            if (p[2]) {                                // diagonal "hazard" stripes behind the letter
+                const pid = 'mhaz' + (mHaz++);
+                defs += '<pattern id="' + pid + '" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" stroke="' + p[1] + '" stroke-width="1.1"/></pattern>';
+                body += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="url(#' + pid + ')" opacity="0.6"/>';
+            }
+            body += '<text x="' + (x + bw / 2) + '" y="' + (pad + bh / 2) + '" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="700" fill="' + p[1] + '">' + p[0] + '</text>';
         });
-        return s + '</svg>';
+        let s = '<svg class="mini-diagram" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+        if (defs) s += '<defs>' + defs + '</defs>';
+        if (m.planner) s += '<rect x="0.7" y="0.7" width="' + (W - 1.4).toFixed(1) + '" height="' + (H - 1.4).toFixed(1) + '" rx="5" fill="none" stroke="#E0A53B" stroke-width="1.3"/>';
+        return s + body + '</svg>';
     }
     // drop the diagram into each table method cell (below the name)
     bodyRows.forEach(tr => {
@@ -1395,22 +1403,31 @@ function initBaselineDiagram() {
 
     // mini branding diagram from a baseline's component flags (gold Planner enclosure when it plans,
     // wrapping Dynamics(red) Reward(green inferred / gold hand) Value(gold) Policy(purple))
+    let blHaz = 0;                                      // unique-id counter for hazard-stripe patterns
     function baselineDiagram(b) {
         const parts = [];
         if (b.dynamics) parts.push(['D', '#E0705A']);
-        if (b.reward) parts.push(['R', '#7FB069']); else if (b.handR) parts.push(['R', '#E0A53B']);
+        // hand-designed reward (RLPD) gets hazard stripes — it's given, not learned
+        if (b.reward) parts.push(['R', '#7FB069']); else if (b.handR) parts.push(['R', '#E0A53B', true]);
         if (b.value) parts.push(b.offpolicy ? ['Q', '#E0A53B'] : ['V', '#5BB1E8']);   // off-policy Q (gold) vs on-policy V (blue)
-        parts.push(['P', '#A99BF5']);                  // every baseline has a policy
+        parts.push(['P', '#A99BF5', !b.online]);       // every baseline has a policy; offline/severed (BC) gets hazard stripes
         const bw = 14, bh = 15, gap = 3, pad = b.planner ? 4 : 0, SC = 1.5;   // render scale (boxes stay uniform)
         const W = parts.length * bw + (parts.length - 1) * gap + pad * 2, H = bh + pad * 2;
-        let s = '<svg class="mini-diagram" width="' + (W * SC).toFixed(1) + '" height="' + (H * SC).toFixed(1) + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
-        if (b.planner) s += '<rect x="0.7" y="0.7" width="' + (W - 1.4).toFixed(1) + '" height="' + (H - 1.4).toFixed(1) + '" rx="5" fill="none" stroke="#E0A53B" stroke-width="1.3"/>';
+        let defs = '', body = '';
         parts.forEach((p, i) => {
             const x = pad + i * (bw + gap);
-            s += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="' + p[1] + '26" stroke="' + p[1] + '" stroke-width="1.3"/>';
-            s += '<text x="' + (x + bw / 2) + '" y="' + (pad + bh / 2) + '" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="700" fill="' + p[1] + '">' + p[0] + '</text>';
+            body += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="' + p[1] + '26" stroke="' + p[1] + '" stroke-width="1.3"/>';
+            if (p[2]) {                                // diagonal "hazard" stripes behind the letter
+                const pid = 'bhaz' + (blHaz++);
+                defs += '<pattern id="' + pid + '" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" stroke="' + p[1] + '" stroke-width="1.1"/></pattern>';
+                body += '<rect x="' + x + '" y="' + pad + '" width="' + bw + '" height="' + bh + '" rx="3.5" fill="url(#' + pid + ')" opacity="0.6"/>';
+            }
+            body += '<text x="' + (x + bw / 2) + '" y="' + (pad + bh / 2) + '" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="700" fill="' + p[1] + '">' + p[0] + '</text>';
         });
-        return s + '</svg>';
+        let s = '<svg class="mini-diagram" width="' + (W * SC).toFixed(1) + '" height="' + (H * SC).toFixed(1) + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+        if (defs) s += '<defs>' + defs + '</defs>';
+        if (b.planner) s += '<rect x="0.7" y="0.7" width="' + (W - 1.4).toFixed(1) + '" height="' + (H - 1.4).toFixed(1) + '" rx="5" fill="none" stroke="#E0A53B" stroke-width="1.3"/>';
+        return s + body + '</svg>';
     }
     picker.querySelectorAll('.baseline-btn[data-baseline]').forEach(btn => {
         const b = BASELINES[btn.dataset.baseline];
