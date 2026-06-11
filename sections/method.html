@@ -35,5 +35,44 @@
                 <div class="method-algo" id="method-algo" role="group" aria-label="MPAIL2 training algorithm"></div>
             </div>
         </div>
+
+        <!-- per-component training objectives from the appendix, tucked into expandable "file tabs":
+             collapsed by default; click a tab to slide its figure + caption open. -->
+        <div class="method-figtabs" id="method-figtabs">
+            <p class="method-figtabs__lead">Per-component training objectives <span>&mdash; appendix figures; click a tab to open</span></p>
+            <div class="method-figtabs__row" role="tablist" aria-label="Component training-objective figures">
+                <button type="button" class="figtab" data-fig="4a" role="tab" aria-expanded="false" aria-controls="figpanel-4a">
+                    <svg class="figtab__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7.5L18 7v14.5H6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 2.5V7H18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                    <span class="figtab__name">Fig&nbsp;4a &mdash; Encoder &amp; Dynamics</span>
+                    <span class="figtab__chev" aria-hidden="true">&rsaquo;</span>
+                </button>
+                <button type="button" class="figtab" data-fig="4b" role="tab" aria-expanded="false" aria-controls="figpanel-4b">
+                    <svg class="figtab__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7.5L18 7v14.5H6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 2.5V7H18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                    <span class="figtab__name">Fig&nbsp;4b &mdash; Reward</span>
+                    <span class="figtab__chev" aria-hidden="true">&rsaquo;</span>
+                </button>
+                <button type="button" class="figtab" data-fig="5" role="tab" aria-expanded="false" aria-controls="figpanel-5">
+                    <svg class="figtab__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7.5L18 7v14.5H6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 2.5V7H18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                    <span class="figtab__name">Fig&nbsp;5 &mdash; &lambda;-Return</span>
+                    <span class="figtab__chev" aria-hidden="true">&rsaquo;</span>
+                </button>
+            </div>
+            <div class="method-figtabs__stage" id="method-figstage">
+                <div class="method-figtabs__inner">
+                    <figure class="figpanel" id="figpanel-4a" data-fig="4a" role="tabpanel">
+                        <img src="Media/Image/method/fig4a-encoder-dynamics.png" loading="lazy" alt="Encoder and Dynamics training diagram: the encoder maps observations to latent states which the dynamics model auto-regressively predicts, trained on a multi-step MSE loss.">
+                        <figcaption><b>Encoder &amp; Dynamics training.</b> The encoder <i>e</i> maps an observation <i>o<sub>t</sub></i> to a latent state <i>z<sub>t</sub></i>. Dynamics <i>f</i> auto-regressively predicts future latents <i>&zcaron;<sub>t+1</sub>,&hellip;,&zcaron;<sub>t+H</sub></i> from action inputs, trained on a multi-step MSE loss <i>&Lscr;<sub>e,f</sub></i> against stop-gradient targets from fresh encoder passes on subsequent observations.</figcaption>
+                    </figure>
+                    <figure class="figpanel" id="figpanel-4b" data-fig="4b" role="tabpanel">
+                        <img src="Media/Image/method/fig4b-reward.png" loading="lazy" alt="Reward training diagram: agent transition scores are minimized while demonstration transition scores are maximized, with a gradient penalty.">
+                        <figcaption><b>Reward training.</b> The reward <i>r</i> is trained contrastively &mdash; agent transition scores <i>(z,&thinsp;z&prime;)</i> are pushed down while demonstration transition scores <i>(z<sub>demo</sub>,&thinsp;z&prime;<sub>demo</sub>)</i> are pushed up. A gradient penalty over interpolated latent pairs regularizes it, yielding the loss <i>&Lscr;<sub>r</sub></i>.</figcaption>
+                    </figure>
+                    <figure class="figpanel" id="figpanel-5" data-fig="5" role="tabpanel">
+                        <img src="Media/Image/method/fig5-lambda-return.png" loading="lazy" alt="MPAIL2 lambda-return diagram: encoder, policy, dynamics, reward and value unrolled over the horizon to compute the lambda-return for actor-critic updates.">
+                        <figcaption><b>MPAIL2 &lambda;-return.</b> Components unroll over horizon <i>H</i>: the encoder produces <i>z<sub>t</sub></i>, the policy proposes action sequences <i>&acirc;<sub>t</sub>,&hellip;,&acirc;<sub>t+H</sub></i>, dynamics predicts next latents, reward scores transitions, and the value <i>Q</i> estimates returns &mdash; together computing the &lambda;-return <i>G<sub>t</sub><sup>&lambda;</sup></i> for actor-critic updates.</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
