@@ -738,17 +738,17 @@ function initResultsTunnel() {
     //   { prefix, max, task } = iteration-swappable training clip (prefix + "<iter>.mp4", iters 0..max step 10)
     //   { src, task, badges } = a single fixed clip
     function cellVideo(methodKey, col) {
-        if (col === 'res-bp' || col === 'res-pnp') {
-            const t = col === 'res-bp' ? { dir: 'Push', task: 'Block Push', max: 100 }
-                                       : { dir: 'Pick', task: 'Pick-and-Place', max: 150 };
+        if (col === 'res-bp' || col === 'res-pnp' || col === 'res-mop') {
+            const t = col === 'res-bp'  ? { dir: 'Push', task: 'Block Push',     max: 100 }
+                    : col === 'res-pnp' ? { dir: 'Pick', task: 'Pick-and-Place', max: 150 }
+                                        : { dir: 'MoP',  task: 'Mug-on-Plate',   max: 200, baselineMax: 140 };
             if (methodKey === 'mpail2') return { prefix: 'Media/Video/' + t.dir + '/iter_', max: t.max, task: t.task };
             const f = FOLDER[methodKey];
             if (!f) return null;                       // BC has no training clip
-            return { prefix: 'Media/Video/Comparison/' + f + '/' + t.dir + '/iter_', max: t.max, task: t.task };
+            return { prefix: 'Media/Video/Comparison/' + f + '/' + t.dir + '/iter_', max: t.baselineMax ?? t.max, task: t.task };
         }
         if (methodKey !== 'mpail2') return null;       // the remaining columns are MPAIL2-only
         switch (col) {
-            case 'res-mop': return { prefix: 'Media/Video/MoP/iter_', max: 200, task: 'Mug-on-Plate' };
             case 'tr-bp':  return { prefix: 'Media/Video/Transfer/Push/iter_', max: 100, task: 'Block Push · transferred' };
             case 'tr-pnp': return { prefix: 'Media/Video/Transfer/Pick/iter_', max: 150, task: 'Pick-and-Place · transferred' };
             case 'sc-bp':  return { prefix: 'Media/Video/From%20Scratch/Push/iter_', max: 100, task: 'Block Push · from scratch' };
@@ -760,10 +760,13 @@ function initResultsTunnel() {
 
     // each claim stages a small set of (method, column) cells, plus an explanatory note
     const CLAIM_CELLS = {
-        world:       [['mpail2', 'res-bp'], ['dac', 'res-bp'], ['mpail2', 'res-pnp'], ['dac', 'res-pnp']],
-        planning:    [['mpail2', 'res-bp'], ['mairl', 'res-bp'], ['mpail2', 'res-pnp'], ['mairl', 'res-pnp']],
+        world:       [['mpail2', 'res-bp'], ['dac', 'res-bp'], ['mpail2', 'res-pnp'], ['dac', 'res-pnp'],
+                      ['mpail2', 'res-mop'], ['dac', 'res-mop']],
+        planning:    [['mpail2', 'res-bp'], ['mairl', 'res-bp'], ['mpail2', 'res-pnp'], ['mairl', 'res-pnp'],
+                      ['mpail2', 'res-mop'], ['mairl', 'res-mop']],
         supervision: [['mpail2', 'res-bp'], ['mairl', 'res-bp'], ['dac', 'res-bp'], ['rlpd', 'res-bp'],
-                      ['mpail2', 'res-pnp'], ['mairl', 'res-pnp'], ['dac', 'res-pnp'], ['rlpd', 'res-pnp']],
+                      ['mpail2', 'res-pnp'], ['mairl', 'res-pnp'], ['dac', 'res-pnp'], ['rlpd', 'res-pnp'],
+                      ['mpail2', 'res-mop'], ['mairl', 'res-mop'], ['dac', 'res-mop'], ['rlpd', 'res-mop']],
         transfer:    [['mpail2', 'sc-bp'], ['mpail2', 'tr-bp'], ['mpail2', 'sc-pnp'], ['mpail2', 'tr-pnp']],
         video:       [['mpail2', 'vid-bp']]
     };
@@ -2482,7 +2485,7 @@ function updateIteration(value) {
     if (iteration === 0) {
         timeSpent.textContent = '0';
     } else {
-        const rate = currentTask === 'pick-place' ? (68 / 150) : (49 / 100);
+        const rate = currentTask === 'pick-place' ? (68 / 150) : (currentTask === 'mug-on-plate' ? (100 / 200) : (49 / 100));
         const minutes = Math.round(iteration * rate);
         timeSpent.textContent = `~${minutes} min`;
     }
@@ -2530,32 +2533,45 @@ function selectTask(task) {
         document.getElementById('transfer-section').classList.remove('task-pick-place');
     }
 
+    // Hide transfer section entirely for Mug on Plate (no transfer results)
+    const transferSection = document.getElementById('transfer-section');
+    if (transferSection) {
+        transferSection.style.display = task === 'mug-on-plate' ? 'none' : '';
+    }
+
     updateSliderRange();
     updateVideo();
     updateSampleMethodVideo();
-    updateTransferVideo();
     updateDemonstrationVideos();
-    updateTransferDemonstrationVideos();
-    updateInitialDemonstrationVideos();
     updateResultsImages();
+    if (task !== 'mug-on-plate') {
+        updateTransferVideo();
+        updateTransferDemonstrationVideos();
+        updateInitialDemonstrationVideos();
+    }
     if (typeof refreshCharts === 'function') refreshCharts();
 }
 
 function updateSliderRange() {
-    const maxIter = currentTask === 'push' ? 100 : 150;
+    const maxIter = currentTask === 'push' ? 100 : (currentTask === 'pick-place' ? 150 : 200);
 
     const slider = document.getElementById('iteration-slider');
-    slider.max = maxIter;
-    if (parseInt(slider.value) > maxIter) slider.value = maxIter;
-    rebuildDots('slider-dots', maxIter, parseInt(slider.value));
-    updateIteration(slider.value);
+    if (slider) {
+        slider.max = maxIter;
+        if (parseInt(slider.value) > maxIter) slider.value = maxIter;
+        rebuildDots('slider-dots', maxIter, parseInt(slider.value));
+        updateIteration(slider.value);
+    }
 
-    const transferSlider = document.getElementById('transfer-iteration-slider');
-    transferSlider.max = maxIter;
-    if (parseInt(transferSlider.value) > maxIter) transferSlider.value = maxIter;
-    rebuildDots('transfer-slider-dots', maxIter, parseInt(transferSlider.value));
-    updateTransferIteration(transferSlider.value);
-
+    if (currentTask !== 'mug-on-plate') {
+        const transferSlider = document.getElementById('transfer-iteration-slider');
+        if (transferSlider) {
+            transferSlider.max = maxIter;
+            if (parseInt(transferSlider.value) > maxIter) transferSlider.value = maxIter;
+            rebuildDots('transfer-slider-dots', maxIter, parseInt(transferSlider.value));
+            updateTransferIteration(transferSlider.value);
+        }
+    }
 }
 
 function rebuildDots(containerId, maxIter, currentValue) {
@@ -2572,7 +2588,8 @@ function rebuildDots(containerId, maxIter, currentValue) {
         if (checkmarksContainer) {
             const pushCheckValues = [60, 70, 80, 90, 100];
             const pickPlaceCheckValues = [60, 70, 100, 110, 120, 130, 140];
-            const checkValues = currentTask === 'push' ? pushCheckValues : pickPlaceCheckValues;
+            const mopCheckValues = [100, 120, 140, 160, 180, 200];
+            const checkValues = currentTask === 'push' ? pushCheckValues : (currentTask === 'pick-place' ? pickPlaceCheckValues : mopCheckValues);
             checkmarksContainer.innerHTML = '';
             for (let i = 0; i <= maxIter; i += 10) {
                 const span = document.createElement('span');
@@ -2598,6 +2615,7 @@ function rebuildDots(containerId, maxIter, currentValue) {
 }
 
 function updateResultsImages() {
+    if (currentTask === 'mug-on-plate') return;
     const folder = currentTask === 'push' ? 'Push' : 'Pick';
     const tableImg = document.getElementById('results-table-img');
     if (tableImg) tableImg.src = `Media/Image/Results/${folder}_table.png`;
@@ -2606,7 +2624,7 @@ function updateResultsImages() {
 }
 
 function updateDemonstrationVideos() {
-    const taskFolder = currentTask === 'push' ? 'Push' : 'Pick';
+    const taskFolder = currentTask === 'push' ? 'Push' : (currentTask === 'pick-place' ? 'Pick' : 'MoP');
     const demoVideos = document.querySelectorAll('.demo-video');
     
     demoVideos.forEach((video, index) => {
@@ -2690,9 +2708,11 @@ function updateSampleMethodVideo() {
         // Sections (and slider) not yet loaded; nothing to update
         return;
     }
-    const iteration = parseInt(iterationSliderEl.value);
+    let iteration = parseInt(iterationSliderEl.value);
     const folder = sampleMethodFolderMap[currentSampleMethod] || 'mpail2_p';
-    const taskFolder = currentTask === 'push' ? 'Push' : 'Pick';
+    const taskFolder = currentTask === 'push' ? 'Push' : (currentTask === 'pick-place' ? 'Pick' : 'MoP');
+    // MoP baseline videos only go to iter_140; clamp so we don't request a missing file
+    if (currentTask === 'mug-on-plate') iteration = Math.min(iteration, 140);
     const videoPath = `Media/Video/Comparison/${folder}/${taskFolder}/iter_${iteration}.mp4`;
     const video = document.getElementById('sample-method-video');
     if (!video) return;
@@ -2715,7 +2735,7 @@ function updateVideo() {
     }
     const iteration = parseInt(iterationSliderEl.value);
 
-    const taskFolder = currentTask === 'push' ? 'Push' : 'Pick';
+    const taskFolder = currentTask === 'push' ? 'Push' : (currentTask === 'pick-place' ? 'Pick' : 'MoP');
     const videoPath = `Media/Video/${taskFolder}/iter_${iteration}.mp4`;
 
     videoLeft.classList.add('loading');

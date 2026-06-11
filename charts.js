@@ -628,11 +628,11 @@ function renderCharts() {
     if (efficiencyChart) { efficiencyChart.destroy(); efficiencyChart = null; }
     destroyTransferCharts();
 
-    const task      = (window.currentTask === 'pick-place') ? 'pick' : 'push';
-    const taskLabel = (task === 'pick') ? 'Pick and Place' : 'Block Push';
+    const task      = (window.currentTask === 'pick-place') ? 'pick' : (window.currentTask === 'mug-on-plate' ? 'mop' : 'push');
+    const taskLabel = (task === 'pick') ? 'Pick and Place' : (task === 'mop' ? 'Mug on Plate' : 'Block Push');
 
     const effData  = chartData.efficiency?.[task];
-    const trData   = chartData.transfer?.[task];
+    const trData   = (task !== 'mop') ? chartData.transfer?.[task] : null;
     const newTaskX = (task === 'pick')
         ? (chartData.transfer?.meta?.new_task_x_pick ?? null)
         : (chartData.transfer?.meta?.new_task_x_push ?? null);
@@ -641,7 +641,7 @@ function renderCharts() {
     // creating a Chart on a display:none / 0-size canvas can throw and abort the rest of this function
     const visible = (id) => { const el = document.getElementById(id); return !!el && el.offsetWidth > 0; };
     try {
-        if (effData && visible('efficiency-chart')) {
+        if (effData && Object.keys(effData).length > 0 && visible('efficiency-chart')) {
             efficiencyChart = createResultChart(
                 'efficiency-chart', 'efficiency-chart-legend',
                 `Sample Efficiency – Real: ${taskLabel}`, effData
@@ -669,7 +669,7 @@ const CLAIM_PLOT_METHODS = {
     planning:    ['MPAIL2', '[−P] (MAIRL)'],
     supervision: ['MPAIL2', '[−P] (MAIRL)', '[−PM] (DAC)', 'RLPD'],
 };
-const PLOT_TASKS = [['push', 'Block Push', []], ['pick', 'Pick-and-Place', [7, 4]]];
+const PLOT_TASKS = [['push', 'Block Push', []], ['pick', 'Pick-and-Place', [7, 4]], ['mop', 'Mug on Plate', [3, 3]]];
 const AGG_GRID = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];   // % of training
 
 // sample a series at a fraction p∈[0,1] of its own training schedule (linear interpolation)
@@ -698,7 +698,7 @@ function aggregateEfficiency(key) {
     const out = {};
     groups.forEach(([label, methodList]) => {
         const series = [];
-        methodList.forEach(m => ['push', 'pick'].forEach(t => { const eff = chartData && chartData.efficiency && chartData.efficiency[t]; if (eff && eff[m]) series.push(eff[m]); }));
+        methodList.forEach(m => ['push', 'pick', 'mop'].forEach(t => { const eff = chartData && chartData.efficiency && chartData.efficiency[t]; if (eff && eff[m]) series.push(eff[m]); }));
         if (!series.length) return;
         const x = [], mean = [], std = [];
         AGG_GRID.forEach(p => {
@@ -759,8 +759,9 @@ function aggregateTransfer() {
 // table method key → efficiency-series label, and result column → its task curve
 const EFF_METHOD = { mpail2: 'MPAIL2', mairl: '[−P] (MAIRL)', dac: '[−PM] (DAC)', rlpd: 'RLPD' };
 const COL_TASK = {
-    'res-bp':  { task: 'push', label: 'Block Push', dash: [] },
-    'res-pnp': { task: 'pick', label: 'Pick-and-Place', dash: [7, 4] },
+    'res-bp':  { task: 'push', label: 'Block Push',      dash: []     },
+    'res-pnp': { task: 'pick', label: 'Pick-and-Place',  dash: [7, 4] },
+    'res-mop': { task: 'mop',  label: 'Mug on Plate',    dash: [3, 3] },
 };
 // the "Claim" (aggregated) view is only meaningful with a claim selected; grey it out otherwise
 function setClaimBtnEnabled(on) {
