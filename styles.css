@@ -3405,13 +3405,14 @@ body.results-fullwidth .results-interactive {
     margin-left: 0; margin-right: 0;
 }
 /* the table expands to its full content; the RQ box expands a comparable amount (wider than its normal
-   290px) so the two columns stay balanced — but the block grows only as much as the table needs */
+   290px) so the two columns stay balanced. The block grows only as much as the table needs, but never
+   past the viewport — if the table is still wider, it scrolls within its panel instead of the page. */
 body.results-fullwidth .results-explore {
-    width: -moz-max-content; width: max-content; max-width: none; margin-left: 0; margin-right: 0;
+    width: 100%; max-width: 100%; margin-left: 0; margin-right: 0;
 }
 body.results-fullwidth .results-panel--q { flex: 0 0 clamp(300px, 24vw, 400px); }
-body.results-fullwidth .results-panel--right { flex: 0 0 auto; width: -moz-max-content; width: max-content; }
-body.results-fullwidth .results-table-scroll { overflow-x: visible; }
+body.results-fullwidth .results-panel--right { flex: 1 1 0; min-width: 0; }
+body.results-fullwidth .results-table-scroll { overflow-x: auto; }
 body.results-fullwidth .results-block--table .results-html-table { width: -moz-max-content; width: max-content; }
 /* controls bar and stage fill that table-driven width (they don't widen it themselves) */
 body.results-fullwidth .results-controls,
