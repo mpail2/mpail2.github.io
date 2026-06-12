@@ -4158,6 +4158,7 @@ body.story-pip-on .story__pip{display:block;}   /* the fly-in/out is FLIP-animat
 .contrib:hover .contrib__more, .contrib:focus-within .contrib__more{transform:rotate(45deg); color:var(--ca);}
 .contrib__lead{margin:11px 0 0; font-size:.92rem; line-height:1.55; color:#c2c9d6;}
 .contrib__lead b{color:#fff;}
+.contrib__claims .contrib__lead{margin:0;}   /* the collapsible wrapper provides the spacing on expand */
 /* collapsible claims via the grid 0fr -> 1fr trick */
 .contrib__claims{display:grid; grid-template-rows:0fr; transition:grid-template-rows .35s ease, margin-top .35s ease;}
 .contrib__claims-inner{overflow:hidden; min-height:0; opacity:0; transition:opacity .3s ease;}
