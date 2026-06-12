@@ -3114,8 +3114,6 @@ body.dark-mode .tv-chip.is-on { color: #0e1117; background: #a5b4fc; border-colo
     text-align: left; font-size: 0.9em; line-height: 1.5; color: #374151;
     max-width: 70ch; margin: 0; max-height: 0; overflow: hidden; opacity: 0;
     transition: max-height .35s ease, opacity .35s ease, margin .35s ease;
-    /* stay put when the (wide) table block scrolls horizontally with the page in full-width */
-    position: sticky; left: 0;
 }
 .tv-caption.is-on { max-height: 120px; opacity: 1; margin: 12px 0 4px; }
 body.dark-mode .tv-caption { color: #c7cdda; }
