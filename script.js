@@ -623,7 +623,7 @@ function initResultsTunnel() {
             text: 'Less supervision does not mean less performance. MPAIL2 and its IRL ablations use no hand-designed reward and no action supervision, yet match or beat BC and RLPD, which are given both.'
         },
         transfer: {
-            rows: ['mpail2', 'mairl', 'bc'], cols: ['tr-bp', 'tr-pnp'],
+            rows: ['mpail2', 'mairl', 'bc'], cols: ['tr-bp', 'tr-pnp', 'sc-bp', 'sc-pnp'],
             text: 'Positive online transfer. Initialized from a first task and continued on a related one, MPAIL2 retains high success (90% / 94%) where BC degrades — the first real-world demonstration of positive online transfer in IRLfO.'
         },
         video: {
@@ -1078,19 +1078,19 @@ function initMethodExplorer() {
     const COMP = {
         task:     { label: 'Task Observations', regions: [[2, 2, 996, 141], [730, 172, 90, 86]],
                     desc: 'Expert demonstrations &mdash; <strong>observation-only</strong>, with no rewards or action labels.' },
-        encoder:  { label: 'Encoder', regions: [[244, 338, 206, 134]], ref: ['4a', 'Fig 4a'],
+        encoder:  { label: 'Encoder', regions: [[244, 338, 206, 134]], ref: ['4a', 'Architecture'],
                     desc: 'Maps a raw observation into a compact latent state \\(z = e(o)\\). All planning and learning happen in this latent space.' },
-        dynamics: { label: 'Dynamics', regions: [[468, 228, 78, 254]], ref: ['4a', 'Fig 4a'],
+        dynamics: { label: 'Dynamics', regions: [[468, 228, 78, 254]], ref: ['4a', 'Architecture'],
                     desc: 'The learned world model \\(f(z,a)\\) predicts the next latent state, letting the agent imagine rollouts without touching the real world.' },
-        value:    { label: 'Value', regions: [[578, 222, 72, 300]], ref: ['5', 'Fig 5'],
+        value:    { label: 'Value', regions: [[578, 222, 72, 300]], ref: ['5', 'Architecture'],
                     desc: 'The off-policy value \\(Q(z,a)\\) bootstraps long-horizon return beyond the planning horizon, learned from replayed experience.' },
-        reward:   { label: 'Inferred Reward', regions: [[512, 336, 100, 176]], ref: ['4b', 'Fig 4b'],
+        reward:   { label: 'Inferred Reward', regions: [[512, 336, 100, 176]], ref: ['4b', 'Architecture'],
                     desc: 'An adversarial (IRL) reward \\(r(z,z\')\\) scores transitions by how expert-like they look &mdash; inferred, never hand-designed.' },
-        policy:   { label: 'Policy', regions: [[348, 472, 128, 90]], ref: ['5', 'Fig 5'],
+        policy:   { label: 'Policy', regions: [[348, 472, 128, 90]], ref: ['5', 'Architecture'],
                     desc: 'A multi-step policy \\(\\pi(a\\mid z)\\) proposes action sequences; it warm-starts the planner and is optimized against the value.' },
         // planner = the initial observation / robot (panel ①), the imagined MPPI rollouts, the camera,
         // and where the robot actually executes the plan (right scene)
-        planner:  { label: 'Planner (MPPI)', regions: [[360, 240, 130, 296], [490, 360, 160, 172], [700, 292, 290, 270]], video: true, ref: ['mppi', 'Alg 2'],
+        planner:  { label: 'Planner (MPPI)', regions: [[360, 240, 130, 296], [490, 360, 160, 172], [700, 292, 290, 270]], video: true, ref: ['mppi', 'Algorithm'],
                     desc: 'At act-time, MPPI rolls randomly sampled- and policy-proposal plans through the dynamics, scores them with reward + value, and executes a robust plan \\(\\widehat{\\Pi}\\) on the robot.' },
         replay:   { label: 'Replay Buffer', regions: [[684, 158, 298, 142]],
                     desc: 'Real interactions \\((o,a,o\')\\) are stored and replayed, so every component learns <strong>off-policy</strong> and sample-efficiently.' }
@@ -1246,7 +1246,7 @@ function initMethodExplorer() {
     // Encoder & Dynamics are trained jointly (Alg. step 4) — focusing either lifts both as one.
     const MERGE = { encoder: 'encdyn', dynamics: 'encdyn' };
     const GROUP = { encdyn: ['encoder', 'dynamics'] };
-    const GROUP_INFO = { encdyn: { label: 'Encoder &amp; Dynamics', col: COL.encoder, ref: ['4a', 'Fig 4a'],
+    const GROUP_INFO = { encdyn: { label: 'Encoder &amp; Dynamics', col: COL.encoder, ref: ['4a', 'Architecture'],
         desc: 'Trained jointly: the encoder \\(e\\) maps an observation to a latent state and the dynamics \\(f\\) predicts the next latent (loss \\(\\mathcal{L}_{e,f}\\)).' } };
     const expand = (ids) => { const out = []; ids.forEach(id => (MERGE[id] ? GROUP[MERGE[id]] : [id]).forEach(g => { if (out.indexOf(g) < 0) out.push(g); })); return out; };
 
