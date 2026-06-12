@@ -243,46 +243,28 @@
 <!-- Key contributions (from the paper) — each card expands into its claims on hover/focus -->
 <section class="project-info scroll-section" id="key-results-section">
     <div class="project-info-inner">
-        <h2 class="section-header">Key Contributions</h2>
-        <p class="section-subtitle contrib-sub">Hover a contribution to see the claims behind it.</p>
+        <h2 class="section-header">Main Contributions</h2>
         <div class="contrib-list">
-            <article class="contrib contrib--a" tabindex="0">
+            <article class="contrib contrib--a">
                 <div class="contrib__head">
                     <span class="contrib__num">1</span>
                     <h3 class="contrib__title">An online, off-policy latent world-modeling framework</h3>
-                    <span class="contrib__more" aria-hidden="true">+</span>
                 </div>
                 <p class="contrib__lead">A single framework that improves the encoder, dynamics, reward, value, and policy <b>together</b>, learning from observations and interaction alone.</p>
-                <div class="contrib__claims"><div class="contrib__claims-inner"><ul>
-                    <li>Needs <b>no hand-designed rewards, no simulation, no pre-training or prior data, and no action supervision</b>.</li>
-                    <li>The <b>first</b> IRL method to learn visual manipulation (pushing, pick-and-place) in the real world <b>from scratch</b>.</li>
-                    <li>Reaches <b>82% pick-and-place success in under 40 minutes</b>, where RL and BC reach only <b>0% and 12%</b> at matched interaction budgets, despite being given rewards and action labels.</li>
-                </ul></div></div>
             </article>
-            <article class="contrib contrib--b" tabindex="0">
+            <article class="contrib contrib--b">
                 <div class="contrib__head">
                     <span class="contrib__num">2</span>
                     <h3 class="contrib__title">World modeling and planning are each critical for real-world IRLfO</h3>
-                    <span class="contrib__more" aria-hidden="true">+</span>
                 </div>
                 <p class="contrib__lead">Simulated and real-world experiments isolating what makes practical, on-robot inverse RL from observation actually work.</p>
-                <div class="contrib__claims"><div class="contrib__claims-inner"><ul>
-                    <li>Ablating the three pillars &mdash; <b>latent planning [P]</b>, a learned <b>dynamics model [M]</b>, and <b>off-policy learning [O]</b> &mdash; each degrades real-world feasibility.</li>
-                    <li>Planning-based learners are <b>substantially more robust</b> than policy networks.</li>
-                </ul></div></div>
             </article>
-            <article class="contrib contrib--c" tabindex="0">
+            <article class="contrib contrib--c">
                 <div class="contrib__head">
                     <span class="contrib__num">3</span>
-                    <h3 class="contrib__title">Scalable real-world learning via transfer and video-only demos</h3>
-                    <span class="contrib__more" aria-hidden="true">+</span>
+                    <h3 class="contrib__title">Scalable real-world robot learning through positive online transfer and video-only demonstration</h3>
                 </div>
                 <p class="contrib__lead">Experiments supporting robot learning approaches that can scale directly in the real world.</p>
-                <div class="contrib__claims"><div class="contrib__claims-inner"><ul>
-                    <li>The <b>first</b> demonstration of <b>positive online task transfer</b> directly in the real world, without offline pre-training.</li>
-                    <li>Learns from <b>observation-only (video)</b> demonstrations, with no action labels.</li>
-                    <li>Opens the door to scalable data sources such as <b>end-user and cross-embodiment</b> demonstrations.</li>
-                </ul></div></div>
             </article>
         </div>
     </div>
