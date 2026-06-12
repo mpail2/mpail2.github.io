@@ -628,11 +628,17 @@ function renderCharts() {
     if (efficiencyChart) { efficiencyChart.destroy(); efficiencyChart = null; }
     destroyTransferCharts();
 
-    const task      = (window.currentTask === 'pick-place') ? 'pick' : (window.currentTask === 'mug-on-plate' ? 'mop' : 'push');
-    const taskLabel = (task === 'pick') ? 'Pick and Place' : (task === 'mop' ? 'Mug on Plate' : 'Block Push');
+    const task      = (window.currentTask === 'pick-place') ? 'pick'
+                    : (window.currentTask === 'mug-on-plate') ? 'mop'
+                    : (window.currentTask === 'vid-bp') ? 'vid'
+                    : 'push';
+    const taskLabel = (task === 'pick') ? 'Pick and Place'
+                    : (task === 'mop') ? 'Mug on Plate'
+                    : (task === 'vid') ? 'Block Push (Video-only)'
+                    : 'Block Push';
 
     const effData  = chartData.efficiency?.[task];
-    const trData   = (task !== 'mop') ? chartData.transfer?.[task] : null;
+    const trData   = (task !== 'mop' && task !== 'vid') ? chartData.transfer?.[task] : null;
     const newTaskX = (task === 'pick')
         ? (chartData.transfer?.meta?.new_task_x_pick ?? null)
         : (chartData.transfer?.meta?.new_task_x_push ?? null);
@@ -663,13 +669,14 @@ function refreshCharts() {
 
 // ─── Per-claim efficiency plot (Focus mode) ──────────────────────────────────
 // One dynamic plot per claim, overlaying every relevant task on a single canvas:
-// method → colour, task → line dash. Efficiency-based claims only (video has none).
+// method → colour, task → line dash. Efficiency-based claims only.
 const CLAIM_PLOT_METHODS = {
     world:       ['MPAIL2', '[−P] (MAIRL)', '[−PM] (DAC)'],
     planning:    ['MPAIL2', '[−P] (MAIRL)'],
     supervision: ['MPAIL2', '[−P] (MAIRL)', '[−PM] (DAC)', 'RLPD'],
+    video:       ['MPAIL2', '[−P] (MAIRL)'],
 };
-const PLOT_TASKS = [['push', 'Block Push', []], ['pick', 'Pick-and-Place', [7, 4]], ['mop', 'Mug on Plate', [3, 3]]];
+const PLOT_TASKS = [['push', 'Block Push', []], ['pick', 'Pick-and-Place', [7, 4]], ['mop', 'Mug on Plate', [3, 3]], ['vid', 'Block Push (Video)', [2, 3]]];
 const AGG_GRID = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];   // % of training
 
 // sample a series at a fraction p∈[0,1] of its own training schedule (linear interpolation)
@@ -698,7 +705,7 @@ function aggregateEfficiency(key) {
     const out = {};
     groups.forEach(([label, methodList]) => {
         const series = [];
-        methodList.forEach(m => ['push', 'pick', 'mop'].forEach(t => { const eff = chartData && chartData.efficiency && chartData.efficiency[t]; if (eff && eff[m]) series.push(eff[m]); }));
+        methodList.forEach(m => ['push', 'pick', 'mop', 'vid'].forEach(t => { const eff = chartData && chartData.efficiency && chartData.efficiency[t]; if (eff && eff[m]) series.push(eff[m]); }));
         if (!series.length) return;
         const x = [], mean = [], std = [];
         AGG_GRID.forEach(p => {
@@ -759,9 +766,10 @@ function aggregateTransfer() {
 // table method key → efficiency-series label, and result column → its task curve
 const EFF_METHOD = { mpail2: 'MPAIL2', mairl: '[−P] (MAIRL)', dac: '[−PM] (DAC)', rlpd: 'RLPD' };
 const COL_TASK = {
-    'res-bp':  { task: 'push', label: 'Block Push',      dash: []     },
-    'res-pnp': { task: 'pick', label: 'Pick-and-Place',  dash: [7, 4] },
-    'res-mop': { task: 'mop',  label: 'Mug on Plate',    dash: [3, 3] },
+    'res-bp':  { task: 'push', label: 'Block Push',           dash: []     },
+    'res-pnp': { task: 'pick', label: 'Pick-and-Place',       dash: [7, 4] },
+    'res-mop': { task: 'mop',  label: 'Mug on Plate',         dash: [3, 3] },
+    'vid-bp':  { task: 'vid',  label: 'Block Push (Video)',   dash: [2, 3] },
 };
 // the "Claim" (aggregated) view is only meaningful with a claim selected; grey it out otherwise
 function setClaimBtnEnabled(on) {
