@@ -70,29 +70,29 @@
                                 </thead>
                                 <tbody>
                                     <tr class="table-group-header">
-                                        <td colspan="4">Real &mdash; 64&times;64 RGB (fixed + wrist) &nbsp;&middot;&nbsp; Franka: Push &nbsp;&middot;&nbsp; Kinova Gen3: PnP &nbsp;&middot;&nbsp; 3 seeds</td>
+                                        <td colspan="4">Real &mdash; 64&times;64 RGB (external + wrist) &nbsp;&middot;&nbsp; Franka: Push &nbsp;&middot;&nbsp; Kinova Gen3: PnP &nbsp;&middot;&nbsp; 3 seeds</td>
                                     </tr>
                                     <tr>
                                         <td>Block Push</td>
-                                        <td>image</td>
+                                        <td>images + proprioception</td>
                                         <td>5&times;5&times;5 cm &nbsp;<span class="reset-region">(18&times;18 cm)</span></td>
                                         <td>10 <span class="trans-count">(1,451 trans.)</span></td>
                                     </tr>
                                     <tr>
                                         <td>Pick-and-Place</td>
-                                        <td>image</td>
+                                        <td>images + proprioception</td>
                                         <td>4&times;4&times;3 cm &nbsp;<span class="reset-region">(8&times;16 cm)</span></td>
                                         <td>10 <span class="trans-count">(1,025 trans.)</span></td>
                                     </tr>
                                     <tr>
                                         <td>Mug-on-Plate</td>
-                                        <td>image</td>
+                                        <td>images + proprioception</td>
                                         <td>mug &empty;8&times;9 cm <span class="reset-region">(18&times;18 cm)</span>, plate &empty;14 cm <span class="reset-region">(20&times;30 cm)</span></td>
                                         <td>15 <span class="trans-count">(1,802 trans.)</span></td>
                                     </tr>
                                     <tr>
                                         <td>Block Push <em>(Video)</em></td>
-                                        <td>fixed-only</td>
+                                        <td>external image only</td>
                                         <td>5&times;5&times;5 cm &nbsp;<span class="reset-region">(18&times;18 cm)</span></td>
                                         <td>10 <span class="trans-count">(914 trans.)</span></td>
                                     </tr>
@@ -125,7 +125,7 @@
                 </button>
                 <div class="rq-group__claims">
                     <button type="button" class="rq-claim" data-claim="world" data-rq="q1"><strong>World modeling is critical.</strong> Only IRL learners with a learned dynamics model gain any real-world traction; dropping the model collapses to 0%.</button>
-                    <button type="button" class="rq-claim" data-claim="planning" data-rq="q1"><strong>Planning enables robustness.</strong> The MPPI planner stabilizes the adversarial objective, yielding far more robust behavior than the policy alone.</button>
+                    <button type="button" class="rq-claim" data-claim="planning" data-rq="q1"><strong>Planning enables robustness.</strong> The planner mitigates adversarial instability, yielding far more robust behavior than the policy alone.</button>
                 </div>
             </div>
             <div class="rq-group" data-rq="q2">

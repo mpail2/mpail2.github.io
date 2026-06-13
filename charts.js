@@ -705,7 +705,7 @@ function aggregateEfficiency(key) {
     const out = {};
     groups.forEach(([label, methodList]) => {
         const series = [];
-        methodList.forEach(m => ['push', 'pick', 'mop', 'vid'].forEach(t => { const eff = chartData && chartData.efficiency && chartData.efficiency[t]; if (eff && eff[m]) series.push(eff[m]); }));
+        methodList.filter(m => !claimExMethods.has(m)).forEach(m => ['push', 'pick', 'mop', 'vid'].filter(t => !claimExTasks.has(t)).forEach(t => { const eff = chartData && chartData.efficiency && chartData.efficiency[t]; if (eff && eff[m]) series.push(eff[m]); }));
         if (!series.length) return;
         const x = [], mean = [], std = [];
         AGG_GRID.forEach(p => {
@@ -731,16 +731,19 @@ function interpAtX(s, xt) {
     }
     return { mean: s.mean[last], std: s.std[last] };
 }
-// Transfer claim, aggregated: MPAIL2's Transferred vs From-Scratch runs, averaged over both tasks
+// Transfer claim, aggregated: each method's Transferred vs From-Scratch runs, averaged over both tasks
 // against the new-task training progress (%) — conveys positive online transfer in one contrast.
+// [label, {push, pick} series keys, colour key (method), dash]. Solid = transferred, dashed = from scratch.
 const TRANSFER_AGG = [
-    ['Transferred', { push: 'MPAIL2 (Full Transfer)', pick: 'MPAIL2 (Transferred)' }, []],
-    ['From Scratch', { push: 'MPAIL2 (From Scratch)', pick: 'MPAIL2 (From Scratch)' }, [6, 4]],
+    ['MPAIL2 · Transferred', { push: 'MPAIL2 (Full Transfer)', pick: 'MPAIL2 (Transferred)' }, 'MPAIL2', []],
+    ['MPAIL2 · From Scratch', { push: 'MPAIL2 (From Scratch)', pick: 'MPAIL2 (From Scratch)' }, 'MPAIL2', [6, 4]],
+    ['[−P] (MAIRL) · Transferred', { push: '[−P] (MAIRL) (Full Transfer)', pick: '[−P] (MAIRL) (Transferred)' }, '[−P] (MAIRL)', []],
+    ['[−P] (MAIRL) · From Scratch', { push: '[−P] (MAIRL) (From Scratch)', pick: '[−P] (MAIRL) (From Scratch)' }, '[−P] (MAIRL)', [6, 4]],
 ];
 function aggregateTransfer() {
     const meta = (chartData && chartData.transfer && chartData.transfer.meta) || {};
     const out = {};
-    TRANSFER_AGG.forEach(([label, keys, dash]) => {
+    TRANSFER_AGG.forEach(([label, keys, colorKey, dash]) => {
         const runs = [];
         ['push', 'pick'].forEach(t => {
             const tr = chartData && chartData.transfer && chartData.transfer[t];
@@ -757,7 +760,7 @@ function aggregateTransfer() {
             runs.forEach(({ s, ntx, xmax }) => { const v = interpAtX(s, ntx + (p / 100) * (xmax - ntx)); if (v) { sm += v.mean; ss += v.std; n++; } });
             if (n) { x.push(p); mean.push(+(sm / n).toFixed(4)); std.push(+(ss / n).toFixed(4)); }
         });
-        if (!ALGO_STYLES[label]) { const base = styleFor(label === 'Transferred' ? 'MPAIL2' : 'MPAIL2 (From Scratch)'); ALGO_STYLES[label] = { line: base.line, fill: base.fill, dash: dash, width: 2.5 }; }
+        if (!ALGO_STYLES[label]) { const base = styleFor(colorKey); ALGO_STYLES[label] = { line: base.line, fill: base.fill, dash: dash, width: 2.5 }; }
         out[label] = { x, mean, std };
     });
     return out;
@@ -781,9 +784,14 @@ function setClaimBtnEnabled(on) {
 }
 
 let currentClaimKey = null, currentSelection = null, plotView = 'claim', claimCharts = [];
+// per-claim filters: methods/tasks the viewer has toggled OFF in the claim efficiency plots
+let claimExMethods = new Set(), claimExTasks = new Set();
 function clearClaimCharts() { claimCharts.forEach(c => c && c.destroy()); claimCharts = []; }
 function renderClaimPlot(key) {
-    if (key && key[0] !== '_') { currentClaimKey = key; currentSelection = null; }   // entering claim mode
+    if (key && key[0] !== '_') {
+        if (key !== currentClaimKey) { claimExMethods.clear(); claimExTasks.clear(); }   // fresh filters per claim
+        currentClaimKey = key; currentSelection = null;                                  // entering claim mode
+    }
     clearClaimCharts();
     const wrap = document.getElementById('results-plot');
     const hint = document.getElementById('results-plot-hint');
@@ -812,8 +820,10 @@ function renderClaimPlot(key) {
             show(true);
             wrap.insertAdjacentHTML('beforeend',
                 '<div class="results-chart-container results-chart-container--claim"><canvas id="claim-chart"></canvas></div><div id="claim-chart-legend"></div>');
+            // four series (MPAIL2 + MAIRL, each transferred/from-scratch) — use a legend, not on-line
+            // labels, since the labels are long and the MAIRL pair runs too close to label inline
             claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend',
-                'Transfer — transferred vs from scratch', agg, true, 'New-task progress (%)', true));
+                'Transfer — transferred vs from scratch', agg, true, 'New-task progress (%)', false));
             return;
         }
         // by task: the two per-task transfer plots, sharing ONE legend (built from the union of series)
@@ -849,28 +859,77 @@ function renderClaimPlot(key) {
 
     if (plotView === 'claim') {
         const agg = aggregateEfficiency(key);
-        if (!Object.keys(agg).length) { show(false); return; }
+        if (!Object.keys(agg).length) { show(true); claimEmptyNote(); renderClaimControls(key); return; }
         show(true);
         claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend',
             'Sample Efficiency Combined', agg, true, 'Training Progress (%)', true));
+        renderClaimControls(key);
         return;
     }
 
     // by-task overlay: one line per (method × task); colour = method, dash = task
     const merged = {};
     PLOT_TASKS.forEach(([task, taskLabel, dash]) => {
+        if (claimExTasks.has(task)) return;
         const eff = chartData && chartData.efficiency && chartData.efficiency[task];
         if (!eff) return;
         methods.forEach(m => {
-            if (!eff[m]) return;
+            if (claimExMethods.has(m) || !eff[m]) return;
             const mLabel = m + ' · ' + taskLabel;
             if (!ALGO_STYLES[mLabel]) { const base = styleFor(m); ALGO_STYLES[mLabel] = { line: base.line, fill: base.fill, dash: dash, width: base.width }; }
             merged[mLabel] = eff[m];
         });
     });
-    if (!Object.keys(merged).length) { show(false); return; }
+    if (!Object.keys(merged).length) { show(true); claimEmptyNote(); renderClaimControls(key); return; }
     show(true);
     claimCharts.push(createResultChart('claim-chart', 'claim-chart-legend', 'Individual Sample Efficiency ', merged, false));
+    renderClaimControls(key);
+}
+
+// when method/task filters leave nothing to plot, replace the chart with a gentle note (controls stay below)
+function claimEmptyNote() {
+    const c = document.querySelector('#results-plot .results-chart-container--claim');
+    if (c) c.innerHTML = '<p class="claim-plot-empty">No sample-efficiency curves for the current method / task selection.</p>';
+}
+
+// Filter controls under the claim efficiency plots: toggle methods (grouped by the claim line they feed)
+// and tasks in/out of the plot. In the aggregate view methods are clustered under their claim-line label
+// and tinted to that line's colour, so it is clear which line each method belongs to.
+function renderClaimControls(key) {
+    const wrap = document.getElementById('results-plot');
+    if (!wrap || !CLAIM_PLOT_METHODS[key]) return;
+    const claimMethods = CLAIM_PLOT_METHODS[key];
+    const groups = AGG_LABELS[key] || claimMethods.map(m => [m, [m]]);
+    const hasData = (m) => PLOT_TASKS.some(([t]) => chartData && chartData.efficiency && chartData.efficiency[t] && chartData.efficiency[t][m]);
+    const taskHasData = (t) => chartData && chartData.efficiency && chartData.efficiency[t] && claimMethods.some(m => chartData.efficiency[t][m]);
+    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const chip = (kind, id, label, col) => {
+        const off = (kind === 'method' ? claimExMethods : claimExTasks).has(id);
+        return '<button type="button" class="cpc-chip' + (off ? ' is-off' : '') + '" data-kind="' + kind +
+            '" data-id="' + esc(id) + '" style="--cc:' + col + '" aria-pressed="' + (!off) + '">' +
+            '<span class="cpc-chip__dot"></span>' + esc(label) + '</button>';
+    };
+
+    let methodsHtml = '';
+    if (plotView === 'claim' && AGG_LABELS[key]) {               // cluster methods under their claim line
+        groups.forEach(([glabel, mlist]) => {
+            const avail = mlist.filter(hasData);
+            if (!avail.length) return;
+            const col = styleFor(mlist[0]).line;
+            methodsHtml += '<div class="cpc-group" style="--gc:' + col + '"><span class="cpc-group__label">' + glabel + '</span>' +
+                avail.map(m => chip('method', m, m, col)).join('') + '</div>';
+        });
+    } else {                                                     // by-task: flat, each method its own colour
+        methodsHtml = claimMethods.filter(hasData).map(m => chip('method', m, m, styleFor(m).line)).join('');
+    }
+    const tasksHtml = PLOT_TASKS.filter(([t]) => taskHasData(t)).map(([t, tl]) => chip('task', t, tl, '#8a93a8')).join('');
+    if (!methodsHtml && !tasksHtml) return;
+
+    wrap.insertAdjacentHTML('beforeend',
+        '<div class="claim-plot-controls" id="claim-plot-controls">' +
+        '<div class="cpc-row"><span class="cpc-row__label">Methods</span><div class="cpc-row__items">' + methodsHtml + '</div></div>' +
+        '<div class="cpc-row"><span class="cpc-row__label">Tasks</span><div class="cpc-row__items">' + tasksHtml + '</div></div>' +
+        '</div>');
 }
 window.renderClaimPlot = renderClaimPlot;
 
@@ -919,6 +978,21 @@ document.addEventListener('click', e => {
     plotView = b.dataset.view;
     if (currentSelection) renderSelectionPlot(currentSelection);
     else if (currentClaimKey) renderClaimPlot(currentClaimKey);
+});
+
+// method / task filter chips under the claim efficiency plots — toggle a series in or out
+document.addEventListener('click', e => {
+    const chip = e.target.closest('#claim-plot-controls .cpc-chip');
+    if (!chip || !currentClaimKey || currentSelection) return;
+    const kind = chip.dataset.kind, id = chip.dataset.id;
+    const set = kind === 'method' ? claimExMethods : claimExTasks;
+    if (!set.has(id)) {                                          // turning OFF — keep at least one of this kind active
+        const items = Array.prototype.slice.call(chip.closest('.cpc-row').querySelectorAll('.cpc-chip'));
+        const active = items.filter(c => !c.classList.contains('is-off')).length;
+        if (active <= 1) return;
+    }
+    if (set.has(id)) set.delete(id); else set.add(id);
+    renderClaimPlot(currentClaimKey);
 });
 
 // Re-render on theme toggle

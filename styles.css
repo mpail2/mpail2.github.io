@@ -500,6 +500,13 @@ body.dark-mode .method-figtabs__lead span { color: #7f8aa0; }
 .figtab__chev { margin-left: 1px; font-size: 1.15em; opacity: .55; transition: transform .25s ease; }
 .figtab.is-open { background: #fff; color: #4f46e5; border-color: rgba(102, 126, 234, 0.32); border-bottom-color: #fff; box-shadow: 0 -3px 12px rgba(15, 23, 42, 0.06); }
 .figtab.is-open .figtab__chev { transform: rotate(90deg); opacity: 1; }
+/* a focused component in the diagram rings its documenting tab, tinted to the component colour */
+.figtab.is-cued:not(.is-open) {
+    border-color: var(--cue, #667eea);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--cue, #667eea) 38%, transparent);
+    color: #374151;
+}
+body.dark-mode .figtab.is-cued:not(.is-open) { color: #e5e9f5; }
 body.dark-mode .figtab { background: #141a2e; border-color: rgba(165, 180, 252, 0.22); color: #c7cdda; }
 body.dark-mode .figtab:hover { background: #1a2138; }
 body.dark-mode .figtab.is-open { background: #0b1020; color: #a5b4fc; border-bottom-color: #0b1020; }
@@ -1884,6 +1891,23 @@ body.dark-mode .left-sidebar-hint::before {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 11px 50%);
     border-radius: 0 8px 8px 0;
 }
+
+/* External links (paper, source) — icon buttons at the far right, set apart like the Gallery pill */
+.timeline-ext {
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 6px;
+    color: #aab2c5; border-radius: 8px; text-decoration: none;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+.timeline-ext + .timeline-ext { margin-left: 4px; }                 /* tight gap between the icons */
+.timeline-item--standalone + .timeline-ext { margin-left: 15px; }   /* first icon sits apart from Gallery */
+.timeline-item--standalone + .timeline-ext::before {                /* divider, echoing the Gallery pill */
+    content: ""; position: absolute; left: -8px; top: 16%; height: 68%; width: 1px;
+    background: rgba(255, 255, 255, 0.22);
+}
+.timeline-ext:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.timeline-ext svg { width: 19px; height: 19px; display: block; }
 
 @media (max-width: 760px) {
     .timeline-nav { padding: 6px 8px; gap: 2px; }
@@ -3546,7 +3570,7 @@ a:hover {
 .hero-inner{max-width:1040px; width:100%; display:flex; flex-direction:column; align-items:center; text-align:center;}
 .hero-title{
     font-family:'Space Grotesk','Inter','Segoe UI',sans-serif; font-weight:700;
-    line-height:1.08; font-size:clamp(2em,5.2vw,3.7em); letter-spacing:-0.02em;
+    line-height:1.15; font-size:clamp(2em,5.2vw,3.7em); letter-spacing:-0.02em;
     width:100%; max-width:960px; margin:0 auto 8px;
     text-align:center; text-wrap:balance;
     background:linear-gradient(94deg,#ffffff 0%,#eef0ff 40%,#c4caff 100%);
@@ -4172,3 +4196,69 @@ body.story-pip-on .story__pip{display:block;}   /* the fly-in/out is FLIP-animat
     border-radius:50%; background:var(--ca); opacity:.85;}
 .contrib__claims b{color:#eef1f7; font-weight:700;}
 
+/* ── Citation + author contacts (bottom of page) ───────────────────────────── */
+#citation-section .section-header,
+#citation-section .section-subtitle { text-align: left; }
+.citation-block { position: relative; margin: 22px 0 8px; text-align: left; }
+.citation-bibtex {
+    margin: 0; padding: 20px 22px; border-radius: 12px;
+    background: #0E1117; color: #e6e9f0;
+    font-family: 'SF Mono', 'Menlo', 'Consolas', monospace; font-size: 0.85rem; line-height: 1.6;
+    overflow-x: auto; white-space: pre; tab-size: 2;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
+}
+.citation-bibtex code { font-family: inherit; color: inherit; background: none; padding: 0; }
+.citation-copy {
+    position: absolute; top: 12px; right: 12px;
+    padding: 5px 13px; font-size: 0.78rem; font-weight: 600;
+    color: #cdd3e0; background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 7px; cursor: pointer;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+.citation-copy:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.citation-copy.is-copied { background: rgba(127, 176, 105, 0.25); border-color: #7FB069; color: #c9f0b3; }
+
+.citation-contacts__header {
+    text-align: left; margin: 32px 0 14px; font-size: 1.05rem; font-weight: 700; color: #334155;
+}
+body.dark-mode .citation-contacts__header { color: #e2e8f0; }
+.citation-contacts {
+    list-style: none; margin: 0; padding: 0; text-align: left;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 9px 26px;
+}
+.citation-contacts li { display: flex; align-items: baseline; gap: 9px; font-size: 0.92rem; }
+.cc-name { color: #334155; font-weight: 600; }
+body.dark-mode .cc-name { color: #e2e8f0; }
+.cc-mail {
+    font-family: 'SF Mono', 'Menlo', 'Consolas', monospace; font-size: 0.82rem;
+    color: #667eea; text-decoration: none;
+}
+.cc-mail:hover { text-decoration: underline; }
+@media (max-width: 640px) {
+    .citation-bibtex { font-size: 0.78rem; padding: 16px 16px; }
+    .citation-contacts { grid-template-columns: 1fr; }
+}
+
+
+/* ── Claim efficiency plots: method / task filter chips ────────────────────── */
+.claim-plot-controls { margin: 14px 2px 2px; display: flex; flex-direction: column; gap: 8px; }
+.cpc-row { display: flex; align-items: flex-start; gap: 12px; }
+.cpc-row__label { flex: 0 0 50px; padding-top: 5px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #9aa3b2; }
+.cpc-row__items { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 9px; min-width: 0; }
+.cpc-group { display: inline-flex; align-items: center; gap: 6px; padding: 3px 7px 3px 3px; border-radius: 9px;
+    border: 1px solid color-mix(in srgb, var(--gc, #8a93a8) 38%, transparent);
+    background: color-mix(in srgb, var(--gc, #8a93a8) 8%, transparent); }
+.cpc-group__label { padding-left: 5px; font-size: 0.7rem; font-weight: 700; color: var(--gc, #6b7280); white-space: nowrap; }
+.cpc-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; cursor: pointer;
+    font: 600 0.78rem 'Inter', system-ui, sans-serif; color: #374151;
+    background: #fff; border: 1px solid rgba(15, 23, 42, 0.14); border-radius: 7px;
+    transition: opacity .18s ease, border-color .18s ease, background .18s ease; }
+.cpc-chip__dot { width: 12px; height: 3px; border-radius: 2px; background: var(--cc, #8a93a8); flex: none; }
+.cpc-chip:hover { border-color: var(--cc, #667eea); }
+.cpc-chip.is-off { opacity: .42; text-decoration: line-through; }
+.cpc-chip.is-off .cpc-chip__dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--cc, #8a93a8); }
+.claim-plot-empty { margin: 0; padding: 28px 12px; text-align: center; font-size: 0.9rem; color: #8a93a8; }
+body.dark-mode .cpc-row__label { color: #7f8aa3; }
+body.dark-mode .cpc-chip { background: #131a2e; color: #cbd5e1; border-color: rgba(165, 180, 252, 0.2); }
+body.dark-mode .claim-plot-empty { color: #7f8aa3; }
+@media (max-width: 560px) { .cpc-row { flex-direction: column; gap: 4px; } .cpc-row__label { padding-top: 0; } }

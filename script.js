@@ -1308,6 +1308,15 @@ function initMethodExplorer() {
         const refHtml = info.ref ? ' <button type="button" class="method-figref" data-fig="' + info.ref[0] + '" title="Open the training-objective figure">' + info.ref[1] + '&nbsp;&rsaquo;</button>' : '';
         explainEl.innerHTML = '<p class="method-explain__title" style="color:' + col + '">' + info.label + '</p>' +
             '<p class="method-explain__body">' + renderInline(info.desc) + refHtml + '</p>';
+        cueFigtab(info.ref ? info.ref[0] : null, col);
+    }
+    // ring the file tab that documents the focused component, tinted to its colour
+    function cueFigtab(fig, col) {
+        document.querySelectorAll('#method-figtabs .figtab').forEach(t => {
+            const on = !!fig && t.dataset.fig === fig;
+            t.classList.toggle('is-cued', on);
+            if (on && col) t.style.setProperty('--cue', col); else t.style.removeProperty('--cue');
+        });
     }
     const show = (id) => showIds([id], id);
     function clearShow() {
@@ -1319,6 +1328,7 @@ function initMethodExplorer() {
         if (methodVideo) methodVideo.classList.remove('is-focus');
         algoLines.forEach(l => { l.classList.remove('is-on', 'is-split'); l.style.removeProperty('--c'); l.style.removeProperty('--c2'); });
         explainEl.innerHTML = defaultExplain;
+        cueFigtab(null);
     }
     let pinnedIds = null, pinnedPrimary = null;
     const leave = () => { if (pinnedIds) showIds(pinnedIds, pinnedPrimary); else clearShow(); };
@@ -2328,6 +2338,14 @@ function initMethodFigTabs() {
             });
         }
     })();
+    // each file tab focuses the component(s) it documents in the diagram/algorithm:
+    // planner (step 1), encoder+dynamics (step 4), reward (step 5), value+policy (λ-return, steps 6-7)
+    const TAB_FOCUS = {
+        mppi: [['planner'], 'planner'],
+        '4a': [['encoder'], 'encoder'],          // expands to the Encoder & Dynamics group
+        '4b': [['reward'], 'reward'],
+        '5':  [['value', 'policy'], 'value']      // λ-return drives the actor-critic update
+    };
     let openFig = null;
     function setOpen(fig) {
         const prev = openFig;
@@ -2335,10 +2353,11 @@ function initMethodFigTabs() {
         tabs.forEach(t => { const on = t.dataset.fig === fig; t.classList.toggle('is-open', on); t.setAttribute('aria-expanded', on ? 'true' : 'false'); });
         panels.forEach(p => p.classList.toggle('is-active', p.dataset.fig === fig));
         stage.classList.toggle('is-open', !!fig);
-        // the MPPI tab is the planner used in step 1 of the training loop — focus it in the figure/algorithm
+        // focus the open tab's component(s) in the figure/algorithm; clear when a focusing tab closes
         if (typeof window.methodSetFocus === 'function') {
-            if (fig === 'mppi') window.methodSetFocus(['planner'], 'planner');
-            else if (prev === 'mppi') window.methodSetFocus(null);
+            const f = fig && TAB_FOCUS[fig];
+            if (f) window.methodSetFocus(f[0], f[1]);
+            else if (prev && TAB_FOCUS[prev]) window.methodSetFocus(null);
         }
     }
     tabs.forEach(t => t.addEventListener('click', () => setOpen(openFig === t.dataset.fig ? null : t.dataset.fig)));
@@ -3010,6 +3029,24 @@ function closeVideoModal() {
     modal.classList.remove('active');
     video.pause();
     document.body.style.overflow = '';
+}
+
+// Copy the BibTeX entry to the clipboard, with brief button feedback
+function copyBibtex(btn) {
+    const code = document.getElementById('bibtex-entry');
+    if (!code) return;
+    const text = code.textContent;
+    const done = () => { const o = btn.textContent; btn.textContent = 'Copied!'; btn.classList.add('is-copied'); setTimeout(() => { btn.textContent = o; btn.classList.remove('is-copied'); }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+    } else { fallbackCopy(text, done); }
+}
+function fallbackCopy(text, done) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { /* ignore */ }
+    document.body.removeChild(ta);
 }
 
 // Modal event listeners
